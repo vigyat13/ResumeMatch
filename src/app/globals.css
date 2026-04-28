@@ -1,26 +1,214 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * RESUMEMATCH DESIGN SYSTEM
+ *
+ * CSS custom properties (design tokens) define the entire visual language.
+ * @theme tells Tailwind to generate utility classes from these tokens.
+ * Components use semantic names like bg-background instead of raw hex.
+ * Dark mode works by swapping token values — no dark: prefix needed.
+ */
+
+@theme {
+  /* ── Brand Primitives (warm charcoal neutral scale) ─────── */
+  --color-brand-50:  oklch(99.3% 0.002 0);
+  --color-brand-100: oklch(98.1% 0.005 0);
+  --color-brand-200: oklch(95.5% 0.010 0);
+  --color-brand-300: oklch(92.8% 0.015 0);
+  --color-brand-400: oklch(88.5% 0.025 0);
+  --color-brand-500: oklch(82.1% 0.035 0);
+  --color-brand-600: oklch(74.2% 0.040 0);
+  --color-brand-700: oklch(65.3% 0.045 0);
+  --color-brand-800: oklch(54.1% 0.040 0);
+  --color-brand-900: oklch(42.8% 0.035 0);
+  --color-brand-950: oklch(32.5% 0.030 0);
+
+  /* ── Emerald accent (success, highlights, progress) ─────── */
+  --color-emerald-50:  oklch(99.1% 0.002 142);
+  --color-emerald-100: oklch(97.8% 0.008 142);
+  --color-emerald-200: oklch(95.2% 0.018 142);
+  --color-emerald-300: oklch(91.4% 0.035 142);
+  --color-emerald-400: oklch(85.6% 0.065 142);
+  --color-emerald-500: oklch(76.4% 0.120 142);
+  --color-emerald-600: oklch(66.8% 0.140 142);
+  --color-emerald-700: oklch(56.2% 0.130 142);
+  --color-emerald-800: oklch(46.1% 0.110 142);
+  --color-emerald-900: oklch(37.8% 0.090 142);
+
+  /* ── Red (errors, destructive actions) ──────────────────── */
+  --color-red-500: oklch(76.6% 0.120 0);
+  --color-red-600: oklch(67.0% 0.140 0);
+
+  /* ── Amber (warnings, medium match scores) ───────────────── */
+  --color-amber-500: oklch(79.0% 0.150 72);
+  --color-amber-600: oklch(70.0% 0.150 72);
+
+  /* ── Semantic Tokens (Default = Marketing Dark) ──────────── *
+   * The whole app shell uses the same dark/emerald palette as the
+   * landing page. Pages reference semantic tokens (`bg-background`,
+   * `text-foreground`, `bg-card`, `text-accent`…) and inherit the
+   * marketing surface automatically. The `.light` override at the
+   * bottom of this file lets us flip back to the warm light shell
+   * without touching any component code.
+   */
+  --color-background:           #080808;                 /* = --color-marketing-bg */
+  --color-foreground:           #f5f0e8;                 /* = --color-marketing-text */
+  --color-card:                 #0e0e0e;                 /* = --color-marketing-surface */
+  --color-card-foreground:      #f5f0e8;
+  --color-primary:              #34d399;                 /* emerald CTA */
+  --color-primary-foreground:   #080808;                 /* dark text on emerald */
+  --color-secondary:            rgba(245,240,232,0.06);
+  --color-secondary-foreground: #f5f0e8;
+  --color-muted:                rgba(245,240,232,0.04);
+  --color-muted-foreground:     rgba(245,240,232,0.55);
+  --color-accent:               #34d399;
+  --color-accent-foreground:    #080808;
+  --color-destructive:          #f87171;
+  --color-destructive-foreground: #080808;
+  --color-border:               rgba(245,240,232,0.08);
+  --color-input:                rgba(245,240,232,0.04);
+  --color-ring:                 #34d399;
+
+  /* Legacy aliases (still used by Sidebar, AuthModal, dashboard
+   * cards, etc.). Defining them here means we don't have to touch
+   * every component to flip the theme. */
+  --color-surface:              #080808;
+  --color-surface-raised:       #0e0e0e;
+  --color-surface-hover:        rgba(245,240,232,0.06);
+  --color-text-primary:         #f5f0e8;
+  --color-text-secondary:       rgba(245,240,232,0.70);
+  --color-text-muted:           rgba(245,240,232,0.45);
+
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-headline: 'Inter', sans-serif;
+  --font-body:     'Poppins', sans-serif;
+
+  /* ── Shape ──────────────────────────────────────────────── */
+  --radius: 12px;
+
+  /* ── Marketing Surface (landing + dark sections) ────────── *
+   * Used on the landing page and any other "showcase" surface
+   * where we want the dark + emerald brand identity, regardless
+   * of whether the user is in light or dark mode for the app
+   * shell. Keeping these as named tokens lets every page share
+   * one source of truth.
+   */
+  --color-marketing-bg:       #080808;
+  --color-marketing-surface:  #0e0e0e;
+  --color-marketing-text:     #f5f0e8;
+  --color-marketing-accent:   #34d399;
+  --color-marketing-warn:     #fbbf24;
+  --color-marketing-error:    #f87171;
+  --color-marketing-info:     #3b82f6;
+  --color-marketing-muted:    rgba(245,240,232,0.40);
+  --color-marketing-faint:    rgba(245,240,232,0.18);
+  --color-marketing-line:     rgba(245,240,232,0.07);
+  --font-marketing-display:   'Bebas Neue', 'Inter', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Light Mode Override (opt-in) ─────────────────────────── *
+ * Default = dark marketing surface (above). To force the warm
+ * light shell on a specific surface, add `class="light"` to
+ * the html or wrapper element.
+ */
+.light {
+  --color-background:           var(--color-brand-50);
+  --color-foreground:           var(--color-brand-950);
+  --color-card:                 var(--color-brand-100);
+  --color-card-foreground:      var(--color-brand-950);
+  --color-primary:              var(--color-brand-900);
+  --color-primary-foreground:   var(--color-brand-50);
+  --color-secondary:            var(--color-brand-200);
+  --color-secondary-foreground: var(--color-brand-900);
+  --color-muted:                var(--color-brand-300);
+  --color-muted-foreground:     var(--color-brand-700);
+  --color-accent:               var(--color-emerald-600);
+  --color-accent-foreground:    var(--color-brand-50);
+  --color-destructive:          var(--color-red-600);
+  --color-border:               var(--color-brand-200);
+  --color-input:                var(--color-brand-100);
+  --color-ring:                 var(--color-emerald-500);
+
+  /* Legacy alias overrides for the light surface */
+  --color-surface:              var(--color-brand-50);
+  --color-surface-raised:       var(--color-brand-100);
+  --color-surface-hover:        var(--color-brand-200);
+  --color-text-primary:         var(--color-brand-950);
+  --color-text-secondary:       var(--color-brand-800);
+  --color-text-muted:           var(--color-brand-700);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ── Base Styles ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
+
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-headline); }
+
+/* ── Reusable Component Classes ──────────────────────────── */
+
+/* Card with soft shadow and rounded corners */
+.hero-panel {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Feature card with hover animation */
+.step-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+}
+.step-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* Grid overlay pattern for hero backgrounds */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Skeleton shimmer for loading states */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-card) 25%,
+    var(--color-border) 50%,
+    var(--color-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.animate-reveal-up { animation: reveal-up 0.5s ease-out both; }
+.animate-float     { animation: float 3s ease-in-out infinite; }

@@ -62,6 +62,9 @@ export function BuilderForm({ data, onChange }: Props) {
           <FieldGroup label="Job Title" span="col-span-2">
             <Input value={data.title} onChange={v => set('title', v)} placeholder="Software Engineer" />
           </FieldGroup>
+          <FieldGroup label="Profile Image URL" span="col-span-2">
+            <Input value={data.profileImage ?? ''} onChange={v => set('profileImage', v)} placeholder="headshot.jpg or https://example.com/headshot.jpg" />
+          </FieldGroup>
           <FieldGroup label="Email">
             <Input value={data.email} onChange={v => set('email', v)} placeholder="jane@example.com" />
           </FieldGroup>

@@ -5,30 +5,20 @@
  * Next.js App Router automatically wraps all pages with this layout.
  *
  * Key jobs:
- * 1. Load Google Fonts (Inter for headings, Poppins for body)
+ * 1. Load one consistent Google Font across the app
  * 2. Set page metadata (SEO title, description)
  * 3. Apply the font CSS variables that globals.css uses
  */
 
 import type { Metadata } from 'next'
-import { Inter, Poppins } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-// Inter = geometric, modern — used for headlines and UI elements
-// next/font automatically optimizes font loading (no layout shift)
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-headline', // matches our CSS variable in globals.css
+  variable: '--font-headline',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
-})
-
-// Poppins = warm, approachable — used for body text and descriptions
-const poppins = Poppins({
-  subsets: ['latin'],
-  variable: '--font-body',
-  display: 'swap',
-  weight: ['400', '500', '600'],
 })
 
 // Metadata is used by search engines and social media previews
@@ -53,8 +43,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    // Apply both font variables so CSS can reference --font-headline and --font-body
-    <html lang="en" className={`${inter.variable} ${poppins.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full bg-background text-foreground antialiased">
         {children}
       </body>

@@ -14,9 +14,8 @@ import { AuthModal }    from './AuthModal'
 import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
 import { createClient } from '@/lib/supabase/client'
-import { renderTemplate } from '@/lib/builder/render'
-import { generateLatex } from '@/lib/builder/latex'
 import { parseLatex }    from '@/lib/builder/parseLatex'
+import { buildResumeSystemOutput } from '@/lib/builder/systemOutput'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
@@ -61,8 +60,8 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     return () => clearTimeout(t)
   }, [data])
 
-  const latexCode    = useMemo(() => generateLatex(data), [data])
-  const renderedHtml = useMemo(() => renderTemplate(templateHtml, data), [templateHtml, data])
+  const systemOutput = useMemo(() => buildResumeSystemOutput(data), [data])
+  const latexCode    = systemOutput.latex
 
   // Active LaTeX shown in Monaco: edited version or freshly generated
   const activeLatex = editedLatex ?? latexCode
@@ -250,10 +249,10 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       {tab === 'direct' && (
         <div className="flex flex-col items-center px-8 py-6 gap-4 min-h-[calc(100vh-53px)] bg-muted/40">
           <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg max-w-xl text-center">
-            Click anywhere on the resume to edit text directly. Changes here are independent from the Form tab.
+            This canvas renders the canonical semantic HTML output. Direct edits here are local-only and do not rewrite the form state.
           </p>
           <div className="print-target">
-            <DirectEditPreview renderedHtml={renderedHtml} templateCss={templateCss} />
+            <DirectEditPreview renderedHtml={systemOutput.html} />
           </div>
         </div>
       )}
@@ -387,14 +386,10 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
               </div>
             )}
 
-            {/* Preview — shows HTML template rendered from parsed data */}
+            {/* Preview — shows the canonical HTML rendered from parsed data */}
             <div className="flex-1 overflow-auto px-6 py-6 flex justify-center">
               <div style={{ transform: 'scale(0.72)', transformOrigin: 'top center', width: '21cm' }}>
-                <LivePreview
-                  templateHtml={templateHtml}
-                  templateCss={templateCss}
-                  data={data}
-                />
+                <SystemHtmlPreview html={systemOutput.html} />
               </div>
             </div>
           </div>
@@ -420,7 +415,7 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
   )
 }
 
-function DirectEditPreview({ renderedHtml, templateCss }: { renderedHtml: string; templateCss: string }) {
+function DirectEditPreview({ renderedHtml }: { renderedHtml: string }) {
   const ref    = useRef<HTMLDivElement>(null)
   const inited = useRef(false)
 
@@ -431,13 +426,9 @@ function DirectEditPreview({ renderedHtml, templateCss }: { renderedHtml: string
     }
   }, [renderedHtml])
 
-  const scopedCss = templateCss
-    .replace(/body\s*\{/g, '.preview-sheet {')
-    .replace(/\.resume\s*\{/g, '.preview-sheet .resume {')
-
   return (
     <>
-      <style>{scopedCss}</style>
+      <SystemHtmlStyles />
       <style>{`
         .preview-sheet[contenteditable]:focus-within { outline: 2px solid hsl(var(--primary)); outline-offset: 4px; border-radius: 8px; }
         @media print {
@@ -455,5 +446,31 @@ function DirectEditPreview({ renderedHtml, templateCss }: { renderedHtml: string
         spellCheck={false}
       />
     </>
+  )
+}
+
+function SystemHtmlPreview({ html }: { html: string }) {
+  return (
+    <>
+      <SystemHtmlStyles />
+      <div
+        className="preview-sheet bg-white shadow-xl rounded-lg"
+        style={{ minHeight: '29.7cm', width: '21cm', maxWidth: '100%', padding: '1cm' }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </>
+  )
+}
+
+function SystemHtmlStyles() {
+  return (
+    <style>{`
+      .preview-sheet img { display:block; width:88px; height:88px; object-fit:cover; margin:0 0 16px auto; border:1px solid #111; }
+      .preview-sheet h1 { margin:0; font-size:28px; line-height:1.2; font-weight:700; }
+      .preview-sheet h2 { margin:18px 0 8px; font-size:14px; line-height:1.3; font-weight:700; text-transform:uppercase; border-bottom:1px solid #111; padding-bottom:4px; }
+      .preview-sheet p { margin:0 0 8px; font-size:12px; line-height:1.5; color:#111; white-space:pre-wrap; overflow-wrap:anywhere; }
+      .preview-sheet ul { margin:0 0 10px 18px; padding:0; }
+      .preview-sheet li { margin:0 0 4px; font-size:12px; line-height:1.5; color:#111; white-space:pre-wrap; overflow-wrap:anywhere; }
+    `}</style>
   )
 }

@@ -1,14 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Check, Crown, Loader2, ShieldCheck, Sparkles } from 'lucide-react'
-import { renderTemplate } from '@/lib/builder/render'
-import { pickSampleForTemplate } from '@/lib/builder/types'
+import { sortTemplatesByPriority } from '@/lib/builder/templateOrdering'
 import {
   getTemplateBadge,
   getTemplateDescription,
   isCompanyInspiredTemplate,
 } from '@/lib/builder/templateMeta'
+
+const TemplatePreview = dynamic(
+  () => import('./TemplatePreview').then(mod => mod.TemplatePreview),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-white" />,
+  }
+)
 
 interface Template {
   id:          string
@@ -32,13 +40,14 @@ interface Props {
 }
 
 export function TemplateCarousel({ templates, resumes }: Props) {
-  const [selectedId, setSelectedId] = useState<string>(templates[0]?.id ?? '')
+  const orderedTemplates = sortTemplatesByPriority(templates)
+  const [selectedId, setSelectedId] = useState<string>(orderedTemplates[0]?.id ?? '')
   const [targetResume, setTargetResume] = useState<string>(resumes[0]?.id ?? '')
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState<string | null>(null)
   const [localResumes, setLocalResumes] = useState(resumes)
 
-  const selected = templates.find(t => t.id === selectedId)
+  const selected = orderedTemplates.find(t => t.id === selectedId)
 
   async function handleApply() {
     if (!selectedId || !targetResume) return
@@ -76,7 +85,7 @@ export function TemplateCarousel({ templates, resumes }: Props) {
       </div>
 
       <div className="flex gap-5 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin">
-        {templates.map(template => (
+        {orderedTemplates.map(template => (
           <button
             key={template.id}
             onClick={() => setSelectedId(template.id)}
@@ -152,7 +161,7 @@ export function TemplateCarousel({ templates, resumes }: Props) {
           <div className="space-y-4">
             <div className="space-y-2">
               {localResumes.map(resume => {
-                const currentTemplate = templates.find(t => t.id === resume.template_id)
+                const currentTemplate = orderedTemplates.find(t => t.id === resume.template_id)
                 const isTarget = targetResume === resume.id
                 const justApplied = applied === resume.id && resume.template_id === selectedId
 
@@ -211,25 +220,7 @@ export function TemplateCarousel({ templates, resumes }: Props) {
 }
 
 function TemplateThumb({ template }: { template: Template }) {
-  const scope = `tpl-${template.id.slice(0, 8)}`
-  const rendered = renderTemplate(template.html_content, pickSampleForTemplate(template.name))
-  const css = template.css_content
-    .replace(/body\s*\{/g, `.${scope} {`)
-    .replace(/\.resume\s*\{/g, `.${scope} .resume {`)
-
   return (
-    <>
-      <style>{css}</style>
-      <div
-        style={{
-          transform: 'scale(0.34)',
-          transformOrigin: 'top left',
-          width: '21cm',
-          pointerEvents: 'none',
-        }}
-      >
-        <div className={scope} dangerouslySetInnerHTML={{ __html: rendered }} />
-      </div>
-    </>
+    <TemplatePreview template={template} scale={0.21} />
   )
 }

@@ -25,6 +25,7 @@
 import { useMemo } from 'react'
 import { renderTemplate } from '@/lib/builder/render'
 import type { ResumeData } from '@/lib/builder/types'
+import { scopeTemplateCss } from '@/lib/builder/scopeCss'
 
 interface Props {
   templateHtml: string
@@ -32,16 +33,29 @@ interface Props {
   data:         ResumeData
 }
 
+// Same ATS override applied in TemplatePreview so the live builder view
+// matches the gallery thumbnails exactly.
+const ATS_OVERRIDE = `
+  .preview-sheet a          { color: #111 !important; text-decoration: none !important; }
+  .preview-sheet *          { color: inherit; }
+  .preview-sheet            { color: #111; }
+`
+
 export function LivePreview({ templateHtml, templateCss, data }: Props) {
   const renderedHtml = useMemo(
     () => renderTemplate(templateHtml, data),
     [templateHtml, data]
   )
 
-  // Scope the template CSS to .preview-sheet so it doesn't leak
-  const scopedCss = templateCss
-    .replace(/body\s*\{/g, '.preview-sheet {')
-    .replace(/\.resume\s*\{/g, '.preview-sheet .resume {')
+  // Memoize scopedCss — templateCss is a static prop that never changes while
+  // the user is editing, so this avoids re-injecting the <style> tag on every
+  // keystroke (which can cause a brief style flash).
+  const scopedCss = useMemo(
+    () =>
+      scopeTemplateCss(templateCss, '.preview-sheet') +
+      ATS_OVERRIDE,
+    [templateCss]
+  )
 
   return (
     <>
@@ -54,7 +68,7 @@ export function LivePreview({ templateHtml, templateCss, data }: Props) {
         }
       `}</style>
 
-      {/* Scoped template CSS */}
+      {/* Scoped template CSS + ATS override */}
       <style>{scopedCss}</style>
 
       {/* The resume preview */}

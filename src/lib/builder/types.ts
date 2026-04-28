@@ -38,6 +38,7 @@ export interface ProjectEntry {
 export interface ResumeData {
   name:       string
   title:      string
+  profileImage?: string
   email:      string
   phone:      string
   location:   string
@@ -54,58 +55,84 @@ export interface ResumeData {
 }
 
 export const DEFAULT_RESUME_DATA: ResumeData = {
-  name:      'Your Name',
-  title:     'Software Engineer',
-  email:     'you@example.com',
-  phone:     '+1 (555) 000-0000',
-  location:  'San Francisco, CA',
-  github:    'github.com/yourhandle',
-  linkedin:  'linkedin.com/in/yourhandle',
-  portfolio: 'yourportfolio.dev',
-  summary:   'Experienced professional with a track record of delivering impactful results. Skilled at cross-functional collaboration and solving complex problems.',
+  name:         'Alex Rivera',
+  title:        'Software Engineer',
+  profileImage: '',
+  email:        'alex.rivera@gmail.com',
+  phone:        '+1 (415) 555-0192',
+  location:     'San Francisco, CA',
+  github:       'github.com/alexrivera',
+  linkedin:     'linkedin.com/in/alexrivera',
+  portfolio:    'alexrivera.dev',
+  summary:      'Full-stack engineer with 5 years building high-scale consumer products. Led backend work at Stripe that processed $2B+ in payments annually. Strong in distributed systems, API design, and developer tooling.',
   experience: [
     {
-      company: 'Acme Corp',
-      role:    'Senior Engineer',
-      period:  'Jan 2022 – Present',
+      company: 'Stripe',
+      role:    'Software Engineer II · Payments Infrastructure',
+      period:  'Mar 2022 – Present',
       bullets: [
-        'Led a team of 5 to ship a product used by 100k+ users',
-        'Reduced API latency by 40% through query optimization',
-        'Mentored 3 junior engineers, improving team velocity by 25%',
+        'Designed and shipped a retry-logic overhaul for the payment-intent lifecycle that reduced failed-payment fallout by 18%, recovering ~$40M ARR',
+        'Led migration of the charge-routing service from Ruby monolith to Go microservice; cut p99 latency from 420ms to 95ms under peak load',
+        'Built an internal dashboard (React + tRPC) used by 200+ ops analysts to investigate disputed transactions, replacing a manual Salesforce workflow',
+        'Mentored 2 new-grad engineers through onboarding and first production deploys',
       ],
     },
     {
-      company: 'Startup Inc',
-      role:    'Software Engineer',
-      period:  'Jun 2019 – Dec 2021',
+      company: 'Airbnb',
+      role:    'Software Engineer · Search & Discovery',
+      period:  'Jul 2020 – Feb 2022',
       bullets: [
-        'Built core features for the main product from 0 to launch',
-        'Integrated 3rd-party APIs including Stripe and Twilio',
+        'Rebuilt the geo-search ranking pipeline (Python/Elasticsearch) to incorporate real-time availability; improved booking conversion by 6.4% in A/B test',
+        'Reduced search index rebuild time from 4 hours to 22 minutes by parallelising Spark jobs across 80 EMR nodes',
+        'Shipped accessibility improvements (WCAG 2.1 AA) across the search results page, unblocking enterprise partnerships in the EU',
+      ],
+    },
+    {
+      company: 'Palantir Technologies',
+      role:    'Software Engineer Intern · Forward Deployed',
+      period:  'May 2019 – Aug 2019',
+      bullets: [
+        'Delivered a real-time pipeline dashboard for a Fortune 100 energy client; reduced manual reporting effort by 12 hours/week',
       ],
     },
   ],
   projects: [
     {
-      name:        'My Project',
-      tech:        'React, Node.js, PostgreSQL',
-      link:        'github.com/yourhandle/project',
-      description: 'A brief description of what the project does.',
-      bullets:     ['Built X to solve Y, resulting in Z'],
+      name:        'pgwatch-lite',
+      tech:        'Go, PostgreSQL, Prometheus, Grafana',
+      link:        'github.com/alexrivera/pgwatch-lite',
+      description: 'Lightweight Postgres query-stat and lock-contention exporter with zero-config dashboards.',
+      bullets: [
+        'Reached 2.1k GitHub stars in 6 months; adopted by 30+ production teams',
+        'Cut mean time-to-diagnose for lock contention from ~25min to under 3min based on user reports',
+      ],
+    },
+    {
+      name:        'turbo-rpc',
+      tech:        'TypeScript, Node.js, Zod',
+      link:        'github.com/alexrivera/turbo-rpc',
+      description: 'Type-safe RPC framework with schema inference — zero codegen, full IDE autocomplete.',
+      bullets: [
+        '4.8k weekly npm downloads; shipped to production in 3 companies within 2 months of release',
+      ],
     },
   ],
   education: [
     {
-      school: 'State University',
-      degree: 'B.S. Computer Science',
-      year:   '2019',
+      school: 'University of California, Berkeley',
+      degree: 'B.S. Electrical Engineering & Computer Sciences · GPA 3.82',
+      year:   '2016 – 2020',
     },
   ],
   skills: [
-    { name: 'TypeScript',   level: 90 },
-    { name: 'React',        level: 85 },
-    { name: 'Node.js',      level: 80 },
-    { name: 'PostgreSQL',   level: 75 },
-    { name: 'AWS',          level: 65 },
+    { name: 'Go',           level: 90 },
+    { name: 'TypeScript',   level: 88 },
+    { name: 'Python',       level: 82 },
+    { name: 'PostgreSQL',   level: 85 },
+    { name: 'React',        level: 80 },
+    { name: 'AWS / GCP',    level: 75 },
+    { name: 'Kubernetes',   level: 72 },
+    { name: 'Elasticsearch', level: 70 },
   ],
 }
 
@@ -127,6 +154,7 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
 export const SAMPLE_ENGINEER: ResumeData = {
   name:      'Priya Sharma',
   title:     'Senior Software Engineer',
+  profileImage: '',
   email:     'priya.sharma@gmail.com',
   phone:     '+91 98450 21847',
   location:  'Bengaluru, India',
@@ -221,6 +249,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
 export const SAMPLE_PM: ResumeData = {
   name:      'Aditya Krishnan',
   title:     'Senior Product Manager',
+  profileImage: '',
   email:     'aditya.krishnan@outlook.com',
   phone:     '+91 99020 14583',
   location:  'Mumbai, India',
@@ -308,6 +337,7 @@ export const SAMPLE_PM: ResumeData = {
 export const SAMPLE_DESIGNER: ResumeData = {
   name:      'Ananya Iyer',
   title:     'Senior Product Designer',
+  profileImage: '',
   email:     'hi@ananyaiyer.design',
   phone:     '+91 95135 77820',
   location:  'Pune, India',

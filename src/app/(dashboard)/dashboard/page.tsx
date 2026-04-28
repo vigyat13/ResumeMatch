@@ -76,6 +76,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+
+      {/* Beta notice */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 px-5 py-4 flex items-start gap-3">
+        <span className="mt-0.5 text-lg">🚧</span>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Dashboard is in early access</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            The resume builder is fully live. Job matching, uploads, and settings are being rolled out shortly.{' '}
+            <Link href="/builder" className="text-primary font-medium hover:underline">Go build a resume →</Link>
+          </p>
+        </div>
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">

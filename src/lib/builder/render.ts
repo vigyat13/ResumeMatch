@@ -19,6 +19,28 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{publications\}\}/g, renderList(data.publications ?? []))
     .replace(/\{\{honors\}\}/g,      renderList(data.honors ?? []))
 
+  // Fallbacks: if a section placeholder is absent from the template HTML, append
+  // it as a plain unstyled section so user edits always appear in the preview.
+  function appendSection(title: string, innerHtml: string) {
+    if (!innerHtml) return
+    const section = `<div style="margin-top:18px">
+      <div style="font-size:0.85em;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1.5px solid #111;padding-bottom:3px;margin-bottom:10px">${title}</div>
+      ${innerHtml}
+    </div>`
+    output = output.includes('</body>')
+      ? output.replace('</body>', `${section}</body>`)
+      : output + section
+  }
+
+  if (!html.includes('{{projects}}')    && data.projects?.length)
+    appendSection('Projects',     renderProjects(data.projects))
+
+  if (!html.includes('{{honors}}')      && data.honors?.length)
+    appendSection('Honors & Awards', renderList(data.honors))
+
+  if (!html.includes('{{publications}}') && data.publications?.length)
+    appendSection('Publications', renderList(data.publications))
+
   return output
 }
 
@@ -27,9 +49,9 @@ function renderExperience(entries: ExperienceEntry[]): string {
     <div class="exp-entry" style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <strong style="font-size:0.95em">${esc(e.role)}</strong>
-        <span style="font-size:0.82em;color:#666;white-space:nowrap">${esc(e.period)}</span>
+        <span style="font-size:0.82em;color:#444;white-space:nowrap">${esc(e.period)}</span>
       </div>
-      <div style="font-size:0.875em;color:#555;margin-bottom:4px;font-style:italic">${esc(e.company)}</div>
+      <div style="font-size:0.875em;color:#444;margin-bottom:4px;font-style:italic">${esc(e.company)}</div>
       <ul style="margin:4px 0 0 16px;padding:0">
         ${e.bullets.filter(b => b.trim()).map(b =>
           `<li style="margin-bottom:3px;font-size:0.875em;line-height:1.4">${esc(b)}</li>`
@@ -45,10 +67,10 @@ function renderProjects(entries: ProjectEntry[]): string {
     <div class="proj-entry" style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <strong style="font-size:0.95em">${esc(p.name)}</strong>
-        ${p.link ? `<a href="https://${esc(p.link)}" style="font-size:0.82em;color:#2563eb">${esc(p.link)}</a>` : ''}
+        ${p.link ? `<a href="https://${esc(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none">${esc(p.link)}</a>` : ''}
       </div>
-      <div style="font-size:0.82em;color:#666;margin-bottom:4px;font-style:italic">${esc(p.tech)}</div>
-      ${p.description ? `<div style="font-size:0.875em;color:#444;margin-bottom:3px">${esc(p.description)}</div>` : ''}
+      <div style="font-size:0.82em;color:#444;margin-bottom:4px;font-style:italic">${esc(p.tech)}</div>
+      ${p.description ? `<div style="font-size:0.875em;color:#333;margin-bottom:3px">${esc(p.description)}</div>` : ''}
       <ul style="margin:4px 0 0 16px;padding:0">
         ${p.bullets.filter(b => b.trim()).map(b =>
           `<li style="margin-bottom:3px;font-size:0.875em;line-height:1.4">${esc(b)}</li>`
@@ -63,9 +85,9 @@ function renderEducation(entries: EducationEntry[]): string {
     <div class="edu-entry" style="display:flex;justify-content:space-between;margin-bottom:10px">
       <div>
         <strong style="font-size:0.95em">${esc(e.school)}</strong>
-        <div style="font-size:0.875em;color:#555">${esc(e.degree)}</div>
+        <div style="font-size:0.875em;color:#444">${esc(e.degree)}</div>
       </div>
-      <span style="font-size:0.85em;color:#666;white-space:nowrap">${esc(e.year)}</span>
+      <span style="font-size:0.85em;color:#444;white-space:nowrap">${esc(e.year)}</span>
     </div>
   `).join('')
 }
@@ -81,8 +103,8 @@ function renderSkillsBars(skills: ResumeData['skills']): string {
   return skills.filter(s => s.name.trim()).map(s => `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
       <span style="font-size:0.82em;width:90px;flex-shrink:0">${esc(s.name)}</span>
-      <div style="flex:1;height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${s.level}%;background:currentColor;border-radius:3px"></div>
+      <div style="flex:1;height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${s.level}%;background:#111;border-radius:3px"></div>
       </div>
     </div>
   `).join('')

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { EXAMPLE_RESUME_DATA } from '@/lib/builder/types'
 import { TemplatePreviewClient } from '@/components/templates/TemplatePreviewClient'
 import { TemplateGallery } from '@/components/builder/TemplateGallery'
@@ -53,11 +53,8 @@ export default async function BuilderPage({
       {/* ── Navbar ──────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            Resume<span className="text-primary">Match</span>
+          <Link href="/" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 22, letterSpacing: '0.01em', fontWeight: 700 }}>
+            Resume<span style={{ color: 'var(--color-marketing-accent)' }}>Match</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login"
@@ -78,9 +75,9 @@ export default async function BuilderPage({
 
           {/* Left copy */}
           <div className="flex-1 max-w-[720px] space-y-6 lg:pl-1">
-            <h1 className="text-[4rem] lg:text-[4.6rem] font-bold leading-[0.92] tracking-[-0.01em] font-headline text-[#f5f0e8] m-0">
+            <h1 style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 'clamp(36px, 6vw, 74px)', lineHeight: 0.92, letterSpacing: '-0.01em', color: 'var(--color-marketing-text)', fontWeight: 700, margin: 0 }}>
               Build a resume<br />
-              <span className="text-[var(--color-marketing-accent)]">that gets interviews</span>
+              <span style={{ color: 'var(--color-marketing-accent)' }}>that gets interviews</span>
             </h1>
             <p className="text-[rgba(245,240,232,0.42)] text-lg leading-relaxed max-w-[720px]">
               Pick from {total}+ professional and company-inspired templates, fill in
@@ -105,7 +102,7 @@ export default async function BuilderPage({
                 { value: '100%',      label: 'Free to edit' },
               ].map(s => (
                 <div key={s.label}>
-                  <div className="text-2xl font-bold font-headline text-[#f5f0e8]">{s.value}</div>
+                  <div style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 28, fontWeight: 700, color: 'var(--color-marketing-text)', lineHeight: 1 }}>{s.value}</div>
                   <div className="text-xs text-[rgba(245,240,232,0.45)] mt-0.5">{s.label}</div>
                 </div>
               ))}
@@ -138,7 +135,7 @@ export default async function BuilderPage({
         {/* Section header */}
         <div className="flex items-end justify-between mb-7">
           <div>
-            <h2 className="text-3xl lg:text-[3.1rem] leading-none font-bold font-headline tracking-tight text-[#f5f0e8] m-0">
+            <h2 style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 'clamp(28px, 4vw, 50px)', lineHeight: 0.93, letterSpacing: '-0.01em', color: 'var(--color-marketing-text)', fontWeight: 700, margin: 0 }}>
               Choose your template
             </h2>
             <p className="text-[rgba(245,240,232,0.45)] text-base mt-2">

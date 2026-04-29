@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Download, Loader2, ChevronLeft, FileText, Code2,
   Edit3, Copy, Check, RefreshCw, ImagePlus, X, AlertCircle,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { renderTemplate } from '@/lib/builder/render'
 import dynamic from 'next/dynamic'
@@ -41,6 +42,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [spacing, setSpacing]           = useState(0)
   const [contentScale, setContentScale] = useState(100)
   const [cropBottomMm, setCropBottomMm] = useState(0)
+  const [layoutPanelOpen, setLayoutPanelOpen] = useState(false)
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'saving' | 'downloading' | 'ready'>('idle')
 
   // LaTeX editor state
@@ -196,10 +198,30 @@ ${previewSpacingCss(previewTuning, 'body')}
   return (
     <>
       {showAuth && <AuthModal onSuccess={onAuthSuccess} onClose={() => setShowAuth(false)} />}
+      {layoutPanelOpen && (
+        <div className="print:hidden fixed inset-0 z-40 xl:hidden">
+          <button
+            aria-label="Close layout controls"
+            className="absolute inset-0 bg-black/55"
+            onClick={() => setLayoutPanelOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-[min(88vw,340px)] border-l border-border bg-background shadow-2xl">
+            <LayoutControls
+              spacing={spacing}
+              setSpacing={setSpacing}
+              contentScale={contentScale}
+              setContentScale={setContentScale}
+              cropBottomMm={cropBottomMm}
+              setCropBottomMm={setCropBottomMm}
+              onClose={() => setLayoutPanelOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Single unified top bar ───────────────────────────── */}
       <header className="print:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center h-13 px-4 gap-3">
+        <div className="flex min-h-13 items-center px-3 py-2 gap-2 sm:px-4 sm:gap-3">
 
           {/* Logo */}
           <Link href="/builder" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 18, fontWeight: 700, letterSpacing: '0.01em', flexShrink: 0 }}>
@@ -207,7 +229,7 @@ ${previewSpacingCss(previewTuning, 'body')}
           </Link>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
+          <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
             <span>/</span>
             <Link href="/builder" className="hover:text-foreground transition-colors flex items-center gap-1">
               <ChevronLeft className="w-3.5 h-3.5" />Templates
@@ -217,10 +239,10 @@ ${previewSpacingCss(previewTuning, 'body')}
           </div>
 
           {/* Spacer */}
-          <div className="flex-1" />
+          <div className="hidden sm:block flex-1" />
 
           {/* Tab switcher */}
-          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-1">
+          <div className="order-3 flex w-full items-center gap-0.5 rounded-lg bg-muted p-1 sm:order-none sm:w-auto">
             <TabBtn active={tab === 'form'}   onClick={() => setTab('form')}
               icon={<FileText className="w-3.5 h-3.5" />} label="Form" />
             <TabBtn active={tab === 'direct'} onClick={() => setTab('direct')}
@@ -249,117 +271,87 @@ ${previewSpacingCss(previewTuning, 'body')}
             </div>
           )}
 
-          {/* Resume page controls */}
-          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
-            <span className="text-[11px] font-medium text-muted-foreground">Whitespace</span>
-            <button
-              onClick={() => setSpacing(v => Math.max(-2, v - 1))}
-              disabled={spacing <= -2}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Decrease resume whitespace"
-            >
-              -
-            </button>
-            <span className="min-w-16 text-center text-[11px] text-foreground">{spacingLabel(spacing)}</span>
-            <button
-              onClick={() => setSpacing(v => Math.min(2, v + 1))}
-              disabled={spacing >= 2}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Increase resume whitespace"
-            >
-              +
-            </button>
-          </div>
-          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
-            <span className="text-[11px] font-medium text-muted-foreground">Size</span>
-            <button
-              onClick={() => setContentScale(v => Math.max(90, v - 5))}
-              disabled={contentScale <= 90}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Make resume content smaller"
-            >
-              -
-            </button>
-            <span className="min-w-12 text-center text-[11px] text-foreground">{contentScale}%</span>
-            <button
-              onClick={() => setContentScale(v => Math.min(120, v + 5))}
-              disabled={contentScale >= 120}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Make resume content larger"
-            >
-              +
-            </button>
-          </div>
-          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
-            <span className="text-[11px] font-medium text-muted-foreground">Bottom crop</span>
-            <button
-              onClick={() => setCropBottomMm(v => Math.max(0, v - 5))}
-              disabled={cropBottomMm <= 0}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Show more page height"
-            >
-              -
-            </button>
-            <span className="min-w-12 text-center text-[11px] text-foreground">{cropBottomMm}mm</span>
-            <button
-              onClick={() => setCropBottomMm(v => Math.min(120, v + 5))}
-              disabled={cropBottomMm >= 120}
-              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
-              title="Crop bottom white space"
-            >
-              +
-            </button>
-          </div>
+          <button
+            onClick={() => setLayoutPanelOpen(true)}
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted sm:ml-0 xl:hidden"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Layout
+          </button>
 
           {/* Download PDF */}
           <button
             onClick={handleDownload}
             disabled={downloadStatus === 'saving' || downloadStatus === 'downloading'}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-primary text-primary-foreground rounded-lg
                        text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex-shrink-0"
           >
             {downloadStatus === 'saving' || downloadStatus === 'downloading'
               ? <Loader2 className="w-4 h-4 animate-spin" />
               : <Download className="w-4 h-4" />}
-            {downloadButtonLabel(downloadStatus)}
+            <span className="hidden sm:inline">{downloadButtonLabel(downloadStatus)}</span>
+            <span className="sm:hidden">PDF</span>
           </button>
         </div>
       </header>
 
       {/* ── Tab: Form ──────────────────────────────────────── */}
       {tab === 'form' && (
-        <div className="print:hidden flex h-[calc(100vh-53px)]">
+        <div className="print:hidden flex h-[calc(100vh-53px)] flex-col lg:flex-row">
           {/* Left panel — form */}
-          <div className="w-[400px] flex-shrink-0 overflow-y-auto border-r border-border bg-card px-5 py-5">
+          <div className="w-full flex-shrink-0 overflow-y-auto border-b border-border bg-card px-4 py-4 lg:w-[400px] lg:border-b-0 lg:border-r lg:px-5 lg:py-5">
             <BuilderForm data={data} onChange={setData} />
             <div className="mt-6 pt-6 border-t border-border">
               <SkillsEditor skills={data.skills} onChange={skills => setData(d => ({ ...d, skills }))} />
             </div>
           </div>
           {/* Right panel — live preview */}
-          <div className="flex-1 overflow-auto bg-muted/40 px-8 py-8 flex justify-center print:p-0 print:bg-white">
+          <div className="flex-1 overflow-auto bg-muted/40 px-4 py-5 flex justify-center print:p-0 print:bg-white sm:px-8 sm:py-8">
             <div className="print-target">
               <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
             </div>
           </div>
+          <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
+            <LayoutControls
+              spacing={spacing}
+              setSpacing={setSpacing}
+              contentScale={contentScale}
+              setContentScale={setContentScale}
+              cropBottomMm={cropBottomMm}
+              setCropBottomMm={setCropBottomMm}
+            />
+          </aside>
         </div>
       )}
 
       {/* ── Tab: Canvas (direct edit) ───────────────────────── */}
       {tab === 'direct' && (
-        <div className="flex flex-col items-center px-8 py-6 gap-4 min-h-[calc(100vh-53px)] bg-muted/40">
-          <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg max-w-xl text-center">
-            This canvas renders the canonical semantic HTML output. Direct edits here are local-only and do not rewrite the form state.
-          </p>
-          <div className="print-target">
-            <DirectEditPreview renderedHtml={systemOutput.html} />
+        <div className="flex min-h-[calc(100vh-53px)] bg-muted/40">
+          <div className="flex flex-1 flex-col items-center gap-4 overflow-auto px-4 py-5 sm:px-8 sm:py-6">
+            <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg max-w-xl text-center">
+              This canvas renders the canonical semantic HTML output. Direct edits here are local-only and do not rewrite the form state.
+            </p>
+            <div className="print-target">
+              <DirectEditPreview renderedHtml={systemOutput.html} />
+            </div>
           </div>
+          <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
+            <LayoutControls
+              spacing={spacing}
+              setSpacing={setSpacing}
+              contentScale={contentScale}
+              setContentScale={setContentScale}
+              cropBottomMm={cropBottomMm}
+              setCropBottomMm={setCropBottomMm}
+            />
+          </aside>
         </div>
       )}
 
       {/* ── Tab: LaTeX — Overleaf-style split ──────────────── */}
       {tab === 'latex' && (
         <div className="flex h-[calc(100vh-53px)]">
+          <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
 
           {/* Left: Monaco + image panel */}
           <div className="flex-1 flex flex-col border-r border-border" style={{ minWidth: 0 }}>
@@ -493,6 +485,17 @@ ${previewSpacingCss(previewTuning, 'body')}
               </div>
             </div>
           </div>
+          </div>
+          <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
+            <LayoutControls
+              spacing={spacing}
+              setSpacing={setSpacing}
+              contentScale={contentScale}
+              setContentScale={setContentScale}
+              cropBottomMm={cropBottomMm}
+              setCropBottomMm={setCropBottomMm}
+            />
+          </aside>
         </div>
       )}
 
@@ -553,6 +556,152 @@ function printA4Document(html: string, onPrintOpened: () => void) {
   }
 
   iframe.srcdoc = html
+}
+
+type NumberSetter = React.Dispatch<React.SetStateAction<number>>
+
+function LayoutControls({
+  spacing,
+  setSpacing,
+  contentScale,
+  setContentScale,
+  cropBottomMm,
+  setCropBottomMm,
+  onClose,
+}: {
+  spacing: number
+  setSpacing: NumberSetter
+  contentScale: number
+  setContentScale: NumberSetter
+  cropBottomMm: number
+  setCropBottomMm: NumberSetter
+  onClose?: () => void
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-start justify-between border-b border-border px-5 py-5">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Layout</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Page controls</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Tune the A4 preview and exported PDF without changing resume content.
+          </p>
+        </div>
+        {onClose && (
+          <button
+            aria-label="Close layout controls"
+            onClick={onClose}
+            className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+        <LayoutStepper
+          label="Whitespace"
+          value={spacingLabel(spacing)}
+          helper="Controls section gaps, bullet spacing, and resume density."
+          decreaseLabel="Decrease whitespace"
+          increaseLabel="Increase whitespace"
+          onDecrease={() => setSpacing(v => Math.max(-2, v - 1))}
+          onIncrease={() => setSpacing(v => Math.min(2, v + 1))}
+          disableDecrease={spacing <= -2}
+          disableIncrease={spacing >= 2}
+        />
+        <LayoutStepper
+          label="Content size"
+          value={`${contentScale}%`}
+          helper="Scale text and resume blocks while keeping the page A4."
+          decreaseLabel="Make content smaller"
+          increaseLabel="Make content larger"
+          onDecrease={() => setContentScale(v => Math.max(90, v - 5))}
+          onIncrease={() => setContentScale(v => Math.min(120, v + 5))}
+          disableDecrease={contentScale <= 90}
+          disableIncrease={contentScale >= 120}
+        />
+        <LayoutStepper
+          label="Bottom crop"
+          value={`${cropBottomMm}mm`}
+          helper="Cuts unused page height from the final preview/export."
+          decreaseLabel="Show more bottom area"
+          increaseLabel="Crop more bottom whitespace"
+          onDecrease={() => setCropBottomMm(v => Math.max(0, v - 5))}
+          onIncrease={() => setCropBottomMm(v => Math.min(120, v + 5))}
+          disableDecrease={cropBottomMm <= 0}
+          disableIncrease={cropBottomMm >= 120}
+        />
+      </div>
+
+      <div className="border-t border-border px-5 py-4">
+        <button
+          onClick={() => {
+            setSpacing(0)
+            setContentScale(100)
+            setCropBottomMm(0)
+          }}
+          className="w-full rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted"
+        >
+          Reset layout
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function LayoutStepper({
+  label,
+  value,
+  helper,
+  onDecrease,
+  onIncrease,
+  disableDecrease,
+  disableIncrease,
+  decreaseLabel,
+  increaseLabel,
+}: {
+  label: string
+  value: string
+  helper: string
+  onDecrease: () => void
+  onIncrease: () => void
+  disableDecrease: boolean
+  disableIncrease: boolean
+  decreaseLabel: string
+  increaseLabel: string
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{helper}</p>
+        </div>
+        <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground">
+          {value}
+        </span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          onClick={onDecrease}
+          disabled={disableDecrease}
+          title={decreaseLabel}
+          className="rounded-xl border border-border px-3 py-2 text-lg font-semibold leading-none transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          -
+        </button>
+        <button
+          onClick={onIncrease}
+          disabled={disableIncrease}
+          title={increaseLabel}
+          className="rounded-xl border border-border px-3 py-2 text-lg font-semibold leading-none transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          +
+        </button>
+      </div>
+    </section>
+  )
 }
 
 function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {

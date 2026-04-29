@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Crown, ShieldCheck, ArrowRight, Sparkles, ChevronDown } from 'lucide-react'
 import {
   getTemplateBadge,
   getTemplateDescription,
@@ -69,17 +68,17 @@ export function TemplateGallery({ templates }: Props) {
                 <TemplatePreviewClient template={{ ...t, css_content: GALLERY_BASE_CSS }} sample={sample} scale={0.23} />
                 {isCompanyInspiredTemplate(t.name) && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-950 text-white z-10">
-                    <Sparkles className="w-2.5 h-2.5" /> FAANG-type
+                    FAANG-type
                   </div>
                 )}
                 {t.tier === 'pro' && (
                   <div className="absolute top-2 right-2 flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-amber-900 z-10">
-                    <Crown className="w-2.5 h-2.5" /> PRO
+                    PRO
                   </div>
                 )}
                 <div className="absolute inset-0 bg-primary/8 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
                   <span className="flex items-center gap-1 text-xs font-semibold text-primary bg-white px-3 py-1.5 rounded-full shadow-md">
-                    Use this <ArrowRight className="w-3 h-3" />
+                    Use this →
                   </span>
                 </div>
               </div>
@@ -93,7 +92,7 @@ export function TemplateGallery({ templates }: Props) {
                   </span>
                   {t.is_ats_safe && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
-                      <ShieldCheck className="w-3 h-3" /> ATS Safe
+                      ATS Safe
                     </span>
                   )}
                 </div>
@@ -113,7 +112,6 @@ export function TemplateGallery({ templates }: Props) {
             onClick={() => setShown(s => s + PAGE_SIZE)}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-accent/5 hover:border-primary/40 transition-all"
           >
-            <ChevronDown className="w-4 h-4" />
             Load {Math.min(PAGE_SIZE, remaining)} more templates
           </button>
           <p className="text-xs text-muted-foreground">

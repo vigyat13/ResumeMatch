@@ -168,6 +168,7 @@ function parseJakesFormat(latex: string): Partial<ResumeData> | null {
     result.education = eduEntries.map(m => ({
       school: unesc(m[1]),
       degree: unesc(m[3]),
+      cgpa:   '',
       year:   unesc(m[2]),
     })).filter(e => e.school)
   }
@@ -270,10 +271,16 @@ function parseResumeMatchFormat(latex: string): Partial<ResumeData> {
       .map(line => line.trim())
       .filter(Boolean)
       .map(line => {
-        const [school = '', degree = '', year = ''] = parsePipeLine(line)
-        return { school, degree, year }
+        const [school = '', degree = '', cgpaOrYear = '', yearOrEmpty = ''] = parsePipeLine(line)
+        const cgpaLooksLikeScore = /\b(cgpa|gpa|\/10|\/4|\d\.\d)/i.test(cgpaOrYear)
+        return {
+          school,
+          degree,
+          cgpa: cgpaLooksLikeScore ? cgpaOrYear.replace(/^CGPA:\s*/i, '') : '',
+          year: cgpaLooksLikeScore ? yearOrEmpty : cgpaOrYear,
+        }
       })
-      .filter(e => e.school || e.degree || e.year)
+      .filter(e => e.school || e.degree || e.cgpa || e.year)
   }
 
   const skillsSection = sectionText(latex, 'Skills').replace(/\\par\s*$/g, '').trim()

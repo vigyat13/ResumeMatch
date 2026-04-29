@@ -31,7 +31,7 @@ export async function sendWelcomeEmail({ to, firstName }: WelcomeEmailParams) {
       from:    `Vigyat from ResumeMatch <${FROM_EMAIL}>`,
       to,
       replyTo: 'singhvigyat15@gmail.com',
-      subject: `Hey ${firstName}, welcome to ResumeMatch 👋`,
+      subject: 'Welcome to ResumeMatch beta',
       html: renderWelcomeHtml({ firstName, appUrl }),
     })
   } catch (err) {
@@ -59,41 +59,39 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
             <tr>
               <td style="padding:48px 40px 32px;">
                 <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#0f172a;">
-                  Hey ${firstName},
+                  Hi ${firstName},
                 </p>
 
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
-                  I&apos;m Vigyat — I built ResumeMatch. Just wanted to send you a quick note to say <strong>thanks for signing up</strong>.
+                  I&apos;m Vigyat, the creator of ResumeMatch.
                 </p>
 
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
-                  I started this project because every resume tool I tried felt either too generic or charged way too much for what amounts to a glorified spell-checker. ResumeMatch does what I always wanted: scans your resume against real job descriptions, tells you what's actually missing, and helps you fix it.
+                  Thank you for joining the beta. I&apos;m genuinely grateful to have you here this early. ResumeMatch is being built to help people create better resumes, understand how ATS systems read them, and move from resume editing to real job applications with less confusion.
                 </p>
 
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#334155;">
-                  Here&apos;s what you can do right now:
+                <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
+                  Right now, the resume builder is live, and more features are being rolled out step by step, including resume audits, job matching, and agent-assisted applications.
                 </p>
 
-                <ul style="margin:0 0 32px;padding-left:20px;font-size:14px;line-height:1.8;color:#334155;">
-                  <li><strong>Upload your resume</strong> — we&apos;ll extract your skills automatically</li>
-                  <li><strong>Run an ATS audit</strong> — see how applicant tracking systems read it</li>
-                  <li><strong>Match against a job description</strong> — find the gaps before recruiters do</li>
-                </ul>
+                <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#334155;">
+                  Because this is beta access, you may see rough edges. If something feels confusing, broken, or not useful, I&apos;d really appreciate your feedback. It will directly shape what I improve next.
+                </p>
 
                 <!-- CTA button -->
                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
                   <tr>
                     <td style="background:#10b981;border-radius:10px;">
-                      <a href="${appUrl}/dashboard/resumes"
+                      <a href="${appUrl}/builder"
                          style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
-                        Upload your resume →
+                        Start building →
                       </a>
                     </td>
                   </tr>
                 </table>
 
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#334155;">
-                  If you hit any issues or have feedback — good or bad — just hit reply. This email goes straight to my inbox and I read every one.
+                  If you want to share feedback, just reply to this email. It goes straight to me.
                 </p>
 
                 <p style="margin:24px 0 4px;font-size:15px;line-height:1.7;color:#334155;">
@@ -103,7 +101,7 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
                   Vigyat
                 </p>
                 <p style="margin:2px 0 0;font-size:13px;line-height:1.6;color:#94a3b8;">
-                  Founder, ResumeMatch
+                  Creator, ResumeMatch
                 </p>
               </td>
             </tr>
@@ -112,7 +110,7 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
             <tr>
               <td style="padding:20px 40px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
                 <p style="margin:0;font-size:12px;color:#94a3b8;">
-                  You&apos;re getting this because you signed up at
+                  You&apos;re getting this because you signed up for beta access at
                   <a href="${appUrl}" style="color:#10b981;text-decoration:none;">resumematch.app</a>.
                 </p>
               </td>

@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
-import { LivePreview }  from './LivePreview'
+import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
 import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
@@ -36,9 +36,12 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [data, setData]                 = useState<ResumeData>(DEFAULT_RESUME_DATA)
   const [tab, setTab]                   = useState<Tab>('form')
   const [showAuth, setShowAuth]         = useState(false)
-  const [saving, setSaving]             = useState(false)
   const [isLoggedIn, setIsLoggedIn]     = useState(false)
   const [copied, setCopied]             = useState(false)
+  const [spacing, setSpacing]           = useState(0)
+  const [contentScale, setContentScale] = useState(100)
+  const [cropBottomMm, setCropBottomMm] = useState(0)
+  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'saving' | 'downloading' | 'ready'>('idle')
 
   // LaTeX editor state
   const [editedLatex, setEditedLatex]         = useState<string | null>(null)
@@ -48,13 +51,18 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const monacoRef                             = useRef<Parameters<NonNullable<React.ComponentProps<typeof MonacoEditor>['onMount']>>[0] | null>(null)
   const imageInputRef                         = useRef<HTMLInputElement>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     const saved = localStorage.getItem(DRAFT_KEY)
-    if (saved) { try { setData(JSON.parse(saved)) } catch {} }
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as ResumeData
+        setTimeout(() => setData(parsed), 0)
+      } catch {}
+    }
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session))
-  }, [])
+  }, [supabase.auth])
 
   useEffect(() => {
     const t = setTimeout(() => localStorage.setItem(DRAFT_KEY, JSON.stringify(data)), 500)
@@ -63,6 +71,10 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 
   const systemOutput = useMemo(() => buildResumeSystemOutput(data), [data])
   const latexCode    = systemOutput.latex
+  const previewTuning = useMemo(
+    () => ({ spacing, contentScale, cropBottomMm }),
+    [contentScale, cropBottomMm, spacing]
+  )
 
   // Active LaTeX shown in Monaco: edited version or freshly generated
   const activeLatex = editedLatex ?? latexCode
@@ -118,11 +130,11 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 
   async function handleDownload() {
     if (!isLoggedIn) { setShowAuth(true); return }
-    await saveAndPrint()
+    await saveAndDownload()
   }
 
-  async function saveAndPrint() {
-    setSaving(true)
+  async function saveAndDownload() {
+    setDownloadStatus('saving')
     try {
       await fetch('/api/v1/builder/save', {
         method: 'POST',
@@ -130,42 +142,41 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
         body: JSON.stringify({ resumeData: data, templateId }),
       })
     } catch { /* non-fatal */ }
-    finally { setSaving(false) }
+    finally {
+      setDownloadStatus('downloading')
+    }
 
-    // Open a clean window with only the resume — avoids the Next.js app
-    // wrapper hiding the print target via body > * { display:none }.
     const renderedHtml = renderTemplate(templateHtml, data)
+    const fileName = `${safeFileName(data.name || 'resume')}.pdf`
+    const pageHeightMm = previewPageHeightMm(previewTuning)
     const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>${data.name ? data.name + ' — Resume' : 'Resume'}</title>
+<title>${fileName}</title>
 <style>
 *{box-sizing:border-box;-webkit-hyphens:none;hyphens:none}
-body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}
+html,body{margin:0;padding:0;background:#fff;width:210mm;min-height:${pageHeightMm}mm;color:#111}
 a{color:inherit;text-decoration:none}
 ${templateCss}
-@page{size:A4 portrait;margin:0}
-@media print{body{margin:0}.cv{box-shadow:none!important;border-radius:0!important}}
+${previewSpacingCss(previewTuning, 'body')}
+@page{size:210mm ${pageHeightMm}mm;margin:0}
+@media print{body{margin:0;background-image:none!important}.cv{box-shadow:none!important;border-radius:0!important}}
 </style>
 </head>
 <body>${renderedHtml}</body>
 </html>`
-    const blob = new Blob([html], { type: 'text/html' })
-    const url  = URL.createObjectURL(blob)
-    const win  = window.open(url, '_blank', 'width=900,height=1200')
-    if (!win) { URL.revokeObjectURL(url); return }
-    win.addEventListener('load', () => {
-      win.focus()
-      win.print()
-      URL.revokeObjectURL(url)
+
+    printA4Document(html, () => {
+      setDownloadStatus('ready')
+      setTimeout(() => setDownloadStatus('idle'), 3500)
     })
   }
 
   async function onAuthSuccess() {
     setShowAuth(false)
     setIsLoggedIn(true)
-    await saveAndPrint()
+    await saveAndDownload()
   }
 
   async function handleCopy() {
@@ -238,15 +249,79 @@ ${templateCss}
             </div>
           )}
 
+          {/* Resume page controls */}
+          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
+            <span className="text-[11px] font-medium text-muted-foreground">Whitespace</span>
+            <button
+              onClick={() => setSpacing(v => Math.max(-2, v - 1))}
+              disabled={spacing <= -2}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Decrease resume whitespace"
+            >
+              -
+            </button>
+            <span className="min-w-16 text-center text-[11px] text-foreground">{spacingLabel(spacing)}</span>
+            <button
+              onClick={() => setSpacing(v => Math.min(2, v + 1))}
+              disabled={spacing >= 2}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Increase resume whitespace"
+            >
+              +
+            </button>
+          </div>
+          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
+            <span className="text-[11px] font-medium text-muted-foreground">Size</span>
+            <button
+              onClick={() => setContentScale(v => Math.max(90, v - 5))}
+              disabled={contentScale <= 90}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Make resume content smaller"
+            >
+              -
+            </button>
+            <span className="min-w-12 text-center text-[11px] text-foreground">{contentScale}%</span>
+            <button
+              onClick={() => setContentScale(v => Math.min(120, v + 5))}
+              disabled={contentScale >= 120}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Make resume content larger"
+            >
+              +
+            </button>
+          </div>
+          <div className="hidden xl:flex items-center gap-1.5 border border-border rounded-lg px-2 py-1">
+            <span className="text-[11px] font-medium text-muted-foreground">Bottom crop</span>
+            <button
+              onClick={() => setCropBottomMm(v => Math.max(0, v - 5))}
+              disabled={cropBottomMm <= 0}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Show more page height"
+            >
+              -
+            </button>
+            <span className="min-w-12 text-center text-[11px] text-foreground">{cropBottomMm}mm</span>
+            <button
+              onClick={() => setCropBottomMm(v => Math.min(120, v + 5))}
+              disabled={cropBottomMm >= 120}
+              className="h-6 w-6 rounded-md text-sm font-semibold hover:bg-muted disabled:opacity-35"
+              title="Crop bottom white space"
+            >
+              +
+            </button>
+          </div>
+
           {/* Download PDF */}
           <button
             onClick={handleDownload}
-            disabled={saving}
+            disabled={downloadStatus === 'saving' || downloadStatus === 'downloading'}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg
                        text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex-shrink-0"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            {saving ? 'Saving…' : 'Download PDF'}
+            {downloadStatus === 'saving' || downloadStatus === 'downloading'
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Download className="w-4 h-4" />}
+            {downloadButtonLabel(downloadStatus)}
           </button>
         </div>
       </header>
@@ -264,7 +339,7 @@ ${templateCss}
           {/* Right panel — live preview */}
           <div className="flex-1 overflow-auto bg-muted/40 px-8 py-8 flex justify-center print:p-0 print:bg-white">
             <div className="print-target">
-              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} />
+              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
             </div>
           </div>
         </div>
@@ -423,10 +498,61 @@ ${templateCss}
 
       {/* Print target */}
       <div className="hidden print:block print-target">
-        <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} />
+        <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
       </div>
     </>
   )
+}
+
+function spacingLabel(value: number): string {
+  if (value <= -2) return 'Tight'
+  if (value === -1) return 'Compact'
+  if (value === 1) return 'Roomy'
+  if (value >= 2) return 'Airy'
+  return 'Normal'
+}
+
+function safeFileName(value: string): string {
+  return value.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'resume'
+}
+
+function downloadButtonLabel(status: 'idle' | 'saving' | 'downloading' | 'ready'): string {
+  if (status === 'saving') return 'Saving...'
+  if (status === 'downloading') return 'Downloading...'
+  if (status === 'ready') return 'Ready to save'
+  return 'Download PDF'
+}
+
+function printA4Document(html: string, onPrintOpened: () => void) {
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  iframe.style.opacity = '0'
+  iframe.setAttribute('aria-hidden', 'true')
+  document.body.appendChild(iframe)
+
+  const cleanup = () => {
+    setTimeout(() => iframe.remove(), 500)
+  }
+
+  iframe.onload = () => {
+    const win = iframe.contentWindow
+    if (!win) {
+      cleanup()
+      return
+    }
+    win.focus()
+    win.onafterprint = cleanup
+    win.print()
+    onPrintOpened()
+    setTimeout(cleanup, 60_000)
+  }
+
+  iframe.srcdoc = html
 }
 
 function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {

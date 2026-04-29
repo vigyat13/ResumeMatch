@@ -13,9 +13,6 @@
  * Converting to Buffer keeps the file in memory — no temp file writes needed.
  */
 
-// pdf-parse uses CommonJS exports — must use require-style import
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>
 import mammoth from 'mammoth'
 import { extractSkills } from './skills'
 
@@ -47,6 +44,10 @@ export async function parseResume(
 }
 
 async function parsePdf(buffer: Buffer): Promise<string> {
+  // Load pdf-parse lazily. Its transitive PDF.js dependency touches canvas
+  // globals at import time, which breaks Next.js production route collection.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>
   // pdf-parse reads the binary PDF and returns a data object.
   // data.text contains all page text concatenated with newlines.
   const data = await pdfParse(buffer)

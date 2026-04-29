@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight } from 'lucide-react'
 import { EXAMPLE_RESUME_DATA } from '@/lib/builder/types'
 import { TemplatePreviewClient } from '@/components/templates/TemplatePreviewClient'
-import { TemplateGallery } from '@/components/builder/TemplateGallery'
+import { BuilderTemplateBrowser } from '@/components/builder/BuilderTemplateBrowser'
 import { isCompanyInspiredTemplate } from '@/lib/builder/templateMeta'
 import { sortTemplatesByPriority } from '@/lib/builder/templateOrdering'
 
@@ -12,21 +11,7 @@ export const metadata = {
   description: 'Choose from professional and company-inspired resume templates. No account needed to start.',
 }
 
-const CATEGORIES: Record<string, string[]> = {
-  'All':          [],
-  'Tech':         ['FAANG Standard', 'Modern Tech', 'ML Engineer', 'Backend Engineer', 'Frontend Engineer', 'Data Science'],
-  'Professional': ['Executive', 'Consulting', 'Product Manager', 'Simple Universal'],
-  'Minimal':      ['Minimal', 'Mono Clean', 'High Density'],
-  'Two Column':   ['Two Column', 'Europass'],
-  'Specialty':    ['Academic', 'Startup', 'Creative', 'Intern / Entry Level', 'UK CV'],
-}
-
-export default async function BuilderPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>
-}) {
-  const { category = 'All' } = await searchParams
+export default async function BuilderPage() {
   const supabase = await createClient()
 
   const { data: allTemplates } = await supabase
@@ -35,12 +20,7 @@ export default async function BuilderPage({
     .order('created_at')
 
   const exampleTemplate = allTemplates?.find(t => t.name === 'Classic') ?? allTemplates?.[0]
-  const categoryNames = CATEGORIES[category] ?? []
-  const templates = sortTemplatesByPriority(
-    category === 'All'
-      ? (allTemplates ?? [])
-      : (allTemplates ?? []).filter(t => categoryNames.includes(t.name))
-  )
+  const templates = sortTemplatesByPriority(allTemplates ?? [])
 
   const total = allTemplates?.length ?? 0
   const featuredTemplate =
@@ -48,17 +28,30 @@ export default async function BuilderPage({
     ?? exampleTemplate
 
   return (
-    <div className="min-h-screen" style={{ background: 'hsl(var(--background))' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        fontFamily: "var(--font-body), 'Helvetica Neue', sans-serif",
+        background: 'var(--color-marketing-bg)',
+        color: 'var(--color-marketing-text)',
+      }}
+    >
 
       {/* ── Navbar ──────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-sm"
+        style={{
+          borderBottom: '1px solid rgba(245,240,232,0.055)',
+          background: 'rgba(8,8,8,0.82)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 22, letterSpacing: '0.01em', fontWeight: 700 }}>
             Resume<span style={{ color: 'var(--color-marketing-accent)' }}>Match</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5">
+              className="text-sm transition-colors px-3 py-1.5 text-[rgba(245,240,232,0.55)] hover:text-[var(--color-marketing-text)]">
               Sign in
             </Link>
             <Link href="/signup"
@@ -70,7 +63,7 @@ export default async function BuilderPage({
       </nav>
 
       {/* ── Hero ────────────────────────────────────────────── */}
-      <div className="border-b border-border bg-card">
+      <div style={{ borderBottom: '1px solid rgba(245,240,232,0.055)', background: 'var(--color-marketing-surface)' }}>
         <div className="max-w-7xl mx-auto px-6 py-14 lg:py-[4.5rem] flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-20">
 
           {/* Left copy */}
@@ -86,7 +79,7 @@ export default async function BuilderPage({
             <div className="flex flex-wrap gap-3 pt-1">
               <a href="#templates"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm">
-                Browse {total} templates <ArrowRight className="w-4 h-4" />
+                Browse {total} templates →
               </a>
               {featuredTemplate && (
                 <Link href={`/builder/${featuredTemplate.id}`}
@@ -132,43 +125,7 @@ export default async function BuilderPage({
       {/* ── Template Gallery ────────────────────────────────── */}
       <div id="templates" className="max-w-7xl mx-auto px-6 pt-14 pb-10">
 
-        {/* Section header */}
-        <div className="flex items-end justify-between mb-7">
-          <div>
-            <h2 style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 'clamp(28px, 4vw, 50px)', lineHeight: 0.93, letterSpacing: '-0.01em', color: 'var(--color-marketing-text)', fontWeight: 700, margin: 0 }}>
-              Choose your template
-            </h2>
-            <p className="text-[rgba(245,240,232,0.45)] text-base mt-2">
-              All templates are ATS-safe unless marked otherwise
-            </p>
-          </div>
-          <span className="text-base text-[rgba(245,240,232,0.45)] pb-1">{templates.length} templates</span>
-        </div>
-
-        {/* Category tabs */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          {Object.keys(CATEGORIES).map(cat => (
-            <Link
-              key={cat}
-              href={`/builder?category=${encodeURIComponent(cat)}`}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                category === cat
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'border border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
-              }`}
-            >
-              {cat}
-              {cat !== 'All' && (
-                <span className={`ml-1.5 text-[10px] ${category === cat ? 'opacity-70' : 'opacity-50'}`}>
-                  {CATEGORIES[cat].length}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        {/* Grid — client component handles show-20 / load-more */}
-        <TemplateGallery templates={templates} />
+        <BuilderTemplateBrowser templates={templates} />
       </div>
     </div>
   )

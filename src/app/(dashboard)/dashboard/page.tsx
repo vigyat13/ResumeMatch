@@ -13,16 +13,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import {
-  FileText,
-  Briefcase,
-  TrendingUp,
-  Upload,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -69,9 +59,9 @@ export default async function DashboardPage() {
     .single()
 
   const stats = [
-    { label: 'Resumes Uploaded', value: resumeCount ?? 0, icon: FileText,   color: 'text-blue-500',   bg: 'bg-blue-500/10'   },
-    { label: 'Job Matches',      value: matchCount ?? 0,  icon: Briefcase,  color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: 'Avg Match Score',  value: latestAudit ? `${latestAudit.overall_score}%` : '—', icon: TrendingUp, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+    { label: 'Resumes Uploaded', value: resumeCount ?? 0, marker: '01' },
+    { label: 'Job Matches',      value: matchCount ?? 0,  marker: '02' },
+    { label: 'Avg Match Score',  value: latestAudit ? `${latestAudit.overall_score}%` : '—', marker: '03' },
   ]
 
   return (
@@ -101,14 +91,12 @@ export default async function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
+        {stats.map(({ label, value, marker }) => (
           <div
             key={label}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5"
           >
-            <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center mb-3`}>
-              <Icon className={`w-5 h-5 ${color}`} />
-            </div>
+            <p className="text-xs font-semibold tracking-[0.18em] text-[var(--color-accent)] mb-8">{marker}</p>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
             <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{label}</p>
           </div>
@@ -118,16 +106,15 @@ export default async function DashboardPage() {
       {/* Quick action — upload first resume */}
       {resumes.length === 0 && (
         <div className="rounded-xl border-2 border-dashed border-[var(--color-border)] p-8 text-center">
-          <Upload className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" />
+          <p className="text-xs font-semibold tracking-[0.22em] text-[var(--color-accent)] mb-4">START HERE</p>
           <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">Upload your first resume</h3>
           <p className="text-sm text-[var(--color-text-muted)] mb-4">
             Get AI-powered feedback and match it against thousands of job listings.
           </p>
           <Link
             href="/dashboard/resumes/upload"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            <Upload className="w-4 h-4" />
             Upload Resume
           </Link>
         </div>
@@ -142,7 +129,7 @@ export default async function DashboardPage() {
               href="/dashboard/resumes"
               className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
             >
-              View all <ArrowRight className="w-3 h-3" />
+              View all →
             </Link>
           </div>
 
@@ -154,7 +141,6 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-[var(--color-border)]">
               {resumes.map((resume) => (
                 <li key={resume.id} className="flex items-center gap-3 px-5 py-3">
-                  <FileText className="w-4 h-4 flex-shrink-0 text-[var(--color-text-muted)]" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
                       {resume.file_name}
@@ -178,7 +164,7 @@ export default async function DashboardPage() {
               href="/dashboard/matches"
               className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
             >
-              View all <ArrowRight className="w-3 h-3" />
+              View all →
             </Link>
           </div>
 
@@ -190,7 +176,6 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-[var(--color-border)]">
               {matches.map((match) => (
                 <li key={match.id} className="flex items-center gap-3 px-5 py-3">
-                  <Briefcase className="w-4 h-4 flex-shrink-0 text-[var(--color-text-muted)]" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
                       {match.job_title}
@@ -209,16 +194,14 @@ export default async function DashboardPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-    processed: { label: 'Ready',      icon: CheckCircle2, className: 'text-emerald-600 bg-emerald-50'  },
-    pending:   { label: 'Processing', icon: Clock,        className: 'text-amber-600  bg-amber-50'     },
-    error:     { label: 'Error',      icon: AlertCircle,  className: 'text-red-600    bg-red-50'       },
+  const map: Record<string, { label: string; className: string }> = {
+    processed: { label: 'Ready',      className: 'text-emerald-600 bg-emerald-50' },
+    pending:   { label: 'Processing', className: 'text-amber-600 bg-amber-50' },
+    error:     { label: 'Error',      className: 'text-red-600 bg-red-50' },
   }
   const s = map[status] ?? map['pending']
-  const Icon = s.icon
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>
-      <Icon className="w-3 h-3" />
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>
       {s.label}
     </span>
   )

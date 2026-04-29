@@ -44,7 +44,7 @@ export function BuilderForm({ data, onChange }: Props) {
   const setEdu = (i: number, patch: Partial<EducationEntry>) =>
     set('education', data.education.map((e, idx) => idx === i ? { ...e, ...patch } : e))
   const addEdu = () =>
-    set('education', [...data.education, { school: '', degree: '', year: '' }])
+    set('education', [...data.education, { school: '', degree: '', cgpa: '', year: '' }])
   const removeEdu = (i: number) =>
     set('education', data.education.filter((_, idx) => idx !== i))
 
@@ -270,6 +270,9 @@ export function BuilderForm({ data, onChange }: Props) {
                 </FieldGroup>
                 <FieldGroup label="Year">
                   <Input value={edu.year} onChange={v => setEdu(i, { year: v })} placeholder="2019" />
+                </FieldGroup>
+                <FieldGroup label="CGPA / GPA" span="col-span-2">
+                  <Input value={edu.cgpa ?? ''} onChange={v => setEdu(i, { cgpa: v })} placeholder="8.7/10 or 3.8/4.0" />
                 </FieldGroup>
               </div>
             </div>

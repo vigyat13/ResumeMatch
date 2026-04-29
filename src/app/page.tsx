@@ -28,7 +28,7 @@ const scenes = [
     id: "apply",
     tag: "Apply",
     headline: "Apply to jobs posted across the internet",
-    body: "Type the role you want, compare your resume against relevant job requirements, and apply with more confidence.",
+    body: "Type the role you want, compare your resume against relevant job requirements, and apply with more confidence. Let the agent apply for you.",
     href: "/dashboard/matches",
     cta: "Find matching jobs",
   },
@@ -332,21 +332,6 @@ export default function LandingPage() {
                   }}
                 />
                 <div style={{ position: "relative" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 44 }}>
-                  <div style={{ width: 28, height: 1, background: "var(--color-marketing-accent)" }} />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.22em",
-                      color: "rgba(245,240,232,0.3)",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Resume optimization
-                  </span>
-                </div>
-
                 <TypewriterHero />
 
                 <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -489,7 +474,7 @@ export default function LandingPage() {
                 className="landing-flow-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                  gridTemplateColumns: `repeat(${scenes.length * 2 - 1}, minmax(0, 1fr))`,
                   gap: 22,
                   alignItems: "stretch",
                 }}

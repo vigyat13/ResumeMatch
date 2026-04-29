@@ -19,6 +19,7 @@ export interface ExperienceEntry {
 export interface EducationEntry {
   school: string
   degree: string
+  cgpa?:  string
   year:   string
 }
 
@@ -72,7 +73,7 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
     { name: '', tech: '', link: '', description: '', bullets: ['', ''] },
   ],
   education: [
-    { school: '', degree: '', year: '' },
+    { school: '', degree: '', cgpa: '', year: '' },
   ],
   skills: [
     { name: '', level: 80 },

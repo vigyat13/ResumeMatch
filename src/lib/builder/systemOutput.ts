@@ -29,6 +29,7 @@ export interface StructuredResumeJson {
   education: Array<{
     school: string
     degree: string
+    cgpa: string
     year: string
   }>
   skills: string[]
@@ -135,8 +136,9 @@ export function toStructuredResumeJson(data: ResumeData): StructuredResumeJson {
     education: (data.education ?? []).map((entry) => ({
       school: clean(entry.school),
       degree: clean(entry.degree),
+      cgpa: clean(entry.cgpa),
       year: clean(entry.year),
-    })).filter((entry) => entry.school || entry.degree || entry.year),
+    })).filter((entry) => entry.school || entry.degree || entry.cgpa || entry.year),
     skills: (data.skills ?? []).map((entry) => clean(entry.name)).filter(Boolean),
     publications: cleanLines(data.publications),
     honors: cleanLines(data.honors),
@@ -164,7 +166,7 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
       htmlList(entry.bullets),
     ]),
     json.education.length ? '<h2>Education</h2>' : '',
-    ...json.education.map((entry) => `<p>${[entry.school, entry.degree, entry.year].filter(Boolean).map(escHtml).join(' | ')}</p>`),
+    ...json.education.map((entry) => `<p>${[entry.school, entry.degree, entry.cgpa ? `CGPA: ${entry.cgpa}` : '', entry.year].filter(Boolean).map(escHtml).join(' | ')}</p>`),
     json.skills.length ? '<h2>Skills</h2>' : '',
     json.skills.length ? `<p>${json.skills.map(escHtml).join(', ')}</p>` : '',
     json.publications.length ? '<h2>Publications</h2>' : '',
@@ -249,7 +251,8 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
     lines.push('\\section{Education}')
     lines.push('  \\resumeSubHeadingListStart')
     for (const edu of json.education) {
-      lines.push(`    \\resumeSubheading{${escLatex(edu.school)}}{${escLatex(edu.year)}}{${escLatex(edu.degree)}}{}`)
+      const degreeLine = [edu.degree, edu.cgpa ? `CGPA: ${edu.cgpa}` : ''].filter(Boolean).join(' | ')
+      lines.push(`    \\resumeSubheading{${escLatex(edu.school)}}{${escLatex(edu.year)}}{${escLatex(degreeLine)}}{}`)
     }
     lines.push('  \\resumeSubHeadingListEnd')
     lines.push('')

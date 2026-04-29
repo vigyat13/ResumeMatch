@@ -23,6 +23,7 @@ export const ProjectSchema = z.object({
 export const EducationSchema = z.object({
   school: z.string(),
   degree: z.string(),
+  cgpa: z.string().optional().default(''),
   year: z.string(),
 })
 

@@ -34,21 +34,29 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{publications\}\}/g, renderList(data.publications ?? []))
     .replace(/\{\{honors\}\}/g,      renderList(data.honors ?? []))
 
+  output = removeEmptySections(output)
+
   // Fallbacks: if a section placeholder is absent from the template HTML, append
   // it as a plain unstyled section so user edits always appear in the preview.
   function appendSection(title: string, innerHtml: string) {
     if (!innerHtml) return
-    const section = `<div style="margin-top:18px">
-      <div style="font-size:0.85em;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1.5px solid #111;padding-bottom:3px;margin-bottom:10px">${title}</div>
+    const section = `<div style="margin-top:12px">
+      <div style="font-size:0.85em;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1.5px solid #111;padding-bottom:2px;margin-bottom:6px">${title}</div>
       ${innerHtml}
     </div>`
-    output = output.includes('</body>')
-      ? output.replace('</body>', `${section}</body>`)
-      : output + section
+    output = insertBeforeRootClose(output, section)
   }
 
   if (!html.includes('{{projects}}')    && data.projects?.length)
     appendSection('Projects',     renderProjects(data.projects))
+
+  if (!html.includes('{{summary}}')     && data.summary.trim()) {
+    const summarySection = `<div style="margin-top:12px">
+      <div style="font-size:0.85em;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1.5px solid #111;padding-bottom:2px;margin-bottom:6px">Summary</div>
+      <p style="font-size:0.875em;line-height:1.32;margin:0">${esc(data.summary)}</p>
+    </div>`
+    output = insertBeforeFirstSection(output, summarySection)
+  }
 
   if (!html.includes('{{honors}}')      && data.honors?.length)
     appendSection('Honors & Awards', renderList(data.honors))
@@ -56,20 +64,22 @@ export function renderTemplate(html: string, data: ResumeData): string {
   if (!html.includes('{{publications}}') && data.publications?.length)
     appendSection('Publications', renderList(data.publications))
 
+  output = removeEmptySections(output)
+
   return output
 }
 
 function renderExperience(entries: ExperienceEntry[]): string {
-  return entries.map(e => `
-    <div class="exp-entry" style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <strong style="font-size:0.95em">${esc(e.role)}</strong>
-        <span style="font-size:0.82em;color:#444;white-space:nowrap">${esc(e.period)}</span>
+  return entries.filter(hasExperienceContent).map(e => `
+    <div class="exp-entry" style="margin-bottom:10px;break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <strong style="font-size:0.95em;min-width:0">${esc(e.role)}</strong>
+        <span style="font-size:0.82em;color:#444;white-space:nowrap;text-align:right;flex-shrink:0">${esc(e.period)}</span>
       </div>
-      <div style="font-size:0.875em;color:#444;margin-bottom:4px;font-style:italic">${esc(e.company)}</div>
-      <ul style="margin:4px 0 0 16px;padding:0">
+      ${e.company.trim() ? `<div style="font-size:0.875em;color:#444;margin-bottom:3px;font-style:italic">${esc(e.company)}</div>` : ''}
+      <ul style="margin:3px 0 0 16px;padding:0">
         ${e.bullets.filter(b => b.trim()).map(b =>
-          `<li style="margin-bottom:3px;font-size:0.875em;line-height:1.4">${esc(b)}</li>`
+          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${esc(b)}</li>`
         ).join('')}
       </ul>
     </div>
@@ -78,17 +88,17 @@ function renderExperience(entries: ExperienceEntry[]): string {
 
 function renderProjects(entries: ProjectEntry[]): string {
   if (!entries?.length) return ''
-  return entries.map(p => `
-    <div class="proj-entry" style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <strong style="font-size:0.95em">${esc(p.name)}</strong>
-        ${p.link ? `<a href="https://${esc(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none">${esc(p.link)}</a>` : ''}
+  return entries.filter(hasProjectContent).map(p => `
+    <div class="proj-entry" style="margin-bottom:10px;break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <strong style="font-size:0.95em;min-width:0">${esc(p.name)}</strong>
+        ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(p.link)}</a>` : ''}
       </div>
-      <div style="font-size:0.82em;color:#444;margin-bottom:4px;font-style:italic">${esc(p.tech)}</div>
-      ${p.description ? `<div style="font-size:0.875em;color:#333;margin-bottom:3px">${esc(p.description)}</div>` : ''}
-      <ul style="margin:4px 0 0 16px;padding:0">
+      ${p.tech.trim() ? `<div style="font-size:0.82em;color:#444;margin-bottom:3px;font-style:italic">${esc(p.tech)}</div>` : ''}
+      ${p.description.trim() ? `<div style="font-size:0.875em;color:#333;margin-bottom:2px">${esc(p.description)}</div>` : ''}
+      <ul style="margin:3px 0 0 16px;padding:0">
         ${p.bullets.filter(b => b.trim()).map(b =>
-          `<li style="margin-bottom:3px;font-size:0.875em;line-height:1.4">${esc(b)}</li>`
+          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${esc(b)}</li>`
         ).join('')}
       </ul>
     </div>
@@ -96,13 +106,13 @@ function renderProjects(entries: ProjectEntry[]): string {
 }
 
 function renderEducation(entries: EducationEntry[]): string {
-  return entries.map(e => `
-    <div class="edu-entry" style="display:flex;justify-content:space-between;margin-bottom:10px">
-      <div>
+  return entries.filter(hasEducationContent).map(e => `
+    <div class="edu-entry" style="display:flex;justify-content:space-between;gap:12px;margin-bottom:7px;break-inside:avoid">
+      <div style="min-width:0">
         <strong style="font-size:0.95em">${esc(e.school)}</strong>
-        <div style="font-size:0.875em;color:#444">${esc(e.degree)}</div>
+        ${educationDetails(e) ? `<div style="font-size:0.875em;color:#444">${educationDetails(e)}</div>` : ''}
       </div>
-      <span style="font-size:0.85em;color:#444;white-space:nowrap">${esc(e.year)}</span>
+      <span style="font-size:0.85em;color:#444;white-space:nowrap;text-align:right;flex-shrink:0">${esc(e.year)}</span>
     </div>
   `).join('')
 }
@@ -111,7 +121,7 @@ function renderSkillsText(skills: ResumeData['skills']): string {
   return skills
     .filter(s => s.name.trim())
     .map(s => esc(s.name))
-    .join(' • ')
+    .join(', ')
 }
 
 function renderSkillsBars(skills: ResumeData['skills']): string {
@@ -133,9 +143,61 @@ function renderList(items: string[]): string {
   if (!bullets.length) return ''
   return `<ul style="margin:0 0 0 16px;padding:0">
     ${bullets.map(i =>
-      `<li style="font-size:0.875em;margin-bottom:3px;line-height:1.4">${esc(i)}</li>`
+      `<li style="font-size:0.875em;margin-bottom:2px;line-height:1.32">${esc(i)}</li>`
     ).join('')}
   </ul>`
+}
+
+function hasExperienceContent(entry: ExperienceEntry): boolean {
+  return Boolean(
+    entry.company.trim() ||
+    entry.role.trim() ||
+    entry.period.trim() ||
+    entry.bullets.some(b => b.trim())
+  )
+}
+
+function hasProjectContent(entry: ProjectEntry): boolean {
+  return Boolean(
+    entry.name.trim() ||
+    entry.tech.trim() ||
+    (entry.link ?? '').trim() ||
+    entry.description.trim() ||
+    entry.bullets.some(b => b.trim())
+  )
+}
+
+function hasEducationContent(entry: EducationEntry): boolean {
+  return Boolean(entry.school.trim() || entry.degree.trim() || (entry.cgpa ?? '').trim() || entry.year.trim())
+}
+
+function educationDetails(entry: EducationEntry): string {
+  return [
+    entry.degree.trim() ? esc(entry.degree) : '',
+    (entry.cgpa ?? '').trim() ? `CGPA: ${esc(entry.cgpa ?? '')}` : '',
+  ].filter(Boolean).join(' | ')
+}
+
+function removeEmptySections(html: string): string {
+  return html
+    .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<div[^>]*>\s*<\/div>/gi, '')
+    .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<p[^>]*>\s*<\/p>/gi, '')
+    .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<ul[^>]*>\s*<\/ul>/gi, '')
+}
+
+function insertBeforeRootClose(html: string, section: string): string {
+  if (html.includes('</body>')) return html.replace('</body>', `${section}</body>`)
+
+  const closeIndex = html.trimEnd().lastIndexOf('</div>')
+  if (closeIndex === -1) return html + section
+
+  return `${html.slice(0, closeIndex)}${section}${html.slice(closeIndex)}`
+}
+
+function insertBeforeFirstSection(html: string, section: string): string {
+  const firstHeading = html.search(/<h2\b/i)
+  if (firstHeading === -1) return insertBeforeRootClose(html, section)
+  return `${html.slice(0, firstHeading)}${section}${html.slice(firstHeading)}`
 }
 
 /** Escape HTML entities — prevents XSS from user-typed content */

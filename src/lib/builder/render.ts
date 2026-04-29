@@ -1,7 +1,12 @@
 import type { ResumeData, ExperienceEntry, EducationEntry, ProjectEntry } from './types'
 
 export function renderTemplate(html: string, data: ResumeData): string {
+  const profileImg = data.profileImage
+    ? `<img src="${data.profileImage}" alt="Profile photo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block" />`
+    : ''
+
   let output = html
+    .replace(/\{\{profile_image\}\}/g, profileImg)
     .replace(/\{\{name\}\}/g,      esc(data.name))
     .replace(/\{\{title\}\}/g,     esc(data.title))
     .replace(/\{\{email\}\}/g,     esc(data.email))

@@ -1,6 +1,7 @@
 'use client'
 
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { useRef } from 'react'
+import { Plus, Trash2, GripVertical, Upload, X } from 'lucide-react'
 import type { ResumeData, ExperienceEntry, EducationEntry, ProjectEntry } from '@/lib/builder/types'
 
 interface Props {
@@ -11,6 +12,17 @@ interface Props {
 export function BuilderForm({ data, onChange }: Props) {
   const set = <K extends keyof ResumeData>(key: K, val: ResumeData[K]) =>
     onChange({ ...data, [key]: val })
+
+  const photoRef = useRef<HTMLInputElement>(null)
+
+  function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => set('profileImage', reader.result as string)
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
 
   // ── Experience helpers
   const setExp = (i: number, patch: Partial<ExperienceEntry>) =>
@@ -62,9 +74,36 @@ export function BuilderForm({ data, onChange }: Props) {
           <FieldGroup label="Job Title" span="col-span-2">
             <Input value={data.title} onChange={v => set('title', v)} placeholder="Software Engineer" />
           </FieldGroup>
-          <FieldGroup label="Profile Image URL" span="col-span-2">
-            <Input value={data.profileImage ?? ''} onChange={v => set('profileImage', v)} placeholder="headshot.jpg or https://example.com/headshot.jpg" />
-          </FieldGroup>
+          {/* Photo upload */}
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
+              Profile Photo <span className="text-[var(--color-text-muted)] font-normal">(optional — only for templates that support it)</span>
+            </label>
+            <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoFile} />
+            {data.profileImage ? (
+              <div className="flex items-center gap-3">
+                <img src={data.profileImage} alt="Profile" className="w-14 h-14 rounded-full object-cover border border-[var(--color-border)]" />
+                <div className="space-y-1">
+                  <p className="text-xs text-[var(--color-text-secondary)]">Photo uploaded</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => photoRef.current?.click()}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <Upload className="w-3 h-3" /> Replace
+                    </button>
+                    <button type="button" onClick={() => set('profileImage', '')}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors text-red-500">
+                      <X className="w-3 h-3" /> Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => photoRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-surface-hover)] transition-colors text-sm text-[var(--color-text-muted)]">
+                <Upload className="w-4 h-4" /> Upload photo
+              </button>
+            )}
+          </div>
           <FieldGroup label="Email">
             <Input value={data.email} onChange={v => set('email', v)} placeholder="jane@example.com" />
           </FieldGroup>

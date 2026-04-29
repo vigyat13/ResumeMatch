@@ -88,16 +88,6 @@ function escLatex(value: string): string {
     .replace(/→/g, '$\\rightarrow$')
 }
 
-function latexHref(raw: string): string {
-  const href = normalizeUrl(raw)
-  if (!href) return ''
-  return `\\href{${escLatex(href)}}{${escLatex(displayUrl(raw))}}`
-}
-
-function latexMail(email: string): string {
-  const value = clean(email)
-  return value ? `\\href{mailto:${escLatex(value)}}{${escLatex(value)}}` : ''
-}
 
 function contactParts(json: StructuredResumeJson): string[] {
   return [
@@ -110,29 +100,9 @@ function contactParts(json: StructuredResumeJson): string[] {
   ].filter(Boolean)
 }
 
-function latexContactParts(json: StructuredResumeJson): string[] {
-  return [
-    latexMail(json.contact.email),
-    json.contact.phone ? escLatex(json.contact.phone) : '',
-    json.contact.location ? escLatex(json.contact.location) : '',
-    latexHref(json.contact.linkedin),
-    latexHref(json.contact.github),
-    latexHref(json.contact.portfolio),
-  ].filter(Boolean)
-}
-
 function htmlList(items: string[]): string {
   if (!items.length) return ''
   return `<ul>${items.map(item => `<li>${escHtml(item)}</li>`).join('')}</ul>`
-}
-
-function latexList(items: string[]): string {
-  if (!items.length) return ''
-  return [
-    '\\begin{itemize}',
-    ...items.map(item => `  \\item ${escLatex(item)}`),
-    '\\end{itemize}',
-  ].join('\n')
 }
 
 export function toStructuredResumeJson(data: ResumeData): StructuredResumeJson {
@@ -204,55 +174,159 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
   ].filter(Boolean).join('')
 }
 
+// Jake's Resume preamble — compiles on Overleaf out of the box
+const JAKES_PREAMBLE = `%-------------------------------------------
+% ResumeMatch export — Jake's Resume format
+% Paste into https://overleaf.com and compile
+%-------------------------------------------
+\\documentclass[letterpaper,11pt]{article}
+\\usepackage{latexsym}
+\\usepackage[empty]{fullpage}
+\\usepackage{titlesec}
+\\usepackage[usenames,dvipsnames]{color}
+\\usepackage{enumitem}
+\\usepackage[hidelinks]{hyperref}
+\\usepackage{fancyhdr}
+\\usepackage[english]{babel}
+\\usepackage{tabularx}
+\\input{glyphtounicode}
+
+\\pagestyle{fancy}\\fancyhf{}\\fancyfoot{}
+\\renewcommand{\\headrulewidth}{0pt}
+\\renewcommand{\\footrulewidth}{0pt}
+\\addtolength{\\oddsidemargin}{-0.5in}
+\\addtolength{\\evensidemargin}{-0.5in}
+\\addtolength{\\textwidth}{1in}
+\\addtolength{\\topmargin}{-.5in}
+\\addtolength{\\textheight}{1.0in}
+\\urlstyle{same}\\raggedbottom\\raggedright
+\\setlength{\\tabcolsep}{0in}
+
+\\titleformat{\\section}{\\vspace{-4pt}\\scshape\\raggedright\\large}{}{0em}{}[\\color{black}\\titlerule\\vspace{-5pt}]
+\\pdfgentounicode=1
+
+\\newcommand{\\resumeItem}[1]{\\item\\small{{#1\\vspace{-2pt}}}}
+\\newcommand{\\resumeSubheading}[4]{\\vspace{-2pt}\\item
+  \\begin{tabular*}{0.97\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
+    \\textbf{#1} & #2 \\\\
+    \\textit{\\small#3} & \\textit{\\small #4} \\\\
+  \\end{tabular*}\\vspace{-7pt}}
+\\newcommand{\\resumeProjectHeading}[2]{\\item
+  \\begin{tabular*}{0.97\\textwidth}{l@{\\extracolsep{\\fill}}r}
+    \\small#1 & #2 \\\\
+  \\end{tabular*}\\vspace{-7pt}}
+\\renewcommand\\labelitemii{$\\vcenter{\\hbox{\\tiny$\\bullet$}}$}
+\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=0.15in, label={}]}
+\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}
+\\newcommand{\\resumeItemListStart}{\\begin{itemize}}
+\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-5pt}}`
+
 export function generateLatexFromJson(json: StructuredResumeJson): string {
-  const contact = latexContactParts(json).join(' \\quad ')
+  const contactParts: string[] = []
+  if (json.contact.phone)     contactParts.push(escLatex(json.contact.phone))
+  if (json.contact.email)     contactParts.push(`\\href{mailto:${escLatex(json.contact.email)}}{\\underline{${escLatex(json.contact.email)}}}`)
+  if (json.contact.location)  contactParts.push(escLatex(json.contact.location))
+  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(displayUrl(json.contact.linkedin))}}}`)
+  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(displayUrl(json.contact.github))}}}`)
+  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayUrl(json.contact.portfolio))}}}`)
+  const contactLine = contactParts.join(' $|$ ')
 
-  return [
-    '\\documentclass[11pt]{article}',
-    '\\usepackage[margin=0.75in]{geometry}',
-    '\\usepackage{graphicx}',
-    '\\usepackage[hidelinks]{hyperref}',
-    '\\usepackage{enumitem}',
-    '\\setlength{\\parindent}{0pt}',
-    '\\setlength{\\parskip}{0.35em}',
-    '\\begin{document}',
-    json.image ? '\\begin{center}' : '',
-    json.image ? `\\includegraphics[width=0.13\\textwidth]{${escLatex(json.image)}}\\par` : '',
-    json.image ? '\\end{center}' : '',
-    `{\\LARGE \\textbf{${escLatex(json.name)}}}\\par`,
-    json.title ? `\\textbf{${escLatex(json.title)}}\\par` : '',
-    contact ? `${contact}\\par` : '',
-    json.summary ? `\\section*{Summary}\n${escLatex(json.summary)}` : '',
-    json.experience.length ? '\\section*{Experience}' : '',
-    ...json.experience.flatMap((entry) => [
-      `\\textbf{${escLatex(entry.role)}}${entry.company ? ` | ${escLatex(entry.company)}` : ''}${entry.duration ? ` | ${escLatex(entry.duration)}` : ''}\\par`,
-      latexList(entry.bullets),
-    ]),
-    json.projects.length ? '\\section*{Projects}' : '',
-    ...json.projects.flatMap((entry) => {
-      const heading = [
-        `\\textbf{${escLatex(entry.name)}}`,
-        entry.tech ? escLatex(entry.tech) : '',
-        entry.link ? latexHref(entry.link) : '',
-      ].filter(Boolean).join(' | ')
-
-      return [
-        `${heading}\\par`,
-        entry.description ? `${escLatex(entry.description)}\\par` : '',
-        latexList(entry.bullets),
-      ]
-    }),
-    json.education.length ? '\\section*{Education}' : '',
-    ...json.education.map((entry) => `\\textbf{${escLatex(entry.school)}}${entry.degree ? ` | ${escLatex(entry.degree)}` : ''}${entry.year ? ` | ${escLatex(entry.year)}` : ''}\\par`),
-    json.skills.length ? '\\section*{Skills}' : '',
-    json.skills.length ? escLatex(json.skills.join(', ')) + '\\par' : '',
-    json.publications.length ? '\\section*{Publications}' : '',
-    json.publications.length ? latexList(json.publications) : '',
-    json.honors.length ? '\\section*{Honors}' : '',
-    json.honors.length ? latexList(json.honors) : '',
-    '\\end{document}',
+  const lines: string[] = [
+    JAKES_PREAMBLE,
     '',
-  ].filter(Boolean).join('\n')
+    '\\begin{document}',
+    '',
+    '%----------HEADING----------',
+    '\\begin{center}',
+    `  \\textbf{\\Huge \\scshape ${escLatex(json.name)}} \\\\ \\vspace{1pt}`,
+    `  \\small ${contactLine}`,
+    '\\end{center}',
+    '',
+  ]
+
+  if (json.education.length) {
+    lines.push('%-----------EDUCATION-----------')
+    lines.push('\\section{Education}')
+    lines.push('  \\resumeSubHeadingListStart')
+    for (const edu of json.education) {
+      lines.push(`    \\resumeSubheading{${escLatex(edu.school)}}{${escLatex(edu.year)}}{${escLatex(edu.degree)}}{}`)
+    }
+    lines.push('  \\resumeSubHeadingListEnd')
+    lines.push('')
+  }
+
+  if (json.summary) {
+    lines.push('%-----------SUMMARY-----------')
+    lines.push('\\section{Summary}')
+    lines.push(`  ${escLatex(json.summary)}`)
+    lines.push('')
+  }
+
+  if (json.experience.length) {
+    lines.push('%-----------EXPERIENCE-----------')
+    lines.push('\\section{Experience}')
+    lines.push('  \\resumeSubHeadingListStart')
+    for (const exp of json.experience) {
+      lines.push(`    \\resumeSubheading{${escLatex(exp.company)}}{${escLatex(exp.duration)}}{${escLatex(exp.role)}}{}`)
+      if (exp.bullets.length) {
+        lines.push('      \\resumeItemListStart')
+        for (const b of exp.bullets) lines.push(`        \\resumeItem{${escLatex(b)}}`)
+        lines.push('      \\resumeItemListEnd')
+      }
+    }
+    lines.push('  \\resumeSubHeadingListEnd')
+    lines.push('')
+  }
+
+  if (json.projects.length) {
+    lines.push('%-----------PROJECTS-----------')
+    lines.push('\\section{Projects}')
+    lines.push('    \\resumeSubHeadingListStart')
+    for (const proj of json.projects) {
+      const techStr = proj.tech ? ` $|$ \\emph{${escLatex(proj.tech)}}` : ''
+      const linkStr = proj.link ? ` $|$ \\href{${escLatex(normalizeUrl(proj.link))}}{\\underline{${escLatex(displayUrl(proj.link))}}}` : ''
+      lines.push(`      \\resumeProjectHeading{\\textbf{${escLatex(proj.name)}}${techStr}${linkStr}}{}`)
+      if (proj.bullets.length) {
+        lines.push('          \\resumeItemListStart')
+        for (const b of proj.bullets) lines.push(`            \\resumeItem{${escLatex(b)}}`)
+        lines.push('          \\resumeItemListEnd')
+      }
+    }
+    lines.push('    \\resumeSubHeadingListEnd')
+    lines.push('')
+  }
+
+  if (json.skills.length) {
+    lines.push('%-----------TECHNICAL SKILLS-----------')
+    lines.push('\\section{Technical Skills}')
+    lines.push(' \\begin{itemize}[leftmargin=0.15in, label={}]')
+    lines.push('    \\small{\\item{')
+    lines.push(`     \\textbf{Skills}{: ${json.skills.map(escLatex).join(', ')}} \\\\`)
+    lines.push('    }}')
+    lines.push(' \\end{itemize}')
+    lines.push('')
+  }
+
+  if (json.honors.length) {
+    lines.push('%-----------HONORS & AWARDS-----------')
+    lines.push('\\section{Honors \\& Awards}')
+    lines.push('  \\begin{itemize}[leftmargin=0.15in]')
+    for (const h of json.honors) lines.push(`    \\item \\small{${escLatex(h)}}`)
+    lines.push('  \\end{itemize}')
+    lines.push('')
+  }
+
+  if (json.publications.length) {
+    lines.push('%-----------PUBLICATIONS-----------')
+    lines.push('\\section{Publications}')
+    lines.push('  \\begin{itemize}[leftmargin=0.15in]')
+    for (const p of json.publications) lines.push(`    \\item \\small{${escLatex(p)}}`)
+    lines.push('  \\end{itemize}')
+    lines.push('')
+  }
+
+  lines.push('\\end{document}')
+  return lines.join('\n')
 }
 
 export function buildResumeSystemOutput(data: ResumeData): ResumeSystemOutput {

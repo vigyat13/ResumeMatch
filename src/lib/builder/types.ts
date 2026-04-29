@@ -55,85 +55,33 @@ export interface ResumeData {
 }
 
 export const DEFAULT_RESUME_DATA: ResumeData = {
-  name:         'Alex Rivera',
-  title:        'Software Engineer',
+  name:         '',
+  title:        '',
   profileImage: '',
-  email:        'alex.rivera@gmail.com',
-  phone:        '+1 (415) 555-0192',
-  location:     'San Francisco, CA',
-  github:       'github.com/alexrivera',
-  linkedin:     'linkedin.com/in/alexrivera',
-  portfolio:    'alexrivera.dev',
-  summary:      'Full-stack engineer with 5 years building high-scale consumer products. Led backend work at Stripe that processed $2B+ in payments annually. Strong in distributed systems, API design, and developer tooling.',
+  email:        '',
+  phone:        '',
+  location:     '',
+  github:       '',
+  linkedin:     '',
+  portfolio:    '',
+  summary:      '',
   experience: [
-    {
-      company: 'Stripe',
-      role:    'Software Engineer II · Payments Infrastructure',
-      period:  'Mar 2022 – Present',
-      bullets: [
-        'Designed and shipped a retry-logic overhaul for the payment-intent lifecycle that reduced failed-payment fallout by 18%, recovering ~$40M ARR',
-        'Led migration of the charge-routing service from Ruby monolith to Go microservice; cut p99 latency from 420ms to 95ms under peak load',
-        'Built an internal dashboard (React + tRPC) used by 200+ ops analysts to investigate disputed transactions, replacing a manual Salesforce workflow',
-        'Mentored 2 new-grad engineers through onboarding and first production deploys',
-      ],
-    },
-    {
-      company: 'Airbnb',
-      role:    'Software Engineer · Search & Discovery',
-      period:  'Jul 2020 – Feb 2022',
-      bullets: [
-        'Rebuilt the geo-search ranking pipeline (Python/Elasticsearch) to incorporate real-time availability; improved booking conversion by 6.4% in A/B test',
-        'Reduced search index rebuild time from 4 hours to 22 minutes by parallelising Spark jobs across 80 EMR nodes',
-        'Shipped accessibility improvements (WCAG 2.1 AA) across the search results page, unblocking enterprise partnerships in the EU',
-      ],
-    },
-    {
-      company: 'Palantir Technologies',
-      role:    'Software Engineer Intern · Forward Deployed',
-      period:  'May 2019 – Aug 2019',
-      bullets: [
-        'Delivered a real-time pipeline dashboard for a Fortune 100 energy client; reduced manual reporting effort by 12 hours/week',
-      ],
-    },
+    { company: '', role: '', period: '', bullets: ['', '', ''] },
   ],
   projects: [
-    {
-      name:        'pgwatch-lite',
-      tech:        'Go, PostgreSQL, Prometheus, Grafana',
-      link:        'github.com/alexrivera/pgwatch-lite',
-      description: 'Lightweight Postgres query-stat and lock-contention exporter with zero-config dashboards.',
-      bullets: [
-        'Reached 2.1k GitHub stars in 6 months; adopted by 30+ production teams',
-        'Cut mean time-to-diagnose for lock contention from ~25min to under 3min based on user reports',
-      ],
-    },
-    {
-      name:        'turbo-rpc',
-      tech:        'TypeScript, Node.js, Zod',
-      link:        'github.com/alexrivera/turbo-rpc',
-      description: 'Type-safe RPC framework with schema inference — zero codegen, full IDE autocomplete.',
-      bullets: [
-        '4.8k weekly npm downloads; shipped to production in 3 companies within 2 months of release',
-      ],
-    },
+    { name: '', tech: '', link: '', description: '', bullets: ['', ''] },
   ],
   education: [
-    {
-      school: 'University of California, Berkeley',
-      degree: 'B.S. Electrical Engineering & Computer Sciences · GPA 3.82',
-      year:   '2016 – 2020',
-    },
+    { school: '', degree: '', year: '' },
   ],
   skills: [
-    { name: 'Go',           level: 90 },
-    { name: 'TypeScript',   level: 88 },
-    { name: 'Python',       level: 82 },
-    { name: 'PostgreSQL',   level: 85 },
-    { name: 'React',        level: 80 },
-    { name: 'AWS / GCP',    level: 75 },
-    { name: 'Kubernetes',   level: 72 },
-    { name: 'Elasticsearch', level: 70 },
+    { name: '', level: 80 },
+    { name: '', level: 80 },
+    { name: '', level: 80 },
+    { name: '', level: 80 },
   ],
+  publications: [],
+  honors:       [],
 }
 
 /* ─────────────────────────────────────────────────────────────────

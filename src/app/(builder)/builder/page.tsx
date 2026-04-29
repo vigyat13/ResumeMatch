@@ -78,11 +78,11 @@ export default async function BuilderPage({
 
           {/* Left copy */}
           <div className="flex-1 max-w-[720px] space-y-6 lg:pl-1">
-            <h1 className="text-[4rem] lg:text-[4.6rem] font-bold leading-[0.94] tracking-[-0.03em] font-headline text-[#f3efe8] m-0">
+            <h1 className="text-[4rem] lg:text-[4.6rem] font-bold leading-[0.92] tracking-[-0.01em] font-headline text-[#f5f0e8] m-0">
               Build a resume<br />
-              <span className="text-[#69e0ab]">that gets interviews</span>
+              <span className="text-[var(--color-marketing-accent)]">that gets interviews</span>
             </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed max-w-[720px]">
+            <p className="text-[rgba(245,240,232,0.42)] text-lg leading-relaxed max-w-[720px]">
               Pick from {total}+ professional and company-inspired templates, fill in
               your details, and download a pixel-perfect PDF. Sign-in only at download.
             </p>
@@ -105,8 +105,8 @@ export default async function BuilderPage({
                 { value: '100%',      label: 'Free to edit' },
               ].map(s => (
                 <div key={s.label}>
-                  <div className="text-2xl font-bold font-headline text-foreground">{s.value}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+                  <div className="text-2xl font-bold font-headline text-[#f5f0e8]">{s.value}</div>
+                  <div className="text-xs text-[rgba(245,240,232,0.45)] mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -138,14 +138,14 @@ export default async function BuilderPage({
         {/* Section header */}
         <div className="flex items-end justify-between mb-7">
           <div>
-            <h2 className="text-3xl lg:text-[3.1rem] leading-none font-bold font-headline tracking-tight text-[#f3efe8] m-0">
+            <h2 className="text-3xl lg:text-[3.1rem] leading-none font-bold font-headline tracking-tight text-[#f5f0e8] m-0">
               Choose your template
             </h2>
-            <p className="text-muted-foreground text-base mt-2">
+            <p className="text-[rgba(245,240,232,0.45)] text-base mt-2">
               All templates are ATS-safe unless marked otherwise
             </p>
           </div>
-          <span className="text-base text-muted-foreground pb-1">{templates.length} templates</span>
+          <span className="text-base text-[rgba(245,240,232,0.45)] pb-1">{templates.length} templates</span>
         </div>
 
         {/* Category tabs */}

@@ -27,6 +27,24 @@ interface Props {
 
 const PAGE_SIZE = 20
 
+// Normalised base CSS for gallery thumbnails — overrides browser defaults so
+// every card renders at a consistent text size regardless of the template's
+// own CSS (which is stripped so cards don't bleed colour into each other).
+const GALLERY_BASE_CSS = `
+  body,html{margin:0;padding:0}
+  *{box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:13px;line-height:1.4;color:#111;padding:24px 28px}
+  h1{font-size:17px;font-weight:700;margin:0 0 3px}
+  h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid #333;padding-bottom:2px;margin:10px 0 5px}
+  h3{font-size:12px;font-weight:600;margin:0 0 2px}
+  p,li{font-size:11.5px;line-height:1.4;margin:0 0 2px}
+  ul{margin:3px 0 3px 14px;padding:0}
+  a{color:inherit;text-decoration:none}
+  .twocol,.two-col,.layout-two-col,.europass-wrap{display:flex;gap:0}
+  .twocol .sidebar,.two-col .left,.sidebar,.left-col{width:30%;padding:16px 12px;background:#f2f2f2}
+  .twocol .main,.two-col .right,.main-col,.right-col{width:70%;padding:16px 14px}
+`
+
 export function TemplateGallery({ templates }: Props) {
   const [shown, setShown] = useState(PAGE_SIZE)
 
@@ -48,7 +66,7 @@ export function TemplateGallery({ templates }: Props) {
             >
               {/* Live preview thumbnail */}
               <div className="h-64 bg-white relative overflow-hidden">
-                <TemplatePreviewClient template={{ ...t, css_content: '' }} sample={sample} scale={0.23} />
+                <TemplatePreviewClient template={{ ...t, css_content: GALLERY_BASE_CSS }} sample={sample} scale={0.23} />
                 {isCompanyInspiredTemplate(t.name) && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-950 text-white z-10">
                     <Sparkles className="w-2.5 h-2.5" /> FAANG-type

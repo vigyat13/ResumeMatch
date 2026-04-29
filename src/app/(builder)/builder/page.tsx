@@ -14,11 +14,11 @@ export const metadata = {
 
 const CATEGORIES: Record<string, string[]> = {
   'All':          [],
-  'FAANG':        ['Google Style', 'Amazon Style', 'Meta Style', 'Apple Style', 'Microsoft Style', 'Netflix Style', 'Stripe Style'],
-  'Professional': ['Classic', 'Executive', 'Consulting', 'Finance', 'Senior Executive', 'Elegant Serif', 'Dark Professional', 'Charcoal', 'Jakes Resume', 'ATS Pure', 'Corporate Classic', 'Harvard Format', 'Compact Pro'],
-  'Modern':       ['Modern', 'Minimal', 'Bold Header', 'Startup', 'Sharp Lines', 'Tech Minimal', 'Left Accent'],
-  'Two Column':   ['Navy Sidebar', 'Two Column Pro', 'Data Scientist'],
-  'Specialty':    ['Technical', 'LinkedIn', 'Academic Research', 'Product Manager', 'Entry Level'],
+  'Tech':         ['FAANG Standard', 'Modern Tech', 'ML Engineer', 'Backend Engineer', 'Frontend Engineer', 'Data Science'],
+  'Professional': ['Executive', 'Consulting', 'Product Manager', 'Simple Universal'],
+  'Minimal':      ['Minimal', 'Mono Clean', 'High Density'],
+  'Two Column':   ['Two Column', 'Europass'],
+  'Specialty':    ['Academic', 'Startup', 'Creative', 'Intern / Entry Level', 'UK CV'],
 }
 
 export default async function BuilderPage({

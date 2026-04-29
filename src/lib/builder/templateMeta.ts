@@ -1,59 +1,51 @@
-const COMPANY_INSPIRED = new Set([
-  'Google Style',
-  'Amazon Style',
-  'Meta Style',
-  'Apple Style',
-  'Microsoft Style',
-  'Netflix Style',
-  'Stripe Style',
-])
-
 const TWO_COLUMN = new Set([
-  'Navy Sidebar',
-  'Two Column Pro',
-  'Data Scientist',
+  'Two Column',
+  'Europass',
 ])
 
 const TECHNICAL = new Set([
-  'Technical',
-  'Tech Minimal',
-  'Data Scientist',
-  'Academic Research',
-  'Product Manager',
-  'LinkedIn',
+  'FAANG Standard',
+  'ML Engineer',
+  'Backend Engineer',
+  'Frontend Engineer',
+  'Data Science',
+  'Mono Clean',
 ])
 
 const FALLBACK_DESCRIPTIONS: Record<string, string> = {
-  'Google Style': 'Clean, dense, product-engineering format inspired by top-tier tech resumes.',
-  'Amazon Style': 'Structured leadership-focused layout for high-ownership roles.',
-  'Meta Style': 'Fast-scanning product and growth format with sharp section rhythm.',
-  'Apple Style': 'Minimal premium layout with tight typography and disciplined white space.',
-  'Microsoft Style': 'Balanced enterprise format for platform, cloud, and systems roles.',
-  'Netflix Style': 'High-signal performance layout built for senior individual contributors.',
-  'Stripe Style': 'Modern operator layout with crisp metrics and polished hierarchy.',
-  'Classic': 'Straight ATS-first single-column resume with traditional hierarchy.',
-  'Executive': 'Senior-level layout emphasizing scope, leadership, and business impact.',
-  'Consulting': 'Consulting-style format with strong scanning and quantified bullets.',
-  'Finance': 'Compact professional layout built for dense, analytical experience.',
-  'Technical': 'Engineer-focused format with strong projects and skills sections.',
-  'Tech Minimal': 'Minimal modern layout that keeps technical depth easy to scan.',
-  'Academic Research': 'Research-forward template for publications and formal credentials.',
-  'Product Manager': 'Outcome-first layout for product, strategy, and cross-functional leadership.',
-  'Data Scientist': 'Hybrid technical template for modeling, experimentation, and analytics work.',
+  'FAANG Standard':     'Classic single-column layout used at top tech companies. Times New Roman, ruled section headers.',
+  'Modern Tech':        'Blue-accent modern layout for software engineers and tech roles.',
+  'Minimal':            'Ultra-clean minimal layout. Zero decoration, maximum readability.',
+  'Two Column':         'Skills sidebar + main content. Good for dense technical profiles.',
+  'Executive':          'Formal Georgia serif layout for senior and leadership roles.',
+  'Startup':            'Bold green-accent layout putting projects and impact first.',
+  'Academic':           'Serif academic CV with research, publications, and education emphasis.',
+  'Consulting':         'Strong ruled headers and impact-first bullets for consulting roles.',
+  'Product Manager':    'Outcome-first layout for product strategy and cross-functional leadership.',
+  'Data Science':       'Blue-sky accent layout for ML, data, and analytics roles.',
+  'ML Engineer':        'Purple-accent systems layout for machine learning engineers.',
+  'Backend Engineer':   'Monospace-headers layout for APIs, systems, and backend roles.',
+  'Frontend Engineer':  'Amber-accent layout putting UI projects front and center.',
+  'Creative':           'Red-accent Trebuchet layout — expressive but ATS-safe.',
+  'High Density':       'Compact 11px layout that fits more content on one page.',
+  'Intern / Entry Level': 'Clean simple layout leading with education and projects.',
+  'UK CV':              'British CV format with a personal profile section.',
+  'Europass':           'European two-column CV format with dark blue sidebar.',
+  'Mono Clean':         'Monospace developer layout — terminal-style clean.',
+  'Simple Universal':   'Universal single-column layout that works for any role.',
 }
 
-export function isCompanyInspiredTemplate(name: string): boolean {
-  return COMPANY_INSPIRED.has(name)
+export function isCompanyInspiredTemplate(_name: string): boolean {
+  return false
 }
 
 export function getTemplateBadge(name: string): string {
-  if (COMPANY_INSPIRED.has(name)) return 'Company Inspired'
-  if (TECHNICAL.has(name)) return 'Technical'
+  if (TECHNICAL.has(name))  return 'Technical'
   if (TWO_COLUMN.has(name)) return 'Two Column'
   return 'ATS Ready'
 }
 
 export function getTemplateDescription(name: string, description?: string | null): string {
   if (description?.trim()) return description
-  return FALLBACK_DESCRIPTIONS[name] ?? 'Professional resume template optimized for fast recruiter scanning.'
+  return FALLBACK_DESCRIPTIONS[name] ?? 'Professional resume template optimized for ATS and recruiter scanning.'
 }

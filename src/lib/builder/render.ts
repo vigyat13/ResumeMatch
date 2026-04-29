@@ -5,8 +5,14 @@ export function renderTemplate(html: string, data: ResumeData): string {
     ? `<img src="${data.profileImage}" alt="Profile photo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block" />`
     : ''
 
+  const contactLine = [data.email, data.phone, data.location, data.linkedin, data.github, data.portfolio]
+    .filter(v => v?.trim())
+    .map(esc)
+    .join(' | ')
+
   let output = html
     .replace(/\{\{profile_image\}\}/g, profileImg)
+    .replace(/\{\{contact\}\}/g,   contactLine)
     .replace(/\{\{name\}\}/g,      esc(data.name))
     .replace(/\{\{title\}\}/g,     esc(data.title))
     .replace(/\{\{email\}\}/g,     esc(data.email))

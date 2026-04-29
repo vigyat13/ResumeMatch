@@ -48,7 +48,7 @@ export function TemplateGallery({ templates }: Props) {
             >
               {/* Live preview thumbnail */}
               <div className="h-64 bg-white relative overflow-hidden">
-                <TemplatePreviewClient template={t} sample={sample} scale={0.23} />
+                <TemplatePreviewClient template={{ ...t, css_content: '' }} sample={sample} scale={0.23} />
                 {isCompanyInspiredTemplate(t.name) && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-950 text-white z-10">
                     <Sparkles className="w-2.5 h-2.5" /> FAANG-type

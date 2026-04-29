@@ -141,11 +141,12 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 <meta charset="UTF-8">
 <title>${data.name ? data.name + ' — Resume' : 'Resume'}</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;padding:0;background:#fff}
+*{box-sizing:border-box;-webkit-hyphens:none;hyphens:none}
+body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}
+a{color:inherit;text-decoration:none}
 ${templateCss}
-.cv{width:21cm;min-height:29.7cm;padding:1cm;margin:0 auto}
-@media print{@page{size:A4;margin:0}body{margin:0}.cv{box-shadow:none}}
+@page{size:A4 portrait;margin:0}
+@media print{body{margin:0}.cv{box-shadow:none!important;border-radius:0!important}}
 </style>
 </head>
 <body>${renderedHtml}</body>

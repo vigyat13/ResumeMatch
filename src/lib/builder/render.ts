@@ -5,10 +5,14 @@ export function renderTemplate(html: string, data: ResumeData): string {
     ? `<img src="${data.profileImage}" alt="Profile photo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block" />`
     : ''
 
-  const contactLine = [data.email, data.phone, data.location, data.linkedin, data.github, data.portfolio]
-    .filter(v => v?.trim())
-    .map(esc)
-    .join(' | ')
+  const contactLine = [
+    data.email     ? `<a href="mailto:${esc(data.email)}" style="color:inherit;text-decoration:none">${esc(data.email)}</a>` : null,
+    data.phone     ? esc(data.phone) : null,
+    data.location  ? esc(data.location) : null,
+    data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(data.linkedin)}</a>` : null,
+    data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(data.github)}</a>` : null,
+    data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(data.portfolio)}</a>` : null,
+  ].filter(Boolean).join(' | ')
 
   let output = html
     .replace(/\{\{profile_image\}\}/g, profileImg)
@@ -123,8 +127,12 @@ function renderSkillsBars(skills: ResumeData['skills']): string {
 
 function renderList(items: string[]): string {
   if (!items.length) return ''
+  // Split each entry on newlines so one textarea entry with multiple lines
+  // becomes multiple bullets.
+  const bullets = items.flatMap(i => i.split('\n').map(l => l.trim())).filter(Boolean)
+  if (!bullets.length) return ''
   return `<ul style="margin:0 0 0 16px;padding:0">
-    ${items.filter(i => i.trim()).map(i =>
+    ${bullets.map(i =>
       `<li style="font-size:0.875em;margin-bottom:3px;line-height:1.4">${esc(i)}</li>`
     ).join('')}
   </ul>`
@@ -139,4 +147,11 @@ export function esc(str: string): string {
     .replace(/"/g,  '&quot;')
     .replace(/'/g,  '&#039;')
     .replace(/\n/g, '<br/>')
+}
+
+/** Ensure a URL string has a protocol prefix for use in href attributes. */
+function linkHref(url: string): string {
+  const u = (url ?? '').trim()
+  if (!u) return '#'
+  return /^https?:\/\//i.test(u) ? esc(u) : `https://${esc(u)}`
 }

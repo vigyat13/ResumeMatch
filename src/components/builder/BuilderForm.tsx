@@ -316,9 +316,17 @@ export function BuilderForm({ data, onChange }: Props) {
         </div>
         <div className="space-y-2">
           {(data.honors ?? []).map((h, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Input value={h} onChange={v => setHonor(i, v)} placeholder="Award, recognition, or leadership role" />
-              <button onClick={() => removeHonor(i)} className="text-[var(--color-text-muted)] hover:text-red-500 transition-colors flex-shrink-0">
+            <div key={i} className="flex items-start gap-2">
+              <textarea
+                value={h}
+                onChange={e => setHonor(i, e.target.value)}
+                rows={2}
+                placeholder="Award or recognition (one item per line = one bullet)"
+                className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg
+                           bg-[var(--color-surface)] resize-none focus:outline-none
+                           focus:ring-2 focus:ring-[var(--color-accent)]/40 transition"
+              />
+              <button onClick={() => removeHonor(i)} className="mt-2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors flex-shrink-0">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>

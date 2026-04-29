@@ -25,7 +25,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Crown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -78,17 +77,18 @@ export function Sidebar({ user }: { user: SidebarUser }) {
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center gap-3 px-4 py-5 border-b border-[var(--color-border)]',
+        'flex items-center px-4 py-5 border-b border-[var(--color-border)]',
         collapsed && 'justify-center px-0'
       )}>
-        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-white" />
-        </div>
-        {!collapsed && (
-          <span className="font-semibold text-[var(--color-text-primary)] tracking-tight">
-            ResumeMatch
-          </span>
-        )}
+        <Link
+          href="/dashboard"
+          style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 18, fontWeight: 700, letterSpacing: '0.01em', color: 'var(--color-text-primary)', textDecoration: 'none' }}
+        >
+          {collapsed
+            ? <span style={{ color: 'var(--color-accent)' }}>R</span>
+            : <>Resume<span style={{ color: 'var(--color-accent)' }}>Match</span></>
+          }
+        </Link>
       </div>
 
       {/* Collapse toggle button */}

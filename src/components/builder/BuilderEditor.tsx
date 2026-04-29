@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Download, Loader2, ChevronLeft, FileText, Code2,
-  Edit3, Copy, Check, Sparkles, RefreshCw, ImagePlus, X, AlertCircle,
+  Edit3, Copy, Check, RefreshCw, ImagePlus, X, AlertCircle,
 } from 'lucide-react'
+import { renderTemplate } from '@/lib/builder/render'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { BuilderForm }  from './BuilderForm'
@@ -130,7 +131,34 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       })
     } catch { /* non-fatal */ }
     finally { setSaving(false) }
-    window.print()
+
+    // Open a clean window with only the resume — avoids the Next.js app
+    // wrapper hiding the print target via body > * { display:none }.
+    const renderedHtml = renderTemplate(templateHtml, data)
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${data.name ? data.name + ' — Resume' : 'Resume'}</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:#fff}
+${templateCss}
+.cv{width:21cm;min-height:29.7cm;padding:1cm;margin:0 auto}
+@media print{@page{size:A4;margin:0}body{margin:0}.cv{box-shadow:none}}
+</style>
+</head>
+<body>${renderedHtml}</body>
+</html>`
+    const blob = new Blob([html], { type: 'text/html' })
+    const url  = URL.createObjectURL(blob)
+    const win  = window.open(url, '_blank', 'width=900,height=1200')
+    if (!win) { URL.revokeObjectURL(url); return }
+    win.addEventListener('load', () => {
+      win.focus()
+      win.print()
+      URL.revokeObjectURL(url)
+    })
   }
 
   async function onAuthSuccess() {
@@ -162,12 +190,8 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
         <div className="flex items-center h-13 px-4 gap-3">
 
           {/* Logo */}
-          <Link href="/builder" className="flex items-center gap-1.5 font-bold text-base flex-shrink-0">
-            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-primary-foreground" />
-            </div>
-            <span className="text-foreground">Resume</span>
-            <span className="text-primary">Match</span>
+          <Link href="/builder" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 18, fontWeight: 700, letterSpacing: '0.01em', flexShrink: 0 }}>
+            <span>Resume</span><span style={{ color: 'hsl(var(--primary))' }}>Match</span>
           </Link>
 
           {/* Breadcrumb */}

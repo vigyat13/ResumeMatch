@@ -11,13 +11,6 @@ interface PageProps {
 }
 
 export default async function AuthCompletePage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const nextPath = sanitizeNextPath(params.next)
-
-  return <AuthCompleteClient nextPath={nextPath} />
-}
-
-function sanitizeNextPath(value?: string): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard'
-  return value
+  await searchParams
+  return <AuthCompleteClient nextPath="/builder" />
 }

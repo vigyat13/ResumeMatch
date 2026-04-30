@@ -70,7 +70,7 @@ export function AuthModal({ onSuccess, onClose }: Props) {
   async function handleOAuth(provider: 'google' | 'github') {
     setOauth(provider)
     const callbackUrl = new URL('/auth/callback', window.location.origin)
-    callbackUrl.searchParams.set('next', window.location.pathname)
+    callbackUrl.searchParams.set('next', '/builder')
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: callbackUrl.toString() },

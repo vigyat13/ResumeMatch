@@ -23,6 +23,7 @@ const inter = Inter({
 
 // Metadata is used by search engines and social media previews
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://resumematch.live'),
   title: {
     default: 'ResumeMatch — AI-Powered Resume Optimizer',
     template: '%s | ResumeMatch', // page title format: "Dashboard | ResumeMatch"
@@ -34,6 +35,13 @@ export const metadata: Metadata = {
     title: 'ResumeMatch — AI-Powered Resume Optimizer',
     description: 'Get your resume past ATS systems and land interviews with confidence.',
     type: 'website',
+  },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [{ url: '/apple-icon.svg', type: 'image/svg+xml' }],
   },
 }
 

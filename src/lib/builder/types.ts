@@ -91,15 +91,15 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
 
 /** Demo engineer profile. Default hero sample. */
 export const SAMPLE_ENGINEER: ResumeData = {
-  name:      'Aarav Demo',
+  name:      'Pratik Singh',
   title:     'Senior Software Engineer',
   profileImage: '',
-  email:     'aarav.demo@example.com',
+  email:     'pratik.singh@example.com',
   phone:     '+1 (555) 010-2048',
   location:  'Metro City, Remote',
-  github:    'github.com/demo-aarav',
-  linkedin:  'linkedin.com/in/demo-aarav',
-  portfolio: 'aarav-demo.example.com',
+  github:    'github.com/demo-pratik',
+  linkedin:  'linkedin.com/in/demo-pratik',
+  portfolio: 'pratik-demo.example.com',
   summary:   'Backend-leaning full-stack engineer with 5+ years building high-throughput platform and infrastructure systems. Owned services processing 10M+ daily requests at fictional SaaS companies. Comfortable from Postgres internals to React performance budgets.',
   experience: [
     {
@@ -136,7 +136,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'pgmon',
       tech:        'Go, PostgreSQL, Prometheus',
-      link:        'github.com/demo-aarav/pgmon',
+      link:        'github.com/demo-pratik/pgmon',
       description: 'Lightweight Postgres lock and query-stat exporter used by 600+ teams.',
       bullets:     [
         '1.4k GitHub stars in 4 months; 22 external contributors merged',
@@ -146,7 +146,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'tldraw-collab',
       tech:        'TypeScript, Yjs, Cloudflare Durable Objects',
-      link:        'github.com/demo-aarav/tldraw-collab',
+      link:        'github.com/demo-pratik/tldraw-collab',
       description: 'Real-time multiplayer whiteboard on tldraw, conflict-free up to 50 concurrent cursors.',
       bullets:     ['Featured in the Cloudflare Workers showcase, July 2024'],
     },
@@ -176,14 +176,14 @@ export const SAMPLE_ENGINEER: ResumeData = {
 
 /** Demo ML engineer profile. */
 export const SAMPLE_ML: ResumeData = {
-  name:      'Mira Sample',
+  name:      'Nishant Yadav',
   title:     'Machine Learning Engineer',
   profileImage: '',
-  email:     'mira.sample@example.com',
+  email:     'nishant.yadav@example.com',
   phone:     '+1 (555) 010-3186',
   location:  'Data City, Remote',
-  github:    'github.com/demo-mira',
-  linkedin:  'linkedin.com/in/demo-mira',
+  github:    'github.com/demo-nishant',
+  linkedin:  'linkedin.com/in/demo-nishant',
   portfolio: '',
   summary:   'ML engineer with 4 years building recommendation and NLP systems at scale. Led model infrastructure for a demo commerce platform serving 300M+ daily inferences. Strong in Python, PyTorch, and end-to-end MLOps on cloud infrastructure.',
   experience: [
@@ -211,7 +211,7 @@ export const SAMPLE_ML: ResumeData = {
     {
       name:        'LightRec',
       tech:        'Python, PyTorch, FAISS',
-      link:        'github.com/demo-mira/lightrec',
+      link:        'github.com/demo-nishant/lightrec',
       description: 'Lightweight two-tower retrieval library optimised for low-latency inference.',
       bullets:     ['600+ GitHub stars; used in 3 production systems at mid-size Indian e-commerce firms'],
     },
@@ -253,15 +253,15 @@ export const SAMPLE_ML: ResumeData = {
 
 /** Demo frontend engineer profile. */
 export const SAMPLE_FRONTEND: ResumeData = {
-  name:      'Nolan Preview',
+  name:      'Bruce Wayne',
   title:     'Frontend Engineer',
   profileImage: '',
-  email:     'nolan.preview@example.com',
+  email:     'bruce.wayne@example.com',
   phone:     '+1 (555) 010-4421',
   location:  'Design City, Remote',
-  github:    'github.com/demo-nolan',
-  linkedin:  'linkedin.com/in/demo-nolan',
-  portfolio: 'nolan-preview.example.com',
+  github:    'github.com/demo-bruce',
+  linkedin:  'linkedin.com/in/demo-bruce',
+  portfolio: 'bruce-wayne.example.com',
   summary:   'Frontend engineer with 3 years shipping design-system-driven UIs at early-stage startups. Expert in React, Next.js, and Tailwind. Care deeply about perceived performance — every project ships <100ms INP.',
   experience: [
     {
@@ -288,7 +288,7 @@ export const SAMPLE_FRONTEND: ResumeData = {
     {
       name:        'react-skeleton-kit',
       tech:        'TypeScript, React, CSS Houdini',
-      link:        'github.com/demo-nolan/react-skeleton-kit',
+      link:        'github.com/demo-bruce/react-skeleton-kit',
       description: 'Zero-dependency skeleton loader library with layout-shift-free animations.',
       bullets:     ['420+ GitHub stars; 8k weekly npm downloads'],
     },
@@ -324,15 +324,15 @@ export const SAMPLE_FRONTEND: ResumeData = {
 
 /** Demo product manager profile. */
 export const SAMPLE_PM: ResumeData = {
-  name:      'Leah Placeholder',
+  name:      'Suryansh',
   title:     'Senior Product Manager',
   profileImage: '',
-  email:     'leah.placeholder@example.com',
+  email:     'suryansh@example.com',
   phone:     '+1 (555) 010-7732',
   location:  'Product City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/demo-leah',
-  portfolio: 'leah-placeholder.example.com',
+  linkedin:  'linkedin.com/in/demo-suryansh',
+  portfolio: 'suryansh-demo.example.com',
   summary:   'Product leader with 6 years across B2B SaaS and fintech-style products. Shipped 0→1 products driving $8M+ ARR. Consulting-style background; trained as engineer — comfortable in SQL, experiment design, and stakeholder alignment.',
   experience: [
     {
@@ -397,14 +397,14 @@ export const SAMPLE_PM: ResumeData = {
 
 /** Demo backend developer profile. */
 export const SAMPLE_BACKEND: ResumeData = {
-  name:      'Devon Mock',
+  name:      'Rishit',
   title:     'Backend Developer',
   profileImage: '',
-  email:     'devon.mock@example.com',
+  email:     'rishit@example.com',
   phone:     '+1 (555) 010-9094',
   location:  'Cloud City, Remote',
-  github:    'github.com/demo-devon',
-  linkedin:  'linkedin.com/in/demo-devon',
+  github:    'github.com/demo-rishit',
+  linkedin:  'linkedin.com/in/demo-rishit',
   portfolio: '',
   summary:   'Backend developer with 2+ years building REST and gRPC APIs in Node.js and Python. Comfortable with cloud infra, message queues, and writing code that\'s easy for the next person to read.',
   experience: [
@@ -432,7 +432,7 @@ export const SAMPLE_BACKEND: ResumeData = {
     {
       name:        'jobq',
       tech:        'Node.js, BullMQ, Redis',
-      link:        'github.com/demo-devon/jobq',
+      link:        'github.com/demo-rishit/jobq',
       description: 'Simple opinionated job queue with retry, dead-letter, and Prometheus metrics built in.',
       bullets:     ['Used internally at 2 early-stage startups; 180+ GitHub stars'],
     },
@@ -458,15 +458,15 @@ export const SAMPLE_BACKEND: ResumeData = {
 
 /** Demo engineering leader profile. */
 export const SAMPLE_EXECUTIVE: ResumeData = {
-  name:      'Kiran Example',
+  name:      'Krishna',
   title:     'Engineering Director',
   profileImage: '',
-  email:     'kiran.example@example.com',
+  email:     'krishna@example.com',
   phone:     '+1 (555) 010-1267',
   location:  'Platform City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/demo-kiran',
-  portfolio: 'kiran-example.example.com',
+  linkedin:  'linkedin.com/in/demo-krishna',
+  portfolio: 'krishna-demo.example.com',
   summary:   'Engineering Director with 12 years building and scaling platform teams at fictional product companies. Led organisations of 40+ engineers across 3 time zones. Deep expertise in distributed systems, org design, and engineering culture.',
   experience: [
     {

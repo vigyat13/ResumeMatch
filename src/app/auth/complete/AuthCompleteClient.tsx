@@ -34,7 +34,7 @@ export function AuthCompleteClient({ nextPath }: { nextPath: string }) {
           You are signed in.
         </h1>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-[rgba(245,240,232,0.56)]">
-          ResumeMatch is setting up your workspace. You can continue now or wait for the automatic redirect.
+          ResumeMatch is setting up your workspace. You will be sent straight to the builder.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -45,10 +45,10 @@ export function AuthCompleteClient({ nextPath }: { nextPath: string }) {
             Build resume
           </Link>
           <Link
-            href={nextPath}
+            href="/builder"
             className="rounded-xl border border-[rgba(245,240,232,0.14)] px-5 py-3 text-sm font-semibold text-[rgba(245,240,232,0.82)] transition-colors hover:bg-[rgba(245,240,232,0.06)]"
           >
-            Continue
+            Go to builder
           </Link>
         </div>
 

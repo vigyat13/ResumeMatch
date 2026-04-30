@@ -25,15 +25,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://resumematch.live'),
   title: {
-    default: 'ResumeMatch — AI-Powered Resume Optimizer',
+    default: 'ResumeMatch',
     template: '%s | ResumeMatch', // page title format: "Dashboard | ResumeMatch"
   },
   description:
-    'Get your resume past ATS systems, match your skills to jobs, and land interviews with confidence.',
-  keywords: ['resume', 'ATS', 'job matching', 'AI resume', 'resume optimization'],
+    'Create ATS-ready resumes, compare them with job descriptions, and move toward smarter job applications.',
+  keywords: ['resume', 'ATS', 'job matching', 'resume builder', 'job applications'],
   openGraph: {
-    title: 'ResumeMatch — AI-Powered Resume Optimizer',
-    description: 'Get your resume past ATS systems and land interviews with confidence.',
+    title: 'ResumeMatch',
+    description: 'Create ATS-ready resumes, compare them with job descriptions, and move toward smarter job applications.',
     type: 'website',
     url: '/',
     siteName: 'ResumeMatch',
@@ -48,8 +48,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ResumeMatch — AI-Powered Resume Optimizer',
-    description: 'Build ATS-ready resumes, match roles, and move toward agent-assisted applications.',
+    title: 'ResumeMatch',
+    description: 'Create ATS-ready resumes, compare them with job descriptions, and move toward smarter job applications.',
     images: ['/opengraph-image'],
   },
   icons: {

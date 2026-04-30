@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="ResumeMatch">
+  <rect width="256" height="256" rx="56" fill="#080808"/>
+  <path d="M74 48h72l38 38v122H74V48z" fill="#f5f0e8"/>
+  <path d="M146 48v42h38" fill="none" stroke="#080808" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M94 146l28 28 58-76" fill="none" stroke="#2fd69a" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M94 90h36M94 116h58" stroke="#080808" stroke-width="12" stroke-linecap="round" opacity=".82"/>
+</svg>

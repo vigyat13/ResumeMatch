@@ -89,21 +89,21 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
  * SAMPLE PROFILES  (6 India-market profiles, one per template persona)
  * ───────────────────────────────────────────────────────────────── */
 
-/** Pratik Singh — backend/full-stack SWE. Default hero sample. */
+/** Demo engineer profile. Default hero sample. */
 export const SAMPLE_ENGINEER: ResumeData = {
-  name:      'Pratik Singh',
+  name:      'Aarav Demo',
   title:     'Senior Software Engineer',
   profileImage: '',
-  email:     'pratik.singh@gmail.com',
-  phone:     '+91 98450 31274',
-  location:  'Bengaluru, India',
-  github:    'github.com/pratiksingh',
-  linkedin:  'linkedin.com/in/pratiksingh',
-  portfolio: 'pratiksingh.dev',
-  summary:   'Backend-leaning full-stack engineer with 5+ years building high-throughput payments and infrastructure systems. Owned services processing 10M+ daily requests at Razorpay. Comfortable from Postgres internals to React performance budgets.',
+  email:     'aarav.demo@example.com',
+  phone:     '+1 (555) 010-2048',
+  location:  'Metro City, Remote',
+  github:    'github.com/demo-aarav',
+  linkedin:  'linkedin.com/in/demo-aarav',
+  portfolio: 'aarav-demo.example.com',
+  summary:   'Backend-leaning full-stack engineer with 5+ years building high-throughput platform and infrastructure systems. Owned services processing 10M+ daily requests at fictional SaaS companies. Comfortable from Postgres internals to React performance budgets.',
   experience: [
     {
-      company: 'Razorpay',
+      company: 'Northstar Labs',
       role:    'Senior Software Engineer · Payments Platform',
       period:  'Aug 2022 – Present',
       bullets: [
@@ -114,7 +114,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
       ],
     },
     {
-      company: 'Flipkart',
+      company: 'AtlasLoop Systems',
       role:    'Software Development Engineer II',
       period:  'Jul 2020 – Jul 2022',
       bullets: [
@@ -124,7 +124,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
       ],
     },
     {
-      company: 'Zerodha',
+      company: 'Bluegrid Studio',
       role:    'Software Engineer Intern',
       period:  'May 2019 – Jul 2019',
       bullets: [
@@ -136,7 +136,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'pgmon',
       tech:        'Go, PostgreSQL, Prometheus',
-      link:        'github.com/pratiksingh/pgmon',
+      link:        'github.com/demo-aarav/pgmon',
       description: 'Lightweight Postgres lock and query-stat exporter used by 600+ teams.',
       bullets:     [
         '1.4k GitHub stars in 4 months; 22 external contributors merged',
@@ -146,14 +146,14 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'tldraw-collab',
       tech:        'TypeScript, Yjs, Cloudflare Durable Objects',
-      link:        'github.com/pratiksingh/tldraw-collab',
+      link:        'github.com/demo-aarav/tldraw-collab',
       description: 'Real-time multiplayer whiteboard on tldraw, conflict-free up to 50 concurrent cursors.',
       bullets:     ['Featured in the Cloudflare Workers showcase, July 2024'],
     },
   ],
   education: [
     {
-      school: 'Indian Institute of Technology, Roorkee',
+      school: 'Example Institute of Technology',
       degree: 'B.Tech, Computer Science & Engineering · CGPA 8.7/10',
       year:   '2016 – 2020',
     },
@@ -169,26 +169,26 @@ export const SAMPLE_ENGINEER: ResumeData = {
     { name: 'React',       level: 72 },
   ],
   honors: [
-    'Google Summer of Code mentor — PostgreSQL organisation, 2023',
-    'ACM-ICPC Asia Regionals (Amritapuri) — Rank 14/620, 2019',
+    'Open-source platform mentor — database tooling track, 2023',
+    'Regional programming contest — Rank 14/620, 2019',
   ],
 }
 
-/** Nishant Yadav — ML engineer / data scientist. */
+/** Demo ML engineer profile. */
 export const SAMPLE_ML: ResumeData = {
-  name:      'Nishant Yadav',
+  name:      'Mira Sample',
   title:     'Machine Learning Engineer',
   profileImage: '',
-  email:     'nishant.yadav@gmail.com',
-  phone:     '+91 97310 58821',
-  location:  'Hyderabad, India',
-  github:    'github.com/nishantyadav',
-  linkedin:  'linkedin.com/in/nishantyadav',
+  email:     'mira.sample@example.com',
+  phone:     '+1 (555) 010-3186',
+  location:  'Data City, Remote',
+  github:    'github.com/demo-mira',
+  linkedin:  'linkedin.com/in/demo-mira',
   portfolio: '',
-  summary:   'ML engineer with 4 years building recommendation and NLP systems at scale. Led model infra at Meesho serving 300M+ daily inferences. Strong in Python, PyTorch, and end-to-end MLOps on AWS.',
+  summary:   'ML engineer with 4 years building recommendation and NLP systems at scale. Led model infrastructure for a demo commerce platform serving 300M+ daily inferences. Strong in Python, PyTorch, and end-to-end MLOps on cloud infrastructure.',
   experience: [
     {
-      company: 'Meesho',
+      company: 'SignalNest AI',
       role:    'ML Engineer II · Recommendations',
       period:  'Feb 2022 – Present',
       bullets: [
@@ -198,7 +198,7 @@ export const SAMPLE_ML: ResumeData = {
       ],
     },
     {
-      company: 'Walmart Global Tech India',
+      company: 'Meridian Data Works',
       role:    'Data Scientist · Supply Chain',
       period:  'Jul 2020 – Jan 2022',
       bullets: [
@@ -211,26 +211,26 @@ export const SAMPLE_ML: ResumeData = {
     {
       name:        'LightRec',
       tech:        'Python, PyTorch, FAISS',
-      link:        'github.com/nishantyadav/lightrec',
+      link:        'github.com/demo-mira/lightrec',
       description: 'Lightweight two-tower retrieval library optimised for low-latency inference.',
       bullets:     ['600+ GitHub stars; used in 3 production systems at mid-size Indian e-commerce firms'],
     },
     {
       name:        'Hindi Sentiment Corpus',
       tech:        'Python, HuggingFace Datasets',
-      link:        'huggingface.co/datasets/nishantyadav/hindi-sentiment',
+      link:        'example.com/datasets/demo-sentiment',
       description: '50k annotated Hindi social-media sentences for sentiment classification.',
       bullets:     ['10k+ downloads on HuggingFace Hub; cited in 4 academic papers'],
     },
   ],
   education: [
     {
-      school: 'IIT Hyderabad',
+      school: 'Sample School of Computing',
       degree: 'M.Tech, Computer Science — specialisation in ML · CGPA 9.1/10',
       year:   '2018 – 2020',
     },
     {
-      school: 'NIT Warangal',
+      school: 'North Valley University',
       degree: 'B.Tech, Electronics & Communication Engineering',
       year:   '2014 – 2018',
     },
@@ -246,36 +246,36 @@ export const SAMPLE_ML: ResumeData = {
     { name: 'FAISS',         level: 76 },
   ],
   honors: [
-    'Best Paper — EMNLP 2023 Industry Track (co-author)',
-    'Meesho ML Hackathon — 1st place, 2023',
+    'Best Paper — Demo NLP Industry Track, 2023',
+    'Internal ML Hackathon — 1st place, 2023',
   ],
 }
 
-/** Satyam Tiwari — frontend engineer at a startup. */
+/** Demo frontend engineer profile. */
 export const SAMPLE_FRONTEND: ResumeData = {
-  name:      'Satyam Tiwari',
+  name:      'Nolan Preview',
   title:     'Frontend Engineer',
   profileImage: '',
-  email:     'satyam.tiwari@gmail.com',
-  phone:     '+91 93452 07136',
-  location:  'Mumbai, India',
-  github:    'github.com/satyamtiwari',
-  linkedin:  'linkedin.com/in/satyamtiwari',
-  portfolio: 'satyam.design',
+  email:     'nolan.preview@example.com',
+  phone:     '+1 (555) 010-4421',
+  location:  'Design City, Remote',
+  github:    'github.com/demo-nolan',
+  linkedin:  'linkedin.com/in/demo-nolan',
+  portfolio: 'nolan-preview.example.com',
   summary:   'Frontend engineer with 3 years shipping design-system-driven UIs at early-stage startups. Expert in React, Next.js, and Tailwind. Care deeply about perceived performance — every project ships <100ms INP.',
   experience: [
     {
-      company: 'Setu (acquired by Pine Labs)',
+      company: 'PixelBridge Labs',
       role:    'Frontend Engineer',
       period:  'Jan 2023 – Present',
       bullets: [
         'Rebuilt the account-aggregator consent journey in Next.js 14; reduced time-to-interactive by 55% and lifted completion rate from 61% to 84%',
-        'Led the Setu Design System v2 — 60 Radix-based components with full dark-mode, adopted across 4 product squads',
+        'Led the design system v2 — 60 Radix-based components with full dark-mode, adopted across 4 product squads',
         'Integrated Playwright E2E suite with CI; caught 3 critical regressions before production in the first sprint',
       ],
     },
     {
-      company: 'Dukaan',
+      company: 'Storefrontly',
       role:    'Frontend Developer',
       period:  'Jun 2021 – Dec 2022',
       bullets: [
@@ -288,21 +288,21 @@ export const SAMPLE_FRONTEND: ResumeData = {
     {
       name:        'react-skeleton-kit',
       tech:        'TypeScript, React, CSS Houdini',
-      link:        'github.com/satyamtiwari/react-skeleton-kit',
+      link:        'github.com/demo-nolan/react-skeleton-kit',
       description: 'Zero-dependency skeleton loader library with layout-shift-free animations.',
       bullets:     ['420+ GitHub stars; 8k weekly npm downloads'],
     },
     {
       name:        'Colour Ramp Tool',
       tech:        'SvelteKit, OKLCH, WCAG',
-      link:        'colourramp.satyam.design',
+      link:        'colour-ramp.example.com',
       description: 'Browser tool for generating accessible perceptually uniform colour scales.',
       bullets:     ['Featured in CSS Weekly #532 and Smashing Magazine newsletter'],
     },
   ],
   education: [
     {
-      school: 'Vellore Institute of Technology',
+      school: 'Riverbend Technical University',
       degree: 'B.Tech, Information Technology',
       year:   '2017 – 2021',
     },
@@ -318,25 +318,25 @@ export const SAMPLE_FRONTEND: ResumeData = {
     { name: 'SVG / Animation', level: 82 },
   ],
   honors: [
-    'Frontend Masters — Course Author, "Modern CSS Layout", 2024',
+    'Demo Web Guild — Course Author, "Modern CSS Layout", 2024',
   ],
 }
 
-/** Suryansh Deo — product manager / management consulting. */
+/** Demo product manager profile. */
 export const SAMPLE_PM: ResumeData = {
-  name:      'Suryansh Deo',
+  name:      'Leah Placeholder',
   title:     'Senior Product Manager',
   profileImage: '',
-  email:     'suryansh.deo@outlook.com',
-  phone:     '+91 99020 44157',
-  location:  'Gurgaon, India',
+  email:     'leah.placeholder@example.com',
+  phone:     '+1 (555) 010-7732',
+  location:  'Product City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/suryansh-deo',
-  portfolio: 'suryanshde.com',
-  summary:   'Product leader with 6 years across B2B SaaS and fintech. Shipped 0→1 products driving $8M+ ARR. Consulting background from BCG; trained as engineer — comfortable in SQL, experiment design, and stakeholder alignment.',
+  linkedin:  'linkedin.com/in/demo-leah',
+  portfolio: 'leah-placeholder.example.com',
+  summary:   'Product leader with 6 years across B2B SaaS and fintech-style products. Shipped 0→1 products driving $8M+ ARR. Consulting-style background; trained as engineer — comfortable in SQL, experiment design, and stakeholder alignment.',
   experience: [
     {
-      company: 'Zoho',
+      company: 'OrbitDesk Software',
       role:    'Senior Product Manager · CRM Platform',
       period:  'Mar 2022 – Present',
       bullets: [
@@ -346,12 +346,12 @@ export const SAMPLE_PM: ResumeData = {
       ],
     },
     {
-      company: 'BCG',
+      company: 'Vector Strategy Group',
       role:    'Associate · Digital Ventures',
       period:  'Jul 2019 – Feb 2022',
       bullets: [
         'Led digital-transformation engagement for a ₹2,000Cr retail chain; built the MVP roadmap that secured ₹120Cr Series B',
-        'Modelled unit economics for 3 fintech startups in the BCG Digital Ventures portfolio',
+        'Modelled unit economics for 3 fintech startups in a venture studio portfolio',
       ],
     },
   ],
@@ -359,22 +359,22 @@ export const SAMPLE_PM: ResumeData = {
     {
       name:        'PMCraft Newsletter',
       tech:        'Substack, Notion',
-      link:        'pmcraft.substack.com',
+      link:        'product-notes.example.com',
       description: 'Weekly teardowns of Indian SaaS product decisions.',
       bullets:     [
         '8,200+ subscribers; open rate 41% vs. industry avg 22%',
-        'Cited by YourStory and Inc42 as a top PM resource in 2024',
+        'Cited by demo product communities as a top PM resource in 2024',
       ],
     },
   ],
   education: [
     {
-      school: 'IIM Ahmedabad',
+      school: 'Example School of Management',
       degree: 'PGDM (MBA) · Strategy & Operations · CGPA 3.7/4',
       year:   '2017 – 2019',
     },
     {
-      school: 'Delhi Technological University',
+      school: 'Metro Technical University',
       degree: 'B.Tech, Computer Science',
       year:   '2013 – 2017',
     },
@@ -390,26 +390,26 @@ export const SAMPLE_PM: ResumeData = {
     { name: 'Figma',               level: 68 },
   ],
   honors: [
-    'Forbes 30 Under 30 — Enterprise Technology, 2024',
-    'Zoho Founder\'s Award — CRM AI launch, 2024',
+    'Demo 30 Under 30 — Enterprise Technology, 2024',
+    'Founder\'s Award — CRM AI launch, 2024',
   ],
 }
 
-/** Rishit — backend developer (mid-level). */
+/** Demo backend developer profile. */
 export const SAMPLE_BACKEND: ResumeData = {
-  name:      'Rishit',
+  name:      'Devon Mock',
   title:     'Backend Developer',
   profileImage: '',
-  email:     'rishit.dev@gmail.com',
-  phone:     '+91 91740 29563',
-  location:  'Pune, India',
-  github:    'github.com/rishitdev',
-  linkedin:  'linkedin.com/in/rishit-dev',
+  email:     'devon.mock@example.com',
+  phone:     '+1 (555) 010-9094',
+  location:  'Cloud City, Remote',
+  github:    'github.com/demo-devon',
+  linkedin:  'linkedin.com/in/demo-devon',
   portfolio: '',
   summary:   'Backend developer with 2+ years building REST and gRPC APIs in Node.js and Python. Comfortable with cloud infra, message queues, and writing code that\'s easy for the next person to read.',
   experience: [
     {
-      company: 'PhonePe',
+      company: 'RelayPay Labs',
       role:    'Software Engineer · Platform',
       period:  'Sep 2022 – Present',
       bullets: [
@@ -419,7 +419,7 @@ export const SAMPLE_BACKEND: ResumeData = {
       ],
     },
     {
-      company: 'HashedIn (Deloitte)',
+      company: 'HealthGrid Demo',
       role:    'Software Engineer Intern',
       period:  'Jan 2022 – Aug 2022',
       bullets: [
@@ -432,14 +432,14 @@ export const SAMPLE_BACKEND: ResumeData = {
     {
       name:        'jobq',
       tech:        'Node.js, BullMQ, Redis',
-      link:        'github.com/rishitdev/jobq',
+      link:        'github.com/demo-devon/jobq',
       description: 'Simple opinionated job queue with retry, dead-letter, and Prometheus metrics built in.',
       bullets:     ['Used internally at 2 early-stage startups; 180+ GitHub stars'],
     },
   ],
   education: [
     {
-      school: 'Pune Institute of Computer Technology',
+      school: 'Westbridge College of Engineering',
       degree: 'B.E., Computer Engineering · CGPA 8.4/10',
       year:   '2018 – 2022',
     },
@@ -456,32 +456,32 @@ export const SAMPLE_BACKEND: ResumeData = {
   ],
 }
 
-/** KrishnaMurti — senior engineering leader / CTO-track. */
+/** Demo engineering leader profile. */
 export const SAMPLE_EXECUTIVE: ResumeData = {
-  name:      'KrishnaMurti',
+  name:      'Kiran Example',
   title:     'Engineering Director',
   profileImage: '',
-  email:     'krishnamurti@outlook.com',
-  phone:     '+91 96310 05724',
-  location:  'Bengaluru, India',
+  email:     'kiran.example@example.com',
+  phone:     '+1 (555) 010-1267',
+  location:  'Platform City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/krishnamurti-eng',
-  portfolio: 'krishnamurti.io',
-  summary:   'Engineering Director with 12 years building and scaling platform teams at Infosys, Ola, and Freshworks. Led organisations of 40+ engineers across 3 time zones. Deep expertise in distributed systems, org design, and engineering culture.',
+  linkedin:  'linkedin.com/in/demo-kiran',
+  portfolio: 'kiran-example.example.com',
+  summary:   'Engineering Director with 12 years building and scaling platform teams at fictional product companies. Led organisations of 40+ engineers across 3 time zones. Deep expertise in distributed systems, org design, and engineering culture.',
   experience: [
     {
-      company: 'Freshworks',
+      company: 'CloudHarbor Systems',
       role:    'Engineering Director · Platform',
       period:  'Apr 2020 – Present',
       bullets: [
-        'Built the core platform team (12 → 42 engineers) responsible for shared infra used by all 9 Freshworks products',
+        'Built the core platform team (12 → 42 engineers) responsible for shared infra used by all 9 product lines',
         'Drove a multi-year migration from AWS to a hybrid cloud; reduced infrastructure cost by $3.2M annually',
         'Established the engineering excellence programme — reduced P0 incidents by 58% in 18 months through SLO culture and blameless post-mortems',
         'Partnered with CPO to define a 3-year platform roadmap, aligning 6 product teams on shared investment priorities',
       ],
     },
     {
-      company: 'Ola',
+      company: 'RouteWave Mobility',
       role:    'Senior Engineering Manager · Maps & Navigation',
       period:  'Jan 2017 – Mar 2020',
       bullets: [
@@ -490,11 +490,11 @@ export const SAMPLE_EXECUTIVE: ResumeData = {
       ],
     },
     {
-      company: 'Infosys',
+      company: 'EnterpriseWorks Demo',
       role:    'Technology Lead',
       period:  '2012 – 2016',
       bullets: [
-        'Delivered a $12M enterprise integration programme for a UK telecom client, on schedule and under budget',
+        'Delivered a $12M enterprise integration programme for a demo telecom client, on schedule and under budget',
       ],
     },
   ],
@@ -502,19 +502,19 @@ export const SAMPLE_EXECUTIVE: ResumeData = {
     {
       name:        'OpenSLO India Working Group',
       tech:        'SLO standards, community',
-      link:        'openslo.com',
+      link:        'slo-working-group.example.com',
       description: 'Contributing member of the OpenSLO specification working group.',
-      bullets:     ['Represented Freshworks at SREcon Asia 2023 and KubeCon India 2024'],
+      bullets:     ['Represented CloudHarbor at reliability and platform engineering conferences in 2023 and 2024'],
     },
   ],
   education: [
     {
-      school: 'Indian Institute of Science, Bengaluru',
+      school: 'Example Graduate Institute',
       degree: 'M.Tech, Computer Science & Automation',
       year:   '2010 – 2012',
     },
     {
-      school: 'PSG College of Technology, Coimbatore',
+      school: 'South Coast College of Technology',
       degree: 'B.E., Computer Science',
       year:   '2006 – 2010',
     },
@@ -530,8 +530,8 @@ export const SAMPLE_EXECUTIVE: ResumeData = {
     { name: 'Stakeholder Mgmt',       level: 92 },
   ],
   honors: [
-    'CIO & Leader Magazine — Top 25 CTOs in India, 2024',
-    'SREcon Asia — Keynote speaker, 2023',
+    'Demo Leadership Review — Top 25 Engineering Leaders, 2024',
+    'Reliability Summit — Keynote speaker, 2023',
   ],
 }
 

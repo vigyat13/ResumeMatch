@@ -35,6 +35,22 @@ export const metadata: Metadata = {
     title: 'ResumeMatch — AI-Powered Resume Optimizer',
     description: 'Get your resume past ATS systems and land interviews with confidence.',
     type: 'website',
+    url: '/',
+    siteName: 'ResumeMatch',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'ResumeMatch — AI-powered resume builder and job matching',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ResumeMatch — AI-Powered Resume Optimizer',
+    description: 'Build ATS-ready resumes, match roles, and move toward agent-assisted applications.',
+    images: ['/opengraph-image'],
   },
   icons: {
     icon: [

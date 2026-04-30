@@ -13,7 +13,7 @@ import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
 import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
-import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
+import { pickSampleForTemplate } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
 import { createClient } from '@/lib/supabase/client'
 import { parseLatex }    from '@/lib/builder/parseLatex'
@@ -34,7 +34,8 @@ interface Props {
 }
 
 export function BuilderEditor({ templateId, templateName, templateHtml, templateCss }: Props) {
-  const [data, setData]                 = useState<ResumeData>(DEFAULT_RESUME_DATA)
+  const sampleData                      = useMemo(() => pickSampleForTemplate(templateName), [templateName])
+  const [data, setData]                 = useState<ResumeData>(sampleData)
   const [tab, setTab]                   = useState<Tab>('form')
   const [showAuth, setShowAuth]         = useState(false)
   const [isLoggedIn, setIsLoggedIn]     = useState(false)
@@ -60,7 +61,9 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ResumeData
-        setTimeout(() => setData(parsed), 0)
+        if (hasResumeContent(parsed)) {
+          setTimeout(() => setData(parsed), 0)
+        }
       } catch {}
     }
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session))
@@ -524,6 +527,33 @@ function downloadButtonLabel(status: 'idle' | 'saving' | 'downloading' | 'ready'
   if (status === 'downloading') return 'Downloading...'
   if (status === 'ready') return 'Ready to save'
   return 'Download PDF'
+}
+
+function hasResumeContent(data: ResumeData): boolean {
+  return Boolean(
+    data.name?.trim() ||
+    data.email?.trim() ||
+    data.summary?.trim() ||
+    data.experience?.some(entry =>
+      entry.company.trim() ||
+      entry.role.trim() ||
+      entry.period.trim() ||
+      entry.bullets.some(bullet => bullet.trim())
+    ) ||
+    data.projects?.some(project =>
+      project.name.trim() ||
+      project.tech.trim() ||
+      project.description.trim() ||
+      project.bullets.some(bullet => bullet.trim())
+    ) ||
+    data.education?.some(education =>
+      education.school.trim() ||
+      education.degree.trim() ||
+      education.cgpa?.trim() ||
+      education.year.trim()
+    ) ||
+    data.skills?.some(skill => skill.name.trim())
+  )
 }
 
 function printA4Document(html: string, onPrintOpened: () => void) {

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const code     = searchParams.get('code')
   const errParam = searchParams.get('error')
   const errDesc  = searchParams.get('error_description')
-  const next     = searchParams.get('next') ?? '/dashboard'
+  const next     = sanitizeNextPath(searchParams.get('next'))
 
   // Supabase sends ?error=... when OAuth fails at the provider level (bad credentials, user denied, etc.)
   if (errParam) {
@@ -72,7 +72,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}${next}`)
+  const completeUrl = new URL('/auth/complete', origin)
+  completeUrl.searchParams.set('next', next)
+  return NextResponse.redirect(completeUrl)
+}
+
+function sanitizeNextPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard'
+  return value
 }
 
 async function isNewOAuthUser(userId: string, createdAt?: string): Promise<boolean> {

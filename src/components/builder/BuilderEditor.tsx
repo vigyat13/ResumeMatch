@@ -66,7 +66,11 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
         }
       } catch {}
     }
-    supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session))
+    supabase.auth.getUser().then(({ data: { user } }) => setIsLoggedIn(!!user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user)
+    })
+    return () => subscription.unsubscribe()
   }, [supabase.auth])
 
   useEffect(() => {

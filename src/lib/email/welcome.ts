@@ -71,7 +71,7 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
                 </p>
 
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
-                  Right now, the resume builder is live, and more features are being rolled out step by step, including resume audits, job matching, and agent-assisted applications.
+                  Right now, the resume builder is live, and more features are being rolled out step by step, including resume audits and job matching. The bigger goal is to move beyond just editing resumes: in this new era, ResumeMatch should help agents understand your profile, find relevant roles, prepare your applications, and eventually handle more of the applying process on your behalf while you stay in control.
                 </p>
 
                 <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#334155;">
@@ -111,7 +111,7 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
               <td style="padding:20px 40px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
                 <p style="margin:0;font-size:12px;color:#94a3b8;">
                   You&apos;re getting this because you signed up for beta access at
-                  <a href="${appUrl}" style="color:#10b981;text-decoration:none;">resumematch.app</a>.
+                  <a href="${appUrl}" style="color:#10b981;text-decoration:none;">ResumeMatch</a>.
                 </p>
               </td>
             </tr>

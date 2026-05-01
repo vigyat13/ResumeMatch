@@ -37,7 +37,7 @@ export function BuilderTemplateBrowser({ templates }: { templates: Template[] })
 
   return (
     <>
-      <div className="flex items-end justify-between mb-7">
+      <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 'clamp(28px, 4vw, 50px)', lineHeight: 0.93, letterSpacing: '-0.01em', color: 'var(--color-marketing-text)', fontWeight: 700, margin: 0 }}>
             Choose your template
@@ -46,16 +46,16 @@ export function BuilderTemplateBrowser({ templates }: { templates: Template[] })
             All templates are ATS-safe unless marked otherwise
           </p>
         </div>
-        <span className="text-base text-[rgba(245,240,232,0.45)] pb-1">{visibleTemplates.length} templates</span>
+        <span className="text-sm text-[rgba(245,240,232,0.45)] sm:pb-1 sm:text-base">{visibleTemplates.length} templates</span>
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-8">
+      <div className="-mx-4 mb-8 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {Object.entries(CATEGORIES).map(([cat, names]) => (
           <button
             key={cat}
             type="button"
             onClick={() => setCategory(cat)}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-all ${
               category === cat
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'border border-border text-muted-foreground hover:text-foreground hover:border-primary/40'

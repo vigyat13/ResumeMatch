@@ -36,7 +36,7 @@ export default async function DashboardLayout({
     .single()
 
   return (
-    <div className="flex h-screen bg-[var(--color-surface)] overflow-hidden">
+    <div className="flex min-h-dvh flex-col bg-[var(--color-surface)] md:h-screen md:flex-row md:overflow-hidden">
       <Sidebar
         user={{
           id:                user.id,
@@ -49,8 +49,8 @@ export default async function DashboardLayout({
       />
 
       {/* Main content area — scrollable */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <main className="min-w-0 flex-1 overflow-y-auto pb-20 md:pb-0">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
           {children}
         </div>
       </main>

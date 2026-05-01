@@ -67,11 +67,11 @@ export function BuilderForm({ data, onChange }: Props) {
       {/* ── Personal Info ──────────────────────────────────── */}
       <section>
         <SectionHeading>Personal Info</SectionHeading>
-        <div className="grid grid-cols-2 gap-3">
-          <FieldGroup label="Full Name" span="col-span-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <FieldGroup label="Full Name" span="sm:col-span-2">
             <Input value={data.name} onChange={v => set('name', v)} placeholder="Jane Smith" />
           </FieldGroup>
-          <FieldGroup label="Job Title" span="col-span-2">
+          <FieldGroup label="Job Title" span="sm:col-span-2">
             <Input value={data.title} onChange={v => set('title', v)} placeholder="Software Engineer" />
           </FieldGroup>
           {/* Photo upload */}
@@ -158,14 +158,14 @@ export function BuilderForm({ data, onChange }: Props) {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <FieldGroup label="Company">
                   <Input value={exp.company} onChange={v => setExp(i, { company: v })} placeholder="Acme Corp" />
                 </FieldGroup>
                 <FieldGroup label="Role / Title">
                   <Input value={exp.role} onChange={v => setExp(i, { role: v })} placeholder="Senior Engineer" />
                 </FieldGroup>
-                <FieldGroup label="Period" span="col-span-2">
+                <FieldGroup label="Period" span="sm:col-span-2">
                   <Input value={exp.period} onChange={v => setExp(i, { period: v })} placeholder="Jan 2022 – Present" />
                 </FieldGroup>
               </div>
@@ -202,17 +202,17 @@ export function BuilderForm({ data, onChange }: Props) {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <FieldGroup label="Project Name">
                   <Input value={proj.name} onChange={v => setProj(i, { name: v })} placeholder="My Project" />
                 </FieldGroup>
                 <FieldGroup label="Tech Stack">
                   <Input value={proj.tech} onChange={v => setProj(i, { tech: v })} placeholder="React, Node.js, PostgreSQL" />
                 </FieldGroup>
-                <FieldGroup label="Link (GitHub / Live)" span="col-span-2">
+                <FieldGroup label="Link (GitHub / Live)" span="sm:col-span-2">
                   <Input value={proj.link ?? ''} onChange={v => setProj(i, { link: v })} placeholder="github.com/handle/project" />
                 </FieldGroup>
-                <FieldGroup label="Description" span="col-span-2">
+                <FieldGroup label="Description" span="sm:col-span-2">
                   <Input value={proj.description} onChange={v => setProj(i, { description: v })} placeholder="Brief description of what it does" />
                 </FieldGroup>
               </div>
@@ -261,8 +261,8 @@ export function BuilderForm({ data, onChange }: Props) {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldGroup label="School" span="col-span-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <FieldGroup label="School" span="sm:col-span-2">
                   <Input value={edu.school} onChange={v => setEdu(i, { school: v })} placeholder="State University" />
                 </FieldGroup>
                 <FieldGroup label="Degree">
@@ -271,7 +271,7 @@ export function BuilderForm({ data, onChange }: Props) {
                 <FieldGroup label="Year">
                   <Input value={edu.year} onChange={v => setEdu(i, { year: v })} placeholder="2019" />
                 </FieldGroup>
-                <FieldGroup label="CGPA / GPA" span="col-span-2">
+                <FieldGroup label="CGPA / GPA" span="sm:col-span-2">
                   <Input value={edu.cgpa ?? ''} onChange={v => setEdu(i, { cgpa: v })} placeholder="8.7/10 or 3.8/4.0" />
                 </FieldGroup>
               </div>

@@ -87,6 +87,7 @@ function TypewriterHero() {
   return (
     <div style={{ position: "relative" }}>
       <h1
+        className="landing-hero-title"
         style={{
           fontFamily: "var(--font-headline), sans-serif",
           fontSize: "clamp(48px, 9vw, 108px)",
@@ -163,6 +164,22 @@ export default function LandingPage() {
           .landing-anchor-grid { grid-template-columns: 1fr !important; }
           .landing-flow-grid { grid-template-columns: 1fr !important; }
           .landing-flow-arrow { display: none !important; }
+        }
+
+        @media (max-width: 640px) {
+          .landing-header { height: 58px !important; padding: 0 16px !important; }
+          .landing-header > div:last-child { gap: 8px !important; }
+          .landing-header a[href="/login"] { display: none !important; }
+          .landing-header a[href="/builder"] { height: 34px !important; padding: 0 14px !important; font-size: 12px !important; }
+          .landing-section { padding-left: 16px !important; padding-right: 16px !important; }
+          .landing-hero-title { font-size: clamp(44px, 17vw, 72px) !important; min-height: 156px !important; }
+          .landing-proof-grid { gap: 10px !important; }
+          .landing-proof-grid > div { padding: 14px !important; border: 1px solid rgba(245,240,232,0.055); }
+          .landing-flow-grid { gap: 14px !important; }
+          .landing-flow-grid a { min-height: auto !important; padding: 22px !important; border-radius: 22px !important; }
+          .landing-flow-grid h3 { font-size: 24px !important; }
+          .landing-cta { border-radius: 22px !important; padding: 30px 20px !important; gap: 24px !important; }
+          .landing-cta a { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
 
@@ -334,7 +351,7 @@ export default function LandingPage() {
                 <div style={{ position: "relative" }}>
                 <TypewriterHero />
 
-                <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div className="landing-hero-actions" style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
                   <Link
                     href="/builder"
                     style={{
@@ -409,7 +426,7 @@ export default function LandingPage() {
           <div style={{ borderTop: "1px solid rgba(245,240,232,0.04)", borderBottom: "1px solid rgba(245,240,232,0.04)", background: "rgba(245,240,232,0.012)" }}>
             <div
               className="landing-section"
-              style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "center" }}
+              style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "flex-start" }}
             >
               {["LinkedIn", "Indeed", "Greenhouse", "Lever", "Workday", "iCIMS"].map((l) => (
                 <span

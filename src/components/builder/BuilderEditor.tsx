@@ -228,10 +228,10 @@ ${previewSpacingCss(previewTuning, 'body')}
 
       {/* ── Single unified top bar ───────────────────────────── */}
       <header className="print:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex min-h-13 items-center px-3 py-2 gap-2 sm:px-4 sm:gap-3">
+        <div className="flex min-h-13 flex-wrap items-center px-3 py-2 gap-2 sm:px-4 sm:gap-3">
 
           {/* Logo */}
-          <Link href="/builder" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 18, fontWeight: 700, letterSpacing: '0.01em', flexShrink: 0 }}>
+          <Link href="/builder" className="text-base sm:text-lg" style={{ fontFamily: 'var(--font-headline), sans-serif', fontWeight: 700, letterSpacing: '0.01em', flexShrink: 0 }}>
             <span>Resume</span><span style={{ color: 'hsl(var(--primary))' }}>Match</span>
           </Link>
 
@@ -249,7 +249,7 @@ ${previewSpacingCss(previewTuning, 'body')}
           <div className="hidden sm:block flex-1" />
 
           {/* Tab switcher */}
-          <div className="order-3 flex w-full items-center gap-0.5 rounded-lg bg-muted p-1 sm:order-none sm:w-auto">
+          <div className="order-3 flex w-full items-center gap-0.5 overflow-x-auto rounded-lg bg-muted p-1 sm:order-none sm:w-auto">
             <TabBtn active={tab === 'form'}   onClick={() => setTab('form')}
               icon={<FileText className="w-3.5 h-3.5" />} label="Form" />
             <TabBtn active={tab === 'direct'} onClick={() => setTab('direct')}
@@ -260,7 +260,7 @@ ${previewSpacingCss(previewTuning, 'body')}
 
           {/* LaTeX actions (visible only on LaTeX tab) */}
           {tab === 'latex' && (
-            <div className="flex items-center gap-1.5">
+            <div className="order-4 flex w-full items-center gap-1.5 overflow-x-auto sm:order-none sm:w-auto">
               <button onClick={() => { setEditedLatex(null); setRecompileError(null) }}
                 title="Regenerate LaTeX from form data"
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted transition-colors">
@@ -304,16 +304,16 @@ ${previewSpacingCss(previewTuning, 'body')}
 
       {/* ── Tab: Form ──────────────────────────────────────── */}
       {tab === 'form' && (
-        <div className="print:hidden flex h-[calc(100vh-53px)] flex-col lg:flex-row">
+        <div className="print:hidden flex min-h-[calc(100dvh-104px)] flex-col lg:h-[calc(100vh-53px)] lg:flex-row">
           {/* Left panel — form */}
-          <div className="w-full flex-shrink-0 overflow-y-auto border-b border-border bg-card px-4 py-4 lg:w-[400px] lg:border-b-0 lg:border-r lg:px-5 lg:py-5">
+          <div className="max-h-[54dvh] w-full flex-shrink-0 overflow-y-auto border-b border-border bg-card px-4 py-4 lg:max-h-none lg:w-[400px] lg:border-b-0 lg:border-r lg:px-5 lg:py-5">
             <BuilderForm data={data} onChange={setData} />
             <div className="mt-6 pt-6 border-t border-border">
               <SkillsEditor skills={data.skills} onChange={skills => setData(d => ({ ...d, skills }))} />
             </div>
           </div>
           {/* Right panel — live preview */}
-          <div className="flex-1 overflow-auto bg-muted/40 px-4 py-5 flex justify-center print:p-0 print:bg-white sm:px-8 sm:py-8">
+          <div className="flex min-h-[46dvh] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-6 print:bg-white print:p-0 sm:px-8 sm:py-8">
             <div className="print-target">
               <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
             </div>
@@ -333,7 +333,7 @@ ${previewSpacingCss(previewTuning, 'body')}
 
       {/* ── Tab: Canvas (direct edit) ───────────────────────── */}
       {tab === 'direct' && (
-        <div className="flex min-h-[calc(100vh-53px)] bg-muted/40">
+        <div className="flex min-h-[calc(100dvh-104px)] bg-muted/40 lg:min-h-[calc(100vh-53px)]">
           <div className="flex flex-1 flex-col items-center gap-4 overflow-auto px-4 py-5 sm:px-8 sm:py-6">
             <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg max-w-xl text-center">
               This canvas renders the canonical semantic HTML output. Direct edits here are local-only and do not rewrite the form state.
@@ -357,11 +357,11 @@ ${previewSpacingCss(previewTuning, 'body')}
 
       {/* ── Tab: LaTeX — Overleaf-style split ──────────────── */}
       {tab === 'latex' && (
-        <div className="flex h-[calc(100vh-53px)]">
+        <div className="flex min-h-[calc(100dvh-104px)] lg:h-[calc(100vh-53px)]">
           <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
 
           {/* Left: Monaco + image panel */}
-          <div className="flex-1 flex flex-col border-r border-border" style={{ minWidth: 0 }}>
+          <div className="flex min-h-[48dvh] flex-1 flex-col border-b border-border lg:border-b-0 lg:border-r" style={{ minWidth: 0 }}>
 
             {/* Editor toolbar (dark, like Overleaf) */}
             <div className="flex-shrink-0 px-4 py-2 bg-[#1e1e1e] border-b border-[#2a2a2a] flex items-center gap-3">
@@ -456,7 +456,7 @@ ${previewSpacingCss(previewTuning, 'body')}
           </div>
 
           {/* Right: preview + recompile */}
-          <div className="flex-1 flex flex-col bg-muted/40" style={{ minWidth: 0 }}>
+          <div className="flex min-h-[48dvh] flex-1 flex-col bg-muted/40" style={{ minWidth: 0 }}>
 
             {/* Preview toolbar */}
             <div className="flex-shrink-0 px-4 py-2 bg-card border-b border-border flex items-center gap-2">
@@ -486,8 +486,8 @@ ${previewSpacingCss(previewTuning, 'body')}
             )}
 
             {/* Preview — shows the canonical HTML rendered from parsed data */}
-            <div className="flex-1 overflow-auto px-6 py-6 flex justify-center">
-              <div style={{ transform: 'scale(0.72)', transformOrigin: 'top center', width: '21cm' }}>
+            <div className="flex flex-1 justify-center overflow-auto px-3 py-5 sm:px-6 sm:py-6">
+              <div className="w-[21cm] max-w-full origin-top" style={{ transform: 'scale(0.72)', transformOrigin: 'top center' }}>
                 <SystemHtmlPreview html={systemOutput.html} />
               </div>
             </div>

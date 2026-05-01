@@ -45,18 +45,18 @@ export default async function BuilderPage() {
           background: 'rgba(8,8,8,0.82)',
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 22, letterSpacing: '0.01em', fontWeight: 700 }}>
             Resume<span style={{ color: 'var(--color-marketing-accent)' }}>Match</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Link href="/login"
-              className="text-sm transition-colors px-3 py-1.5 text-[rgba(245,240,232,0.55)] hover:text-[var(--color-marketing-text)]">
+              className="hidden px-3 py-1.5 text-sm text-[rgba(245,240,232,0.55)] transition-colors hover:text-[var(--color-marketing-text)] sm:inline-flex">
               Sign in
             </Link>
             <Link href="/signup"
-              className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
-              Get started free
+              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:px-4">
+              Start free
             </Link>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default async function BuilderPage() {
 
       {/* ── Hero ────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid rgba(245,240,232,0.055)', background: 'var(--color-marketing-surface)' }}>
-        <div className="max-w-7xl mx-auto px-6 py-14 lg:py-[4.5rem] flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-20">
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:flex-row lg:items-center lg:gap-20 lg:py-[4.5rem]">
 
           {/* Left copy */}
           <div className="flex-1 max-w-[720px] space-y-6 lg:pl-1">
@@ -72,7 +72,7 @@ export default async function BuilderPage() {
               Build a resume<br />
               <span style={{ color: 'var(--color-marketing-accent)' }}>that gets interviews</span>
             </h1>
-            <p className="text-[rgba(245,240,232,0.42)] text-lg leading-relaxed max-w-[720px]">
+            <p className="max-w-[720px] text-base leading-relaxed text-[rgba(245,240,232,0.42)] sm:text-lg">
               Pick from {total}+ professional and company-inspired templates, fill in
               your details, and download a pixel-perfect PDF. Sign-in only at download.
             </p>
@@ -88,7 +88,7 @@ export default async function BuilderPage() {
                 </Link>
               )}
             </div>
-            <div className="flex gap-12 pt-2">
+            <div className="grid grid-cols-3 gap-4 pt-2 sm:flex sm:gap-12">
               {[
                 { value: `${total}+`, label: 'Templates' },
                 { value: '7',         label: 'FAANG styles' },
@@ -123,7 +123,7 @@ export default async function BuilderPage() {
       </div>
 
       {/* ── Template Gallery ────────────────────────────────── */}
-      <div id="templates" className="max-w-7xl mx-auto px-6 pt-14 pb-10">
+      <div id="templates" className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 sm:pt-14">
 
         <BuilderTemplateBrowser templates={templates} />
       </div>

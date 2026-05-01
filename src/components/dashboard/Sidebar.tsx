@@ -64,9 +64,58 @@ export function Sidebar({ user }: { user: SidebarUser }) {
   }
 
   return (
+    <>
+    <div className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 px-4 py-3 backdrop-blur md:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/dashboard"
+          className="text-lg font-bold tracking-[0.01em] text-[var(--color-text-primary)]"
+          style={{ fontFamily: 'var(--font-headline), sans-serif' }}
+        >
+          Resume<span className="text-[var(--color-accent)]">Match</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/builder"
+            className="rounded-full bg-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-black"
+          >
+            Builder
+          </Link>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-secondary)] disabled:opacity-50"
+          >
+            Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/96 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
+      {NAV_ITEMS.map(({ label, href }) => {
+        const active = isActivePath(pathname, href)
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold transition-colors',
+              active
+                ? 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'
+                : 'text-[var(--color-text-muted)]'
+            )}
+          >
+            <span className="text-[11px]">{label.split(' ').map(word => word[0]).join('')}</span>
+            <span className="mt-0.5 max-w-full truncate">{label.replace('Job ', '')}</span>
+          </Link>
+        )
+      })}
+    </nav>
+
     <aside
       className={cn(
-        'relative flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-raised)]',
+        'relative hidden flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] md:flex',
         'transition-all duration-300 ease-in-out',
         collapsed ? 'w-16' : 'w-64'
       )}
@@ -107,7 +156,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map(({ label, href }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`)
+          const active = isActivePath(pathname, href)
           return (
             <Link
               key={href}
@@ -179,5 +228,12 @@ export function Sidebar({ user }: { user: SidebarUser }) {
         </button>
       </div>
     </aside>
+    </>
   )
+}
+
+function isActivePath(pathname: string, href: string): boolean {
+  return href === '/dashboard'
+    ? pathname === href
+    : pathname === href || pathname.startsWith(`${href}/`)
 }

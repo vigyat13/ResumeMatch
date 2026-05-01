@@ -44,6 +44,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [contentScale, setContentScale] = useState(100)
   const [cropBottomMm, setCropBottomMm] = useState(0)
   const [layoutPanelOpen, setLayoutPanelOpen] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit')
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'saving' | 'downloading' | 'ready'>('idle')
 
   // LaTeX editor state
@@ -250,7 +251,7 @@ ${previewSpacingCss(previewTuning, 'body')}
 
           {/* Tab switcher */}
           <div className="order-3 flex w-full items-center gap-0.5 overflow-x-auto rounded-lg bg-muted p-1 sm:order-none sm:w-auto">
-            <TabBtn active={tab === 'form'}   onClick={() => setTab('form')}
+            <TabBtn active={tab === 'form'}   onClick={() => { setTab('form'); setMobilePane('edit') }}
               icon={<FileText className="w-3.5 h-3.5" />} label="Form" />
             <TabBtn active={tab === 'direct'} onClick={() => setTab('direct')}
               icon={<Edit3 className="w-3.5 h-3.5" />}    label="Canvas" />
@@ -305,16 +306,37 @@ ${previewSpacingCss(previewTuning, 'body')}
       {/* ── Tab: Form ──────────────────────────────────────── */}
       {tab === 'form' && (
         <div className="print:hidden flex min-h-[calc(100dvh-104px)] flex-col lg:h-[calc(100vh-53px)] lg:flex-row">
+          <div className="sticky top-[104px] z-10 grid grid-cols-2 gap-1 border-b border-border bg-background/95 p-2 backdrop-blur lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobilePane('edit')}
+              className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                mobilePane === 'edit' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobilePane('preview')}
+              className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                mobilePane === 'preview' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Preview CV
+            </button>
+          </div>
+
           {/* Left panel — form */}
-          <div className="max-h-[54dvh] w-full flex-shrink-0 overflow-y-auto border-b border-border bg-card px-4 py-4 lg:max-h-none lg:w-[400px] lg:border-b-0 lg:border-r lg:px-5 lg:py-5">
+          <div className={`${mobilePane === 'edit' ? 'block' : 'hidden'} w-full flex-shrink-0 overflow-y-auto border-b border-border bg-card px-4 py-4 lg:block lg:max-h-none lg:w-[400px] lg:border-b-0 lg:border-r lg:px-5 lg:py-5`}>
             <BuilderForm data={data} onChange={setData} />
             <div className="mt-6 pt-6 border-t border-border">
               <SkillsEditor skills={data.skills} onChange={skills => setData(d => ({ ...d, skills }))} />
             </div>
           </div>
           {/* Right panel — live preview */}
-          <div className="flex min-h-[46dvh] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-6 print:bg-white print:p-0 sm:px-8 sm:py-8">
-            <div className="print-target">
+          <div className={`${mobilePane === 'preview' ? 'flex' : 'hidden'} min-h-[calc(100dvh-157px)] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-8 print:bg-white print:p-0 sm:px-8 sm:py-8 lg:flex lg:min-h-0`}>
+            <div className="print-target max-w-full">
               <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
             </div>
           </div>

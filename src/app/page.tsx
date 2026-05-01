@@ -167,10 +167,11 @@ export default function LandingPage() {
         }
 
         @media (max-width: 640px) {
-          .landing-header { height: 58px !important; padding: 0 16px !important; }
+          .landing-header { height: 58px !important; padding: 0 12px !important; }
+          .landing-header > a:first-child { font-size: 19px !important; }
           .landing-header > div:last-child { gap: 8px !important; }
-          .landing-header a[href="/login"] { display: none !important; }
-          .landing-header a[href="/builder"] { height: 34px !important; padding: 0 14px !important; font-size: 12px !important; }
+          .landing-header a[href="/login"] { display: inline-flex !important; font-size: 12px !important; color: rgba(245,240,232,0.62) !important; }
+          .landing-header a[href="/builder"] { height: 34px !important; padding: 0 12px !important; font-size: 12px !important; }
           .landing-section { padding-left: 16px !important; padding-right: 16px !important; }
           .landing-hero-title { font-size: clamp(44px, 17vw, 72px) !important; min-height: 156px !important; }
           .landing-proof-grid { gap: 10px !important; }

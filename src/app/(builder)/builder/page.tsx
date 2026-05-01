@@ -51,7 +51,7 @@ export default async function BuilderPage() {
           </Link>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Link href="/login"
-              className="hidden px-3 py-1.5 text-sm text-[rgba(245,240,232,0.55)] transition-colors hover:text-[var(--color-marketing-text)] sm:inline-flex">
+              className="inline-flex px-2 py-1.5 text-sm text-[rgba(245,240,232,0.62)] transition-colors hover:text-[var(--color-marketing-text)] sm:px-3">
               Sign in
             </Link>
             <Link href="/signup"

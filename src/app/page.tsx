@@ -107,7 +107,7 @@ function FloatingTemplatePreview({
         transform: `translateX(calc(-50% + ${offset * 300}px)) translateY(${Math.abs(offset) * 5}px) scale(${active ? 1 : Math.abs(offset) > 2 ? 0.72 : 0.84})`,
         opacity: active ? 1 : Math.abs(offset) > 2 ? 0.24 : 0.46,
         zIndex: 10 - Math.abs(offset),
-        transition: "transform 680ms cubic-bezier(.2,.8,.2,1), opacity 680ms ease, top 680ms ease",
+        transition: "transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms ease, top 520ms ease",
       }}
     >
       <Link
@@ -127,7 +127,7 @@ function FloatingTemplatePreview({
           boxShadow: active
             ? "0 34px 110px rgba(0,0,0,0.48), 0 0 0 1px rgba(245,240,232,0.08)"
             : "0 20px 70px rgba(0,0,0,0.28), 0 0 0 1px rgba(245,240,232,0.05)",
-          animation: active ? "template-float 4.2s ease-in-out infinite" : "template-float-soft 5.5s ease-in-out infinite",
+          animation: active ? "template-float 3.2s ease-in-out infinite" : "template-float-soft 4.2s ease-in-out infinite",
         }}
       >
         <div style={{ position: "relative", height: active ? 258 : 232, background: "#fff", overflow: "hidden" }}>
@@ -227,7 +227,7 @@ function TemplateShowcase() {
 
     const id = window.setInterval(() => {
       setSelectedIndex((index) => (index + 1) % templates.length);
-    }, 3000);
+    }, 2000);
 
     return () => window.clearInterval(id);
   }, [isPaused, templates.length]);
@@ -595,6 +595,16 @@ export default function LandingPage() {
         a { text-decoration: none; color: inherit; }
         ::selection { background: rgba(52,211,153,0.2); color: #f5f0e8; }
 
+        @keyframes template-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-16px); }
+        }
+
+        @keyframes template-float-soft {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
         @media (max-width: 960px) {
           .landing-shell { overflow-x: clip; }
           .landing-header { padding: 0 20px !important; }
@@ -881,7 +891,7 @@ export default function LandingPage() {
           <div style={{ borderTop: "1px solid rgba(245,240,232,0.04)", borderBottom: "1px solid rgba(245,240,232,0.04)", background: "rgba(245,240,232,0.012)" }}>
             <div
               className="landing-section"
-              style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "flex-start" }}
+              style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "center" }}
             >
               {["LinkedIn", "Indeed", "Greenhouse", "Lever", "Workday", "iCIMS"].map((l) => (
                 <span

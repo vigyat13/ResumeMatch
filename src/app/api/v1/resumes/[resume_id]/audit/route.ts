@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { groq, GROQ_MODELS } from '@/lib/ai/groq'
 import { checkRateLimit } from '@/lib/rate-limit/limiter'
 import { logAuditEvent } from '@/lib/audit/log'
+import { generateRuleBasedAudit, normalizeAuditData, type GeneratedAudit } from '@/lib/audit/rules'
+import type { Json } from '@/types/database'
 
 interface Params {
   params: Promise<{ resume_id: string }>
@@ -100,27 +102,16 @@ overall_score = round(format*0.20 + content*0.25 + keywords*0.25 + length*0.15 +
 
 List 3-7 issues and 3-5 recommendations, sorted by severity/priority descending.`
 
-  let auditData: {
-    overall_score: number
-    category_scores: { format: number; content: number; keywords: number; length: number; contact_info: number }
-    issues: Array<{ severity: string; category: string; message: string }>
-    recommendations: Array<{ priority: string; action: string; impact: string }>
-  }
+  let auditData: GeneratedAudit
 
   try {
-    const completion = await groq.chat.completions.create({
-      model:       GROQ_MODELS.default,
-      messages:    [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-      max_tokens:  1500,
-    })
-
-    const raw     = completion.choices[0]?.message?.content ?? ''
-    const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
-    auditData     = JSON.parse(cleaned)
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not configured')
+    }
+    auditData = normalizeAuditData(await generateAiAudit(prompt))
   } catch (err) {
-    console.error('[ATS Audit] Groq/parse error:', err)
-    return NextResponse.json({ error: 'Failed to generate audit. Please try again.' }, { status: 500 })
+    console.error('[ATS Audit] Falling back to rule engine:', err)
+    auditData = generateRuleBasedAudit(resume.parsed_text)
   }
 
   const { data: report, error: dbErr } = await supabase
@@ -129,9 +120,9 @@ List 3-7 issues and 3-5 recommendations, sorted by severity/priority descending.
       resume_id,
       user_id:          user.id,
       overall_score:    auditData.overall_score,
-      category_scores:  auditData.category_scores,
-      issues:           auditData.issues,
-      recommendations:  auditData.recommendations,
+      category_scores:  auditData.category_scores as unknown as Json,
+      issues:           auditData.issues as unknown as Json,
+      recommendations:  auditData.recommendations as unknown as Json,
     })
     .select()
     .single()
@@ -143,4 +134,21 @@ List 3-7 issues and 3-5 recommendations, sorted by severity/priority descending.
 
   logAuditEvent({ userId: user.id, eventType: 'ats_audit_run', resource: `resume:${resume_id}`, request: req })
   return NextResponse.json({ data: report })
+}
+
+async function generateAiAudit(prompt: string): Promise<GeneratedAudit> {
+  const completion = await groq.chat.completions.create({
+    model:       GROQ_MODELS.default,
+    messages:    [{ role: 'user', content: prompt }],
+    temperature: 0.2,
+    max_tokens:  1500,
+  })
+
+  const raw = completion.choices[0]?.message?.content ?? ''
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*/m, '')
+    .replace(/\s*```\s*$/m, '')
+    .trim()
+
+  return JSON.parse(cleaned) as GeneratedAudit
 }

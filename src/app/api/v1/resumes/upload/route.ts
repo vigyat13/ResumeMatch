@@ -7,13 +7,13 @@
  *  2. Validate file (type + size)
  *  3. Upload to Supabase Storage
  *  4. Insert metadata row in DB (status: 'pending')
- *  5. Parse resume asynchronously (non-blocking)
+ *  5. Parse resume immediately, then update the DB record
  *  6. Return 201 with resume data
  *
- * Why not block on parsing?
- * PDF/DOCX parsing can take 1-3 seconds. Returning immediately gives
- * the user instant feedback. The DB record shows 'pending' → 'completed'
- * as parsing finishes in the background.
+ * Why parse before returning?
+ * Vercel/serverless can freeze execution after the response. If parsing is
+ * fire-and-forget, records can remain pending or failed. We keep the UI in an
+ * "extracting" state while this request completes so the DB is reliable.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -112,10 +112,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save resume.' }, { status: 500 })
     }
 
-    // Kick off parsing asynchronously — don't await
-    // This is a "fire and forget" pattern: we return the response immediately
-    // and parsing continues in the background
-    parseAndUpdate(buffer, fileType as 'pdf' | 'docx', resume.id, supabase)
+    const { text, skills, error } = await parseResume(buffer, fileType as 'pdf' | 'docx')
+    const parsingStatus = error ? 'failed' : 'processed'
+
+    const { error: parseUpdateError } = await supabase
+      .from('resumes')
+      .update({
+        parsed_text:       text,
+        extracted_skills:  skills,
+        parsing_status:    parsingStatus,
+        updated_at:        new Date().toISOString(),
+      })
+      .eq('id', resume.id)
+
+    if (parseUpdateError) {
+      console.error('[Resume Upload] Parse update error:', parseUpdateError)
+    }
 
     return NextResponse.json(
       {
@@ -126,8 +138,9 @@ export async function POST(request: NextRequest) {
           file_type:      resume.file_type,
           file_size:      resume.file_size,
           created_at:     resume.created_at,
-          extracted_skills: [],
-          parsing_status: 'pending',
+          extracted_skills: skills,
+          parsing_status: parsingStatus,
+          parse_error: error ?? null,
         },
       },
       { status: 201 }
@@ -135,36 +148,5 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[Resume Upload] Unexpected error:', err)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
-  }
-}
-
-/**
- * Fire-and-forget: parse the resume and update the DB record.
- * Runs after the HTTP response has been sent.
- */
-async function parseAndUpdate(
-  buffer:   Buffer,
-  fileType: 'pdf' | 'docx',
-  resumeId: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any
-) {
-  try {
-    const { text, skills, error } = await parseResume(buffer, fileType)
-
-    await supabase
-      .from('resumes')
-      .update({
-        parsed_text:      text,
-        extracted_skills: skills,
-        parsing_status:   error ? 'failed' : 'completed',
-      })
-      .eq('id', resumeId)
-  } catch (err) {
-    console.error('[Resume Parser] Background parse failed:', err)
-    await supabase
-      .from('resumes')
-      .update({ parsing_status: 'failed' })
-      .eq('id', resumeId)
   }
 }

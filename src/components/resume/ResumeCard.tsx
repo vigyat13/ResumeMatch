@@ -15,6 +15,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FileText, Trash2, Eye, Clock, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
 import { formatFileSize, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -27,7 +28,7 @@ interface Resume {
   file_size:        number
   extracted_skills: string[] | null
   parsing_status:   string
-  created_at:       string
+  created_at:       string | null
 }
 
 interface Props {
@@ -38,19 +39,47 @@ interface Props {
 export function ResumeCard({ resume, onDelete }: Props) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting,    setDeleting]    = useState(false)
+  const [deleteError, setDeleteError]  = useState<string | null>(null)
+  const [retrying,    setRetrying]     = useState(false)
+  const [retryError,  setRetryError]   = useState<string | null>(null)
+  const router = useRouter()
 
   const skills = resume.extracted_skills ?? []
+  const isParsed = resume.parsing_status === 'processed' || resume.parsing_status === 'completed'
 
   async function handleDelete() {
     setDeleting(true)
+    setDeleteError(null)
     try {
       const res = await fetch(`/api/v1/resumes/${resume.id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => null)
       if (res.ok) {
         onDelete(resume.id)
+      } else {
+        setDeleteError(body?.error ?? 'Failed to delete resume.')
       }
+    } catch {
+      setDeleteError('Network error. Please try again.')
     } finally {
       setDeleting(false)
-      setShowConfirm(false)
+    }
+  }
+
+  async function handleRetryExtraction() {
+    setRetrying(true)
+    setRetryError(null)
+    try {
+      const res = await fetch(`/api/v1/resumes/${resume.id}/parse`, { method: 'POST' })
+      const body = await res.json()
+      if (!res.ok) {
+        setRetryError(body.error ?? 'Extraction failed. Try uploading the resume again.')
+        return
+      }
+      router.refresh()
+    } catch {
+      setRetryError('Network error. Please try again.')
+    } finally {
+      setRetrying(false)
     }
   }
 
@@ -73,7 +102,7 @@ export function ResumeCard({ resume, onDelete }: Props) {
               {resume.file_name}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-              {formatDate(resume.created_at)} · {formatFileSize(resume.file_size)}
+              {resume.created_at ? formatDate(resume.created_at) : ''} · {formatFileSize(resume.file_size)}
             </p>
           </div>
           <ParsingBadge status={resume.parsing_status} />
@@ -102,9 +131,20 @@ export function ResumeCard({ resume, onDelete }: Props) {
               {resume.parsing_status === 'pending'
                 ? 'Extracting skills…'
                 : resume.parsing_status === 'failed'
-                ? 'Skill extraction failed'
+                ? 'Extraction failed. This may be a scanned PDF or protected file.'
                 : 'No skills detected'}
             </p>
+            {resume.parsing_status === 'failed' && (
+              <button
+                onClick={handleRetryExtraction}
+                disabled={retrying}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] disabled:opacity-50"
+              >
+                <Clock className={`h-3.5 w-3.5 ${retrying ? 'animate-spin' : ''}`} />
+                {retrying ? 'Retrying extraction…' : 'Retry extraction'}
+              </button>
+            )}
+            {retryError && <p className="mt-2 text-xs text-red-500">{retryError}</p>}
           </div>
         )}
 
@@ -122,7 +162,11 @@ export function ResumeCard({ resume, onDelete }: Props) {
 
           <Link
             href={`/dashboard/resumes/${resume.id}/audit`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs font-medium transition-colors ${
+              isParsed
+                ? 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                : 'pointer-events-none opacity-45 text-[var(--color-text-muted)]'
+            }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
             ATS Audit
@@ -150,6 +194,11 @@ export function ResumeCard({ resume, onDelete }: Props) {
               This will delete <strong className="text-[var(--color-text-primary)]">{resume.file_name}</strong>.
               This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-500">
+                {deleteError}
+              </p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
@@ -174,7 +223,7 @@ export function ResumeCard({ resume, onDelete }: Props) {
 }
 
 function ParsingBadge({ status }: { status: string }) {
-  if (status === 'completed') return (
+  if (status === 'completed' || status === 'processed') return (
     <span aria-label="Parsing complete">
       <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
     </span>

@@ -31,9 +31,18 @@ export async function parseResume(
   fileType: 'pdf' | 'docx'
 ): Promise<ParseResult> {
   try {
-    const text = fileType === 'pdf'
+    const rawText = fileType === 'pdf'
       ? await parsePdf(buffer)
       : await parseDocx(buffer)
+    const text = normalizeResumeText(rawText)
+
+    if (text.length < 40) {
+      return {
+        text,
+        skills: [],
+        error: 'Could not extract enough text. This file may be scanned or image-based.',
+      }
+    }
 
     const skills = extractSkills(text)
     return { text, skills }
@@ -44,14 +53,23 @@ export async function parseResume(
 }
 
 async function parsePdf(buffer: Buffer): Promise<string> {
-  // Load pdf-parse lazily. Its transitive PDF.js dependency touches canvas
-  // globals at import time, which breaks Next.js production route collection.
+  // pdf-parse v2 exports a PDFParse class, not the old v1 function API.
+  // Loading lazily keeps Next.js route collection stable in production.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>
-  // pdf-parse reads the binary PDF and returns a data object.
-  // data.text contains all page text concatenated with newlines.
-  const data = await pdfParse(buffer)
-  return data.text ?? ''
+  const { PDFParse } = require('pdf-parse') as {
+    PDFParse: new (options: { data: Buffer | Uint8Array }) => {
+      getText: () => Promise<{ text?: string }>
+      destroy: () => Promise<void>
+    }
+  }
+
+  const parser = new PDFParse({ data: buffer })
+  try {
+    const data = await parser.getText()
+    return data.text ?? ''
+  } finally {
+    await parser.destroy()
+  }
 }
 
 async function parseDocx(buffer: Buffer): Promise<string> {
@@ -59,4 +77,13 @@ async function parseDocx(buffer: Buffer): Promise<string> {
   // We don't need HTML here; plain text is what we index and search.
   const result = await mammoth.extractRawText({ buffer })
   return result.value ?? ''
+}
+
+function normalizeResumeText(text: string): string {
+  return text
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\r/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }

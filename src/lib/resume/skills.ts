@@ -59,7 +59,37 @@ export const SKILL_LIST: readonly string[] = [
   'Project Management', 'Team Leadership', 'Communication', 'Problem Solving',
   'Public Speaking', 'Technical Writing', 'Mentoring', 'Code Review',
   'System Design', 'Architecture', 'Microservices', 'Event-Driven',
+
+  // Product / Growth / Analytics
+  'Product Management', 'Roadmapping', 'A/B Testing', 'Experimentation',
+  'Google Analytics', 'Mixpanel', 'Amplitude', 'SEO', 'SEM', 'CRM',
+
+  // Security / Reliability
+  'OAuth', 'JWT', 'RBAC', 'RLS', 'SAML', 'Sentry', 'Observability',
+  'Prometheus', 'Grafana', 'Load Testing', 'Caching',
 ] as const
+
+const SKILL_ALIASES: Record<string, readonly string[]> = {
+  JavaScript: ['JS', 'ECMAScript'],
+  TypeScript: ['TS'],
+  Python: ['Python3'],
+  'Node.js': ['Node', 'NodeJS', 'Node JS'],
+  'Next.js': ['Next', 'NextJS', 'Next JS'],
+  'React Native': ['RN'],
+  PostgreSQL: ['Postgres', 'PostgreSQL'],
+  MongoDB: ['Mongo'],
+  'Tailwind CSS': ['Tailwind'],
+  'Material UI': ['MUI'],
+  'REST API': ['REST', 'RESTful APIs', 'REST APIs'],
+  'Google Cloud': ['GCP', 'Google Cloud Platform'],
+  'GitHub Actions': ['Actions'],
+  'Machine Learning': ['ML'],
+  'Deep Learning': ['DL'],
+  'Scikit-learn': ['Sklearn', 'scikit learn'],
+  'Power BI': ['PowerBI'],
+  'CI/CD': ['CI CD', 'CICD'],
+  'A/B Testing': ['AB Testing', 'A B Testing'],
+}
 
 /**
  * Extract skills from plain text using case-insensitive whole-word matching.
@@ -72,15 +102,39 @@ export const SKILL_LIST: readonly string[] = [
  */
 export function extractSkills(text: string): string[] {
   const found = new Set<string>()
+  const normalizedText = normalizeForSkillMatching(text)
 
   for (const skill of SKILL_LIST) {
-    // Escape special regex characters in skill names (e.g., "C++", "ASP.NET")
-    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const pattern = new RegExp(`\\b${escaped}\\b`, 'i')
-    if (pattern.test(text)) {
+    const candidates = [skill, ...(SKILL_ALIASES[skill] ?? [])]
+    if (candidates.some(candidate => containsSkill(normalizedText, candidate))) {
       found.add(skill)
     }
   }
 
   return Array.from(found)
+}
+
+function normalizeForSkillMatching(text: string): string {
+  return ` ${text
+    .replace(/\u00a0/g, ' ')
+    .replace(/[•·,;|()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()} `
+}
+
+function containsSkill(normalizedText: string, skill: string): boolean {
+  const normalizedSkill = skill
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim()
+
+  // Letter-only skills need strict token boundaries. Skills with symbols
+  // like C++, C#, Next.js, CI/CD are safer with whitespace/punctuation guards.
+  const escaped = normalizedSkill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = /^[a-z0-9]+(?: [a-z0-9]+)*$/.test(normalizedSkill)
+    ? new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'i')
+    : new RegExp(`(^|[^a-z0-9])${escaped}($|[^a-z0-9])`, 'i')
+
+  return pattern.test(normalizedText)
 }

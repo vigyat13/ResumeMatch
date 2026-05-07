@@ -1,19 +1,15 @@
 /**
  * GET  /api/v1/resumes/:resume_id — Get single resume with full parsed text
- * DELETE /api/v1/resumes/:resume_id — Soft delete a resume
- *
- * Why soft delete?
- * Hard deletes are irreversible. Soft deletes (setting deleted_at) let us:
- * - Show "undo delete" in the UI (future)
- * - Keep the file for 30 days before permanent cleanup (future infra job)
- * - Maintain audit history
+ * DELETE /api/v1/resumes/:resume_id — Permanently delete a resume
  *
  * RLS guarantees the user can only touch their own resumes —
  * Supabase's row-level policies apply auth.uid() checks automatically.
+ * The hard delete path validates ownership with the user session first, then
+ * uses the service-role client to remove dependent rows and storage objects.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 
 interface Params {
   params: Promise<{ resume_id: string }>
@@ -57,19 +53,64 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
     }
 
-    // Soft delete: set deleted_at timestamp instead of removing the row
-    const { error } = await supabase
+    const { data: resume, error: lookupError } = await supabase
       .from('resumes')
-      .update({ deleted_at: new Date().toISOString() })
+      .select('id, storage_path')
       .eq('id', resume_id)
-      .eq('user_id', user.id)  // belt-and-suspenders even with RLS
+      .eq('user_id', user.id)
+      .single()
 
-    if (error) {
-      console.error('[Resume Delete] DB error:', error)
+    if (lookupError || !resume) {
+      return NextResponse.json({ error: 'Resume not found.' }, { status: 404 })
+    }
+
+    const admin = createAdminClient()
+
+    const { error: auditDeleteError } = await admin
+      .from('audit_reports')
+      .delete()
+      .eq('resume_id', resume_id)
+      .eq('user_id', user.id)
+
+    if (auditDeleteError) {
+      console.error('[Resume Delete] Audit delete error:', auditDeleteError)
+      return NextResponse.json({ error: 'Failed to delete resume audits.' }, { status: 500 })
+    }
+
+    const { error: matchDeleteError } = await admin
+      .from('job_matches')
+      .delete()
+      .eq('resume_id', resume_id)
+      .eq('user_id', user.id)
+
+    if (matchDeleteError) {
+      console.error('[Resume Delete] Match delete error:', matchDeleteError)
+      return NextResponse.json({ error: 'Failed to delete resume matches.' }, { status: 500 })
+    }
+
+    if (resume.storage_path) {
+      const { error: storageError } = await admin.storage
+        .from('resumes')
+        .remove([resume.storage_path])
+
+      if (storageError) {
+        console.error('[Resume Delete] Storage delete error:', storageError)
+        return NextResponse.json({ error: 'Failed to delete resume file.' }, { status: 500 })
+      }
+    }
+
+    const { error: resumeDeleteError } = await admin
+      .from('resumes')
+      .delete()
+      .eq('id', resume_id)
+      .eq('user_id', user.id)
+
+    if (resumeDeleteError) {
+      console.error('[Resume Delete] DB delete error:', resumeDeleteError)
       return NextResponse.json({ error: 'Failed to delete resume.' }, { status: 500 })
     }
 
-    return NextResponse.json({ data: { message: 'Resume deleted successfully.' } })
+    return NextResponse.json({ data: { message: 'Resume permanently deleted.' } })
   } catch (err) {
     console.error('[Resume Delete] Unexpected error:', err)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })

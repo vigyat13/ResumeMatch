@@ -6,6 +6,13 @@ import {
   ArrowRight,
   ArrowUpRight,
 } from "lucide-react";
+import { TemplatePreviewClient } from "@/components/templates/TemplatePreviewClient";
+import { pickSampleForTemplate } from "@/lib/builder/types";
+import {
+  getTemplateBadge,
+  getTemplateDescription,
+  isCompanyInspiredTemplate,
+} from "@/lib/builder/templateMeta";
 
 const scenes = [
   {
@@ -40,6 +47,441 @@ const heroLines = [
   "Rewritten\nby AI.",
   "Land the\noffer.",
 ] as const;
+
+interface ShowcaseTemplate {
+  id: string
+  name: string
+  description: string | null
+  is_ats_safe: boolean | null
+  tier: string | null
+  html_content: string
+  css_content: string
+}
+
+const LANDING_PREVIEW_CSS = `
+  body,html{margin:0;padding:0}
+  *{box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:13px;line-height:1.4;color:#111;padding:24px 28px}
+  h1{font-size:17px;font-weight:700;margin:0 0 3px}
+  h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid #333;padding-bottom:2px;margin:10px 0 5px}
+  h3{font-size:12px;font-weight:600;margin:0 0 2px}
+  p,li{font-size:11.5px;line-height:1.4;margin:0 0 2px}
+  ul{margin:3px 0 3px 14px;padding:0}
+  a{color:inherit;text-decoration:none}
+  .twocol,.two-col,.layout-two-col,.europass-wrap{display:flex;gap:0}
+  .twocol .sidebar,.two-col .left,.sidebar,.left-col{width:30%;padding:16px 12px;background:#f2f2f2}
+  .twocol .main,.two-col .right,.main-col,.right-col{width:70%;padding:16px 14px}
+`
+
+function FloatingTemplatePreview({
+  template,
+  offset,
+  onSelect,
+}: {
+  template: ShowcaseTemplate
+  offset: number
+  onSelect: () => void
+}) {
+  const active = offset === 0
+
+  if (Math.abs(offset) > 4) return null
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSelect();
+      }}
+      className="landing-template-float-card"
+      data-offset={offset}
+      aria-label={`Select ${template.name} template`}
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: active ? 18 : 46,
+        width: active ? "clamp(280px, 22vw, 340px)" : "clamp(220px, 16vw, 280px)",
+        color: "inherit",
+        cursor: "pointer",
+        transform: `translateX(calc(-50% + ${offset * 300}px)) translateY(${Math.abs(offset) * 5}px) scale(${active ? 1 : Math.abs(offset) > 2 ? 0.72 : 0.84})`,
+        opacity: active ? 1 : Math.abs(offset) > 2 ? 0.24 : 0.46,
+        zIndex: 10 - Math.abs(offset),
+        transition: "transform 680ms cubic-bezier(.2,.8,.2,1), opacity 680ms ease, top 680ms ease",
+      }}
+    >
+      <Link
+        href={`/builder/${template.id}`}
+        onClick={(event) => {
+          if (!active) {
+            event.preventDefault();
+            onSelect();
+          }
+        }}
+        style={{
+          display: "block",
+          borderRadius: 18,
+          border: active ? "2px solid rgba(52,211,153,0.52)" : "2px solid rgba(245,240,232,0.08)",
+          background: "var(--color-card)",
+          overflow: "hidden",
+          boxShadow: active
+            ? "0 34px 110px rgba(0,0,0,0.48), 0 0 0 1px rgba(245,240,232,0.08)"
+            : "0 20px 70px rgba(0,0,0,0.28), 0 0 0 1px rgba(245,240,232,0.05)",
+          animation: active ? "template-float 4.2s ease-in-out infinite" : "template-float-soft 5.5s ease-in-out infinite",
+        }}
+      >
+        <div style={{ position: "relative", height: active ? 258 : 232, background: "#fff", overflow: "hidden" }}>
+          <TemplatePreviewClient
+            template={{ ...template, css_content: LANDING_PREVIEW_CSS }}
+            sample={pickSampleForTemplate(template.name)}
+            scale={0.23}
+          />
+          {isCompanyInspiredTemplate(template.name) && (
+            <div style={{ position: "absolute", top: 8, left: 8, zIndex: 10, borderRadius: 999, background: "#020617", color: "#fff", padding: "3px 8px", fontSize: 10, fontWeight: 800 }}>
+              FAANG-type
+            </div>
+          )}
+          {template.tier === "pro" && (
+            <div style={{ position: "absolute", top: 8, right: 8, zIndex: 10, borderRadius: 999, background: "#facc15", color: "#713f12", padding: "3px 8px", fontSize: 9, fontWeight: 900 }}>
+              PRO
+            </div>
+          )}
+          {!active && <div style={{ position: "absolute", inset: 0, background: "rgba(8,8,8,0.14)" }} />}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: active ? 1 : 0,
+              transition: "opacity 180ms ease",
+              background: active ? "rgba(52,211,153,0.08)" : "transparent",
+            }}
+          >
+            {active && (
+              <span style={{ borderRadius: 999, background: "#fff", color: "var(--color-marketing-accent)", padding: "9px 14px", fontSize: 12, fontWeight: 900, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}>
+                Use this →
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ padding: active ? 16 : 14, borderTop: "1px solid rgba(245,240,232,0.08)" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.2, color: "var(--color-marketing-text)" }}>
+            {template.name}
+          </h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 9 }}>
+            <span style={{ borderRadius: 999, background: "rgba(245,240,232,0.06)", color: "rgba(245,240,232,0.62)", padding: "3px 8px", fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              {getTemplateBadge(template.name)}
+            </span>
+            {template.is_ats_safe && (
+              <span style={{ color: "var(--color-marketing-accent)", fontSize: 10, fontWeight: 700 }}>
+                ATS Safe
+              </span>
+            )}
+          </div>
+          <p style={{ marginTop: 9, minHeight: 32, fontSize: 11, lineHeight: 1.45, color: "rgba(245,240,232,0.42)" }}>
+            {getTemplateDescription(template.name, template.description)}
+          </p>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+function TemplateShowcase() {
+  const [templates, setTemplates] = useState<ShowcaseTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(2);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadTemplates = async () => {
+      try {
+        const res = await fetch("/api/v1/templates/showcase", { cache: "no-store" });
+        if (!res.ok) return;
+        const body = await res.json();
+        const next = body?.data?.templates;
+        if (alive && Array.isArray(next) && next.length > 0) {
+          setTemplates(next);
+        }
+      } catch {
+        // The fallback below keeps the section useful if the API is unavailable.
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    void loadTemplates();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPaused || templates.length < 2) return;
+
+    const id = window.setInterval(() => {
+      setSelectedIndex((index) => (index + 1) % templates.length);
+    }, 3000);
+
+    return () => window.clearInterval(id);
+  }, [isPaused, templates.length]);
+
+  const move = (direction: 1 | -1) => {
+    if (templates.length === 0) return;
+    setSelectedIndex((index) => (index + direction + templates.length) % templates.length);
+  };
+
+  const getOffset = (index: number) => {
+    const raw = index - selectedIndex;
+    if (raw > templates.length / 2) return raw - templates.length;
+    if (raw < -templates.length / 2) return raw + templates.length;
+    return raw;
+  };
+
+  return (
+    <section
+      id="templates"
+      style={{
+        position: "relative",
+        margin: "0 calc(50% - 50vw)",
+        padding: "58px 0 62px",
+        width: "100vw",
+        overflow: "hidden",
+        borderTop: "1px solid rgba(245,240,232,0.045)",
+        borderBottom: "1px solid rgba(245,240,232,0.045)",
+        background: "linear-gradient(180deg, rgba(245,240,232,0.012), rgba(52,211,153,0.018), rgba(245,240,232,0.008))",
+      }}
+    >
+      <div className="landing-section" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "end", justifyContent: "space-between", gap: 28, flexWrap: "wrap", marginBottom: 28 }}>
+        <div style={{ maxWidth: 620 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+            <div style={{ width: 20, height: 1, background: "var(--color-marketing-accent)" }} />
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", color: "rgba(245,240,232,0.25)", textTransform: "uppercase" }}>
+              Templates
+            </span>
+          </div>
+          <h2 style={{ fontSize: "clamp(36px, 4.8vw, 58px)", lineHeight: 0.96, letterSpacing: "-0.03em", marginBottom: 14 }}>
+            Start from a proven resume layout.
+          </h2>
+          <p style={{ fontSize: 15, lineHeight: 1.72, color: "rgba(245,240,232,0.42)", maxWidth: 540 }}>
+            These are the same template cards and previews used in the builder.
+          </p>
+        </div>
+        <Link
+          href="/builder#templates"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            height: 44,
+            padding: "0 18px",
+            borderRadius: 999,
+            border: "1px solid rgba(52,211,153,0.24)",
+            color: "var(--color-marketing-accent)",
+            fontSize: 13,
+            fontWeight: 800,
+          }}
+        >
+          Browse all templates <ArrowRight size={14} />
+        </Link>
+      </div>
+
+      {templates.length > 0 ? (
+        <div
+          className="landing-template-float"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          style={{
+            position: "relative",
+            width: "100%",
+            overflow: "hidden",
+            height: "470px",
+            padding: "8px 0 18px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => move(-1)}
+            aria-label="Previous template"
+            style={{
+              position: "absolute",
+              left: "max(22px, calc(50% - 610px))",
+              top: "44%",
+              transform: "translateY(-50%)",
+              zIndex: 20,
+              width: 46,
+              height: 46,
+              borderRadius: 999,
+              border: "1px solid rgba(52,211,153,0.25)",
+              background: "var(--color-marketing-accent)",
+              color: "var(--color-marketing-bg)",
+              fontSize: 28,
+              lineHeight: 1,
+              boxShadow: "0 16px 45px rgba(52,211,153,0.18)",
+              cursor: "pointer",
+            }}
+          >
+            ‹
+          </button>
+
+          {templates.map((template, index) => {
+            const offset = getOffset(index);
+            return <FloatingTemplatePreview key={template.id} template={template} offset={offset} onSelect={() => setSelectedIndex(index)} />;
+          })}
+
+          <button
+            type="button"
+            onClick={() => move(1)}
+            aria-label="Next template"
+            style={{
+              position: "absolute",
+              right: "max(22px, calc(50% - 610px))",
+              top: "44%",
+              transform: "translateY(-50%)",
+              zIndex: 20,
+              width: 46,
+              height: 46,
+              borderRadius: 999,
+              border: "1px solid rgba(52,211,153,0.25)",
+              background: "var(--color-marketing-accent)",
+              color: "var(--color-marketing-bg)",
+              fontSize: 28,
+              lineHeight: 1,
+              boxShadow: "0 16px 45px rgba(52,211,153,0.18)",
+              cursor: "pointer",
+            }}
+          >
+            ›
+          </button>
+
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 12, display: "flex", justifyContent: "center", gap: 8 }}>
+            {templates.map((template, index) => (
+              <button
+                key={`template-dot-${template.id}`}
+                type="button"
+                onClick={() => setSelectedIndex(index)}
+                aria-label={`Show ${template.name}`}
+                style={{
+                  width: index === selectedIndex ? 24 : 8,
+                  height: 8,
+                  borderRadius: 99,
+                  border: 0,
+                  background: index === selectedIndex ? "var(--color-marketing-accent)" : "rgba(245,240,232,0.16)",
+                  cursor: "pointer",
+                  transition: "width 220ms ease, background 220ms ease",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            border: "1px solid rgba(245,240,232,0.075)",
+            borderRadius: 24,
+            padding: "34px 24px",
+            background: "rgba(245,240,232,0.018)",
+            color: "rgba(245,240,232,0.42)",
+            textAlign: "center",
+          }}
+        >
+          {loading ? "Loading templates..." : "Templates could not load here. Open the builder to browse all layouts."}
+          <div style={{ marginTop: 16 }}>
+            <Link href="/builder#templates" style={{ color: "var(--color-marketing-accent)", fontWeight: 800 }}>
+              Open builder
+            </Link>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CookieBanner() {
+  const [choice, setChoice] = useState<string | null>("checking");
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setChoice(window.localStorage.getItem("resumematch_cookie_choice"));
+    }, 0);
+
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const saveChoice = (value: "accepted" | "essential") => {
+    window.localStorage.setItem("resumematch_cookie_choice", value);
+    setChoice(value);
+  };
+
+  if (choice) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-label="Cookie preferences"
+      style={{
+        position: "fixed",
+        left: "50%",
+        bottom: 22,
+        transform: "translateX(-50%)",
+        zIndex: 200,
+        width: "min(720px, calc(100vw - 28px))",
+        border: "1px solid rgba(245,240,232,0.12)",
+        borderRadius: 26,
+        background: "rgba(14,14,14,0.94)",
+        boxShadow: "0 28px 100px rgba(0,0,0,0.45)",
+        backdropFilter: "blur(22px)",
+        padding: 24,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "start" }}>
+        <div>
+          <h2 style={{ fontSize: 20, lineHeight: 1.15, marginBottom: 10 }}>Cookies improve your experience.</h2>
+          <p style={{ fontSize: 13, lineHeight: 1.65, color: "rgba(245,240,232,0.52)", maxWidth: 580 }}>
+            We use essential cookies for login and security. With your permission, we may also use analytics cookies to understand product usage and improve ResumeMatch.
+          </p>
+          {preferencesOpen && (
+            <div style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgba(245,240,232,0.035)", color: "rgba(245,240,232,0.58)", fontSize: 12, lineHeight: 1.6 }}>
+              Essential cookies are always on because authentication needs them. Analytics cookies are optional and can be disabled by choosing essential only.
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => saveChoice("accepted")}
+          style={{ border: 0, borderRadius: 12, padding: "12px 16px", background: "var(--color-marketing-accent)", color: "var(--color-marketing-bg)", fontWeight: 900, cursor: "pointer" }}
+        >
+          Accept all
+        </button>
+        <button
+          type="button"
+          onClick={() => saveChoice("essential")}
+          style={{ border: "1px solid rgba(245,240,232,0.12)", borderRadius: 12, padding: "12px 16px", background: "rgba(245,240,232,0.04)", color: "var(--color-marketing-text)", fontWeight: 800, cursor: "pointer" }}
+        >
+          Essential only
+        </button>
+        <button
+          type="button"
+          onClick={() => setPreferencesOpen((value) => !value)}
+          style={{ border: "1px solid rgba(52,211,153,0.22)", borderRadius: 12, padding: "12px 16px", background: "rgba(52,211,153,0.06)", color: "var(--color-marketing-accent)", fontWeight: 800, cursor: "pointer" }}
+        >
+          Preferences
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function TypewriterHero() {
   const [displayed, setDisplayed] = useState("");
@@ -164,6 +606,8 @@ export default function LandingPage() {
           .landing-anchor-grid { grid-template-columns: 1fr !important; }
           .landing-flow-grid { grid-template-columns: 1fr !important; }
           .landing-flow-arrow { display: none !important; }
+          .landing-template-float { height: 440px !important; }
+          .landing-template-float-card { width: 250px !important; }
         }
 
         @media (max-width: 640px) {
@@ -179,6 +623,15 @@ export default function LandingPage() {
           .landing-flow-grid { gap: 14px !important; }
           .landing-flow-grid a { min-height: auto !important; padding: 22px !important; border-radius: 22px !important; }
           .landing-flow-grid h3 { font-size: 24px !important; }
+          .landing-template-float { height: 410px !important; }
+          .landing-template-float-card { width: 218px !important; }
+          .landing-template-float-card[data-offset="-3"] { transform: translateX(calc(-50% - 480px)) scale(0.72) !important; }
+          .landing-template-float-card[data-offset="-2"] { transform: translateX(calc(-50% - 320px)) scale(0.76) !important; }
+          .landing-template-float-card[data-offset="-1"] { transform: translateX(calc(-50% - 160px)) scale(0.8) !important; }
+          .landing-template-float-card[data-offset="0"] { transform: translateX(-50%) scale(1) !important; }
+          .landing-template-float-card[data-offset="1"] { transform: translateX(calc(-50% + 160px)) scale(0.8) !important; }
+          .landing-template-float-card[data-offset="2"] { transform: translateX(calc(-50% + 320px)) scale(0.76) !important; }
+          .landing-template-float-card[data-offset="3"] { transform: translateX(calc(-50% + 480px)) scale(0.72) !important; }
           .landing-cta { border-radius: 22px !important; padding: 30px 20px !important; gap: 24px !important; }
           .landing-cta a { width: 100% !important; justify-content: center !important; }
         }
@@ -245,8 +698,9 @@ export default function LandingPage() {
               Resume<span style={{ color: "var(--color-marketing-accent)" }}>Match</span>
             </Link>
             <nav className="landing-nav" style={{ display: "flex", gap: 36, alignItems: "center" }}>
-              {[
+                {[
                 { label: "Builder", href: "/builder", internal: true },
+                { label: "Templates", href: "#templates", internal: false },
                 { label: "How it works", href: "#how-it-works", internal: false },
                               ].map((link) =>
                 link.internal ? (
@@ -446,6 +900,8 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+
+          <TemplateShowcase />
 
           <section
             id="how-it-works"
@@ -737,6 +1193,7 @@ export default function LandingPage() {
             </div>
           </div>
         </footer>
+        <CookieBanner />
       </div>
     </>
   );

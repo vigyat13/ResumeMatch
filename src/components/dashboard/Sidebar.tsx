@@ -36,6 +36,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',   href: '/dashboard' },
   { label: 'My Resumes',  href: '/dashboard/resumes' },
+  { label: 'Find Jobs',   href: '/dashboard/jobs' },
   { label: 'Job Matches', href: '/dashboard/matches' },
   { label: 'Templates',   href: '/dashboard/templates' },
   { label: 'Settings',    href: '/dashboard/settings' },

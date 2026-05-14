@@ -210,5 +210,24 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-headline); }
   50%       { transform: translateY(-8px); }
 }
 
+@keyframes cursor-click {
+  0%   { opacity: 0.9; transform: scale(0.45); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+@keyframes fish-swim {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(118px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes job-card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .animate-reveal-up { animation: reveal-up 0.5s ease-out both; }
 .animate-float     { animation: float 3s ease-in-out infinite; }
+.animate-cursor-click { animation: cursor-click 420ms ease-out forwards; }
+.animate-fish-swim    { animation: fish-swim 2.2s ease-in-out infinite; }
+.animate-job-card-in  { animation: job-card-in 420ms ease-out both; }

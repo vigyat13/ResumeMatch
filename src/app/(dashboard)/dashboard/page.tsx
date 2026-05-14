@@ -21,17 +21,10 @@ export default async function DashboardPage() {
 
   // Parallel fetches — Promise.all runs both queries simultaneously
   // instead of waterfall (resume fetch → then match fetch)
-  const [resumesResult, matchesResult, auditsResult] = await Promise.all([
+  const [resumesResult, auditsResult] = await Promise.all([
     supabase
       .from('resumes')
       .select('id, file_name, parsing_status, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(5),
-
-    supabase
-      .from('job_matches')
-      .select('id, job_title, company, match_percentage, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(5),
@@ -45,12 +38,10 @@ export default async function DashboardPage() {
   ])
 
   const resumes = resumesResult.data ?? []
-  const matches = matchesResult.data ?? []
   const latestAudit = auditsResult.data?.[0] ?? null
 
   // Aggregate stats for the stat cards
   const { count: resumeCount }  = await supabase.from('resumes').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-  const { count: matchCount }   = await supabase.from('job_matches').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -59,13 +50,11 @@ export default async function DashboardPage() {
     .single()
 
   const totalResumes = resumeCount ?? 0
-  const totalMatches = matchCount ?? 0
   const latestScore = latestAudit?.overall_score ?? null
   const firstName = profile?.first_name?.trim()
   const nextAction = getNextAction({
     resumeCount: totalResumes,
     hasAudit: Boolean(latestAudit),
-    matchCount: totalMatches,
   })
 
   const stats = [
@@ -76,9 +65,9 @@ export default async function DashboardPage() {
       marker: '01',
     },
     {
-      label: 'Job Matches',
-      value: totalMatches,
-      helper: totalMatches > 0 ? 'Review your latest fits' : 'Add a JD to compare',
+      label: 'Find Jobs',
+      value: 'Live',
+      helper: 'Search listings by prompt',
       marker: '02',
     },
     {
@@ -117,7 +106,7 @@ export default async function DashboardPage() {
               Welcome back{firstName ? `, ${firstName}` : ''}. Build the next version of your CV.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-text-muted)]">
-              Keep resumes, audits, and job matches in one place. Start with a clean template, upload an existing CV, then use the dashboard to track what needs work.
+              Keep resumes, audits, and job search in one place. Start with a clean template, upload an existing CV, then use the dashboard to track what needs work.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -207,7 +196,7 @@ export default async function DashboardPage() {
                 Your resume pipeline
               </h2>
               <p className="mt-1 max-w-xl text-sm leading-6 text-[var(--color-text-muted)]">
-                The dashboard should tell you what to do next without hunting through pages. Use this flow to move from resume to job match.
+                The dashboard should tell you what to do next without hunting through pages. Use this flow to move from resume to audit to live job search.
               </p>
             </div>
             <Link
@@ -220,7 +209,7 @@ export default async function DashboardPage() {
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <PipelineStep done={totalResumes > 0} label="Resume added" value={totalResumes > 0 ? `${totalResumes} total` : 'Not yet'} />
             <PipelineStep done={Boolean(latestAudit)} label="Audit ready" value={latestScore !== null ? `${latestScore}% score` : 'Pending'} />
-            <PipelineStep done={totalMatches > 0} label="Jobs matched" value={totalMatches > 0 ? `${totalMatches} found` : 'Not yet'} />
+            <PipelineStep done={Boolean(latestAudit)} label="Find jobs" value={latestAudit ? 'Ready' : 'After audit'} />
           </div>
         </div>
       </section>
@@ -272,42 +261,23 @@ export default async function DashboardPage() {
         <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
             <div>
-              <h2 className="font-semibold text-[var(--color-text-primary)]">Recent job matches</h2>
-              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">Role fit and match strength</p>
+              <h2 className="font-semibold text-[var(--color-text-primary)]">Find jobs</h2>
+              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">Search live listings by role and location</p>
             </div>
             <Link
-              href="/dashboard/matches"
+              href="/dashboard/jobs"
               className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] transition-colors hover:border-[var(--color-accent)]/40"
             >
-              View all
+              Open
             </Link>
           </div>
 
-          {matches.length === 0 ? (
-            <EmptyState
-              title="No matches yet"
-              description="Once a job description is added, matches will appear here with a fit score."
-              href="/dashboard/matches"
-              cta="Open matches"
-            />
-          ) : (
-            <ul className="divide-y divide-[var(--color-border)]">
-              {matches.map((match) => (
-                <li key={match.id} className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.025]">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-black/20 text-xs font-semibold text-[var(--color-accent)]">
-                    JD
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                      {match.job_title}
-                    </p>
-                    <p className="text-xs text-[var(--color-text-muted)]">{match.company ?? ''}</p>
-                  </div>
-                  <ScoreBadge score={match.match_percentage ?? 0} />
-                </li>
-              ))}
-            </ul>
-          )}
+          <EmptyState
+            title="Search live job boards"
+            description="Use the jobs page to search real listings, preview the browser run, and open relevant roles."
+            href="/dashboard/jobs"
+            cta="Find jobs"
+          />
         </section>
       </div>
     </div>
@@ -404,17 +374,6 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 80 ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-              : score >= 60 ? 'border-amber-400/20 bg-amber-400/10 text-amber-300'
-              :               'border-red-400/20 bg-red-400/10 text-red-300'
-  return (
-    <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${color}`}>
-      {score}%
-    </span>
-  )
-}
-
 function formatDate(date: string | null) {
   if (!date) return 'Recently'
   return new Intl.DateTimeFormat('en', {
@@ -434,11 +393,9 @@ function scoreCopy(score: number) {
 function getNextAction({
   resumeCount,
   hasAudit,
-  matchCount,
 }: {
   resumeCount: number
   hasAudit: boolean
-  matchCount: number
 }) {
   if (resumeCount === 0) {
     return {
@@ -458,19 +415,10 @@ function getNextAction({
     }
   }
 
-  if (matchCount === 0) {
-    return {
-      title: 'Compare against a job',
-      description: 'Add a job description so ResumeMatch can show gaps between your CV and the target role.',
-      href: '/dashboard/matches',
-      cta: 'Add job match',
-    }
-  }
-
   return {
-    title: 'Review latest matches',
-    description: 'Your setup has resumes, audits, and matches. Review the best roles and improve the weak spots.',
-    href: '/dashboard/matches',
-    cta: 'Review matches',
+    title: 'Find jobs',
+    description: 'Search live listings by prompt and location, then open roles that fit your resume direction.',
+    href: '/dashboard/jobs',
+    cta: 'Search jobs',
   }
 }

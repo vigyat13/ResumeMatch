@@ -63,7 +63,8 @@ function renderWelcomeHtml({ firstName, appUrl }: { firstName: string; appUrl: s
                 </p>
 
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
-                  I&apos;m Vigyat, the creator of ResumeMatch.
+                  I&apos;m Vigyat, the creator of ResumeMatch
+                  .
                 </p>
 
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">

@@ -22,6 +22,7 @@ interface Props {
   template: TemplateLike
   sample?: ResumeData
   scale?: number
+  fit?: 'cover' | 'contain'
   className?: string
 }
 

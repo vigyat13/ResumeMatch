@@ -1,406 +1,188 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  ArrowUpRight,
+  BarChart3,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  LayoutTemplate,
+  Minus,
+  Search,
+  Sparkles,
+  UploadCloud,
 } from "lucide-react";
 import { TemplatePreviewClient } from "@/components/templates/TemplatePreviewClient";
+import { getTemplateBadge, getTemplateDescription } from "@/lib/builder/templateMeta";
 import { pickSampleForTemplate } from "@/lib/builder/types";
-import {
-  getTemplateBadge,
-  getTemplateDescription,
-  isCompanyInspiredTemplate,
-} from "@/lib/builder/templateMeta";
 
-const scenes = [
+const examples = [
   {
-    id: "build",
-    tag: "Build",
-    headline: "Create or edit your CV",
-    body: "Start from scratch or improve your existing resume in a clean, ATS-friendly builder.",
-    href: "/builder",
-    cta: "Open the builder",
+    title: "Upload resume",
+    body: "Parse a PDF or DOCX into clean sections before choosing a template.",
+    icon: UploadCloud,
   },
   {
-    id: "score",
-    tag: "Optimize",
-    headline: "Get your ATS score and improve it with AI",
-    body: "Check formatting, find missing keywords, and rewrite weak bullet points in clear, professional English.",
-    href: "/dashboard/resumes",
-    cta: "Review your ATS score",
+    title: "Improve bullets",
+    body: "Rewrite weak points while preserving real companies, dates, and skills.",
+    icon: Sparkles,
   },
   {
-    id: "apply",
-    tag: "Apply",
-    headline: "Apply to jobs posted across the internet",
-    body: "Type the role you want, compare your resume against relevant job requirements, and apply with more confidence. Let the agent apply for you.",
-    href: "/dashboard/matches",
-    cta: "Find matching jobs",
+    title: "Match jobs",
+    body: "Compare your resume against the job description and expose gaps.",
+    icon: Search,
   },
 ] as const;
 
-const heroLines = [
-  "ATS-ready\nin minutes.",
-  "Actually\nshortlisted.",
-  "Rewritten\nby AI.",
-  "Land the\noffer.",
+const workflow = [
+  {
+    step: "STEP 1",
+    title: "Bring in your existing resume",
+    body: "Start from a blank template or upload your current PDF/DOCX. ResumeMatch detects contact details, education, projects, experience, and skills.",
+  },
+  {
+    step: "STEP 2",
+    title: "Shape it into an ATS-safe version",
+    body: "Pick a role-specific layout, edit live, tune spacing, and export clean HTML, PDF, or LaTeX from one source of truth.",
+  },
+  {
+    step: "STEP 3",
+    title: "Know what to fix before applying",
+    body: "Run audits and job-description matching to see missing keywords, weak sections, and practical next edits.",
+  },
+] as const;
+
+const comparisonRows = [
+  ["Parsing", "Manual copy-paste from old documents.", "PDF/DOCX import with structured field mapping."],
+  ["Templates", "One generic layout for every role.", "Role-specific ATS-safe templates for different industries."],
+  ["Feedback", "Vague advice after you already applied.", "Specific fixes for skills, bullets, formatting, and match gaps."],
+  ["Export", "Formatting breaks between tools.", "Builder, preview, PDF, and LaTeX stay aligned."],
+  ["Applications", "Guess whether a resume fits the job.", "Compare against job descriptions before spending time applying."],
+] as const;
+
+const templates = [
+  "Software Engineer",
+  "Data Science",
+  "Product Manager",
+  "Finance Analyst",
+  "Marketing",
+  "Intern",
 ] as const;
 
 interface ShowcaseTemplate {
-  id: string
-  name: string
-  description: string | null
-  is_ats_safe: boolean | null
-  tier: string | null
-  html_content: string
-  css_content: string
+  id: string;
+  name: string;
+  description: string | null;
+  is_ats_safe: boolean | null;
+  tier: string | null;
+  html_content: string;
+  css_content: string;
 }
 
-const LANDING_PREVIEW_CSS = `
-  body,html{margin:0;padding:0}
-  *{box-sizing:border-box}
-  body{font-family:Arial,sans-serif;font-size:13px;line-height:1.4;color:#111;padding:24px 28px}
-  h1{font-size:17px;font-weight:700;margin:0 0 3px}
-  h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid #333;padding-bottom:2px;margin:10px 0 5px}
-  h3{font-size:12px;font-weight:600;margin:0 0 2px}
-  p,li{font-size:11.5px;line-height:1.4;margin:0 0 2px}
-  ul{margin:3px 0 3px 14px;padding:0}
-  a{color:inherit;text-decoration:none}
-  .twocol,.two-col,.layout-two-col,.europass-wrap{display:flex;gap:0}
-  .twocol .sidebar,.two-col .left,.sidebar,.left-col{width:30%;padding:16px 12px;background:#f2f2f2}
-  .twocol .main,.two-col .right,.main-col,.right-col{width:70%;padding:16px 14px}
-`
-
-function FloatingTemplatePreview({
-  template,
-  offset,
-  onSelect,
-}: {
-  template: ShowcaseTemplate
-  offset: number
-  onSelect: () => void
-}) {
-  const active = offset === 0
-
-  if (Math.abs(offset) > 4) return null
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") onSelect();
-      }}
-      className="landing-template-float-card"
-      data-offset={offset}
-      aria-label={`Select ${template.name} template`}
-      style={{
-        position: "absolute",
-        left: "50%",
-        top: active ? 18 : 46,
-        width: active ? "clamp(280px, 22vw, 340px)" : "clamp(220px, 16vw, 280px)",
-        color: "inherit",
-        cursor: "pointer",
-        transform: `translateX(calc(-50% + ${offset * 300}px)) translateY(${Math.abs(offset) * 5}px) scale(${active ? 1 : Math.abs(offset) > 2 ? 0.72 : 0.84})`,
-        opacity: active ? 1 : Math.abs(offset) > 2 ? 0.24 : 0.46,
-        zIndex: 10 - Math.abs(offset),
-        transition: "transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms ease, top 520ms ease",
-      }}
-    >
-      <Link
-        href={`/builder/${template.id}`}
-        onClick={(event) => {
-          if (!active) {
-            event.preventDefault();
-            onSelect();
-          }
-        }}
-        style={{
-          display: "block",
-          borderRadius: 18,
-          border: active ? "2px solid rgba(52,211,153,0.52)" : "2px solid rgba(245,240,232,0.08)",
-          background: "var(--color-card)",
-          overflow: "hidden",
-          boxShadow: active
-            ? "0 34px 110px rgba(0,0,0,0.48), 0 0 0 1px rgba(245,240,232,0.08)"
-            : "0 20px 70px rgba(0,0,0,0.28), 0 0 0 1px rgba(245,240,232,0.05)",
-          animation: active ? "template-float 3.2s ease-in-out infinite" : "template-float-soft 4.2s ease-in-out infinite",
-        }}
-      >
-        <div style={{ position: "relative", height: active ? 258 : 232, background: "#fff", overflow: "hidden" }}>
-          <TemplatePreviewClient
-            template={{ ...template, css_content: LANDING_PREVIEW_CSS }}
-            sample={pickSampleForTemplate(template.name)}
-            scale={0.23}
-          />
-          {isCompanyInspiredTemplate(template.name) && (
-            <div style={{ position: "absolute", top: 8, left: 8, zIndex: 10, borderRadius: 999, background: "#020617", color: "#fff", padding: "3px 8px", fontSize: 10, fontWeight: 800 }}>
-              FAANG-type
-            </div>
-          )}
-          {template.tier === "pro" && (
-            <div style={{ position: "absolute", top: 8, right: 8, zIndex: 10, borderRadius: 999, background: "#facc15", color: "#713f12", padding: "3px 8px", fontSize: 9, fontWeight: 900 }}>
-              PRO
-            </div>
-          )}
-          {!active && <div style={{ position: "absolute", inset: 0, background: "rgba(8,8,8,0.14)" }} />}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: active ? 1 : 0,
-              transition: "opacity 180ms ease",
-              background: active ? "rgba(52,211,153,0.08)" : "transparent",
-            }}
-          >
-            {active && (
-              <span style={{ borderRadius: 999, background: "#fff", color: "var(--color-marketing-accent)", padding: "9px 14px", fontSize: 12, fontWeight: 900, boxShadow: "0 16px 40px rgba(0,0,0,0.18)" }}>
-                Use this →
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div style={{ padding: active ? 16 : 14, borderTop: "1px solid rgba(245,240,232,0.08)" }}>
-          <h3 style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.2, color: "var(--color-marketing-text)" }}>
-            {template.name}
-          </h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 9 }}>
-            <span style={{ borderRadius: 999, background: "rgba(245,240,232,0.06)", color: "rgba(245,240,232,0.62)", padding: "3px 8px", fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              {getTemplateBadge(template.name)}
-            </span>
-            {template.is_ats_safe && (
-              <span style={{ color: "var(--color-marketing-accent)", fontSize: 10, fontWeight: 700 }}>
-                ATS Safe
-              </span>
-            )}
-          </div>
-          <p style={{ marginTop: 9, minHeight: 32, fontSize: 11, lineHeight: 1.45, color: "rgba(245,240,232,0.42)" }}>
-            {getTemplateDescription(template.name, template.description)}
-          </p>
-        </div>
-      </Link>
-    </div>
-  )
-}
-
-function TemplateShowcase() {
-  const [templates, setTemplates] = useState<ShowcaseTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(2);
-  const [isPaused, setIsPaused] = useState(false);
+function LandingTemplateFlow() {
+  const [items, setItems] = useState<ShowcaseTemplate[]>([]);
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    let alive = true;
+    let cancelled = false;
 
-    const loadTemplates = async () => {
+    async function loadTemplates() {
       try {
-        const res = await fetch("/api/v1/templates/showcase", { cache: "no-store" });
-        if (!res.ok) return;
-        const body = await res.json();
-        const next = body?.data?.templates;
-        if (alive && Array.isArray(next) && next.length > 0) {
-          setTemplates(next);
+        const res = await fetch("/api/v1/templates/showcase");
+        const json = await res.json();
+        const templates = json?.data?.templates;
+        if (!cancelled && Array.isArray(templates)) {
+          setItems(templates);
         }
       } catch {
-        // The fallback below keeps the section useful if the API is unavailable.
-      } finally {
-        if (alive) setLoading(false);
+        if (!cancelled) setItems([]);
       }
-    };
+    }
 
-    void loadTemplates();
-
+    loadTemplates();
     return () => {
-      alive = false;
+      cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (isPaused || templates.length < 2) return;
+    if (items.length < 2) return;
+    const interval = window.setInterval(() => {
+      setActive((value) => (value + 1) % items.length);
+    }, 3600);
 
-    const id = window.setInterval(() => {
-      setSelectedIndex((index) => (index + 1) % templates.length);
-    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [items.length]);
 
-    return () => window.clearInterval(id);
-  }, [isPaused, templates.length]);
+  if (items.length === 0) return null;
 
-  const move = (direction: 1 | -1) => {
-    if (templates.length === 0) return;
-    setSelectedIndex((index) => (index + direction + templates.length) % templates.length);
-  };
-
-  const getOffset = (index: number) => {
-    const raw = index - selectedIndex;
-    if (raw > templates.length / 2) return raw - templates.length;
-    if (raw < -templates.length / 2) return raw + templates.length;
-    return raw;
+  const move = (direction: -1 | 1) => {
+    setActive((value) => (value + direction + items.length) % items.length);
   };
 
   return (
-    <section
-      id="templates"
-      style={{
-        position: "relative",
-        margin: "0 calc(50% - 50vw)",
-        padding: "58px 0 62px",
-        width: "100vw",
-        overflow: "hidden",
-        borderTop: "1px solid rgba(245,240,232,0.045)",
-        borderBottom: "1px solid rgba(245,240,232,0.045)",
-        background: "linear-gradient(180deg, rgba(245,240,232,0.012), rgba(52,211,153,0.018), rgba(245,240,232,0.008))",
-      }}
-    >
-      <div className="landing-section" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "end", justifyContent: "space-between", gap: 28, flexWrap: "wrap", marginBottom: 28 }}>
-        <div style={{ maxWidth: 620 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
-            <div style={{ width: 20, height: 1, background: "var(--color-marketing-accent)" }} />
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.22em", color: "rgba(245,240,232,0.25)", textTransform: "uppercase" }}>
-              Templates
-            </span>
-          </div>
-          <h2 style={{ fontSize: "clamp(36px, 4.8vw, 58px)", lineHeight: 0.96, letterSpacing: "-0.03em", marginBottom: 14 }}>
-            Start from a proven resume layout.
-          </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.72, color: "rgba(245,240,232,0.42)", maxWidth: 540 }}>
-            These are the same template cards and previews used in the builder.
-          </p>
-        </div>
-        <Link
-          href="/builder#templates"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            height: 44,
-            padding: "0 18px",
-            borderRadius: 999,
-            border: "1px solid rgba(52,211,153,0.24)",
-            color: "var(--color-marketing-accent)",
-            fontSize: 13,
-            fontWeight: 800,
-          }}
-        >
-          Browse all templates <ArrowRight size={14} />
-        </Link>
-      </div>
+    <section className="rm-flow-section" aria-label="Live resume template previews">
+      <div className="rm-flow-stage">
+        <button className="rm-flow-arrow left" type="button" onClick={() => move(-1)} aria-label="Previous template">
+          <ChevronLeft size={26} />
+        </button>
+        <button className="rm-flow-arrow right" type="button" onClick={() => move(1)} aria-label="Next template">
+          <ChevronRight size={26} />
+        </button>
 
-      {templates.length > 0 ? (
-        <div
-          className="landing-template-float"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          style={{
-            position: "relative",
-            width: "100%",
-            overflow: "hidden",
-            height: "470px",
-            padding: "8px 0 18px",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => move(-1)}
-            aria-label="Previous template"
-            style={{
-              position: "absolute",
-              left: "max(22px, calc(50% - 610px))",
-              top: "44%",
-              transform: "translateY(-50%)",
-              zIndex: 20,
-              width: 46,
-              height: 46,
-              borderRadius: 999,
-              border: "1px solid rgba(52,211,153,0.25)",
-              background: "var(--color-marketing-accent)",
-              color: "var(--color-marketing-bg)",
-              fontSize: 28,
-              lineHeight: 1,
-              boxShadow: "0 16px 45px rgba(52,211,153,0.18)",
-              cursor: "pointer",
-            }}
-          >
-            ‹
-          </button>
+        <div className="rm-flow-track">
+          {items.map((template, index) => {
+            const offset = ((index - active + items.length + Math.floor(items.length / 2)) % items.length) - Math.floor(items.length / 2);
+            const hidden = Math.abs(offset) > 3;
+            const selected = offset === 0;
+            const sample = pickSampleForTemplate(template.name);
 
-          {templates.map((template, index) => {
-            const offset = getOffset(index);
-            return <FloatingTemplatePreview key={template.id} template={template} offset={offset} onSelect={() => setSelectedIndex(index)} />;
-          })}
-
-          <button
-            type="button"
-            onClick={() => move(1)}
-            aria-label="Next template"
-            style={{
-              position: "absolute",
-              right: "max(22px, calc(50% - 610px))",
-              top: "44%",
-              transform: "translateY(-50%)",
-              zIndex: 20,
-              width: 46,
-              height: 46,
-              borderRadius: 999,
-              border: "1px solid rgba(52,211,153,0.25)",
-              background: "var(--color-marketing-accent)",
-              color: "var(--color-marketing-bg)",
-              fontSize: 28,
-              lineHeight: 1,
-              boxShadow: "0 16px 45px rgba(52,211,153,0.18)",
-              cursor: "pointer",
-            }}
-          >
-            ›
-          </button>
-
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 12, display: "flex", justifyContent: "center", gap: 8 }}>
-            {templates.map((template, index) => (
-              <button
-                key={`template-dot-${template.id}`}
-                type="button"
-                onClick={() => setSelectedIndex(index)}
-                aria-label={`Show ${template.name}`}
+            return (
+              <Link
+                key={template.id}
+                href={`/builder/${template.id}/start`}
+                className={`rm-flow-card ${selected ? "active" : ""} ${hidden ? "hidden-card" : ""}`}
                 style={{
-                  width: index === selectedIndex ? 24 : 8,
-                  height: 8,
-                  borderRadius: 99,
-                  border: 0,
-                  background: index === selectedIndex ? "var(--color-marketing-accent)" : "rgba(245,240,232,0.16)",
-                  cursor: "pointer",
-                  transition: "width 220ms ease, background 220ms ease",
+                  transform: `translateX(${offset * 330}px) scale(${selected ? 1 : 0.86})`,
+                  opacity: hidden ? 0 : selected ? 1 : 0.36,
+                  zIndex: 20 - Math.abs(offset),
                 }}
-              />
-            ))}
-          </div>
+                aria-hidden={hidden}
+              >
+                <div className="rm-flow-preview">
+                  <TemplatePreviewClient template={template} sample={sample} fit="cover" />
+                </div>
+                <div className="rm-flow-card-body">
+                  <div className="rm-flow-card-head">
+                    <h3>{template.name}</h3>
+                    {selected && <span>Use this →</span>}
+                  </div>
+                  <div className="rm-flow-meta">
+                    <span>{getTemplateBadge(template.name)}</span>
+                    {template.is_ats_safe && <strong>ATS Safe</strong>}
+                  </div>
+                  <p>{getTemplateDescription(template.name, template.description)}</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
-      ) : (
-        <div
-          style={{
-            maxWidth: 1280,
-            margin: "0 auto",
-            border: "1px solid rgba(245,240,232,0.075)",
-            borderRadius: 24,
-            padding: "34px 24px",
-            background: "rgba(245,240,232,0.018)",
-            color: "rgba(245,240,232,0.42)",
-            textAlign: "center",
-          }}
-        >
-          {loading ? "Loading templates..." : "Templates could not load here. Open the builder to browse all layouts."}
-          <div style={{ marginTop: 16 }}>
-            <Link href="/builder#templates" style={{ color: "var(--color-marketing-accent)", fontWeight: 800 }}>
-              Open builder
-            </Link>
-          </div>
+
+        <div className="rm-flow-dots" aria-hidden="true">
+          {items.map((template, index) => (
+            <button
+              key={template.id}
+              type="button"
+              className={index === active ? "active" : ""}
+              onClick={() => setActive(index)}
+              tabIndex={-1}
+            />
+          ))}
         </div>
-      )}
+      </div>
     </section>
   );
 }
@@ -425,784 +207,1274 @@ function CookieBanner() {
   if (choice) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-label="Cookie preferences"
-      style={{
-        position: "fixed",
-        left: "50%",
-        bottom: 22,
-        transform: "translateX(-50%)",
-        zIndex: 200,
-        width: "min(720px, calc(100vw - 28px))",
-        border: "1px solid rgba(245,240,232,0.12)",
-        borderRadius: 26,
-        background: "rgba(14,14,14,0.94)",
-        boxShadow: "0 28px 100px rgba(0,0,0,0.45)",
-        backdropFilter: "blur(22px)",
-        padding: 24,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "start" }}>
-        <div>
-          <h2 style={{ fontSize: 20, lineHeight: 1.15, marginBottom: 10 }}>Cookies improve your experience.</h2>
-          <p style={{ fontSize: 13, lineHeight: 1.65, color: "rgba(245,240,232,0.52)", maxWidth: 580 }}>
-            We use essential cookies for login and security. With your permission, we may also use analytics cookies to understand product usage and improve ResumeMatch.
-          </p>
-          {preferencesOpen && (
-            <div style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgba(245,240,232,0.035)", color: "rgba(245,240,232,0.58)", fontSize: 12, lineHeight: 1.6 }}>
-              Essential cookies are always on because authentication needs them. Analytics cookies are optional and can be disabled by choosing essential only.
-            </div>
-          )}
-        </div>
+    <div className="rm-cookie" role="dialog" aria-label="Cookie preferences">
+      <div>
+        <h2>Cookies improve your experience.</h2>
+        <p>
+          Essential cookies keep login and security working. Analytics cookies are optional and help us improve ResumeMatch.
+        </p>
+        {preferencesOpen && (
+          <div className="rm-cookie-note">
+            Essential cookies are always on. Choose essential only to disable optional analytics.
+          </div>
+        )}
       </div>
-      <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={() => saveChoice("accepted")}
-          style={{ border: 0, borderRadius: 12, padding: "12px 16px", background: "var(--color-marketing-accent)", color: "var(--color-marketing-bg)", fontWeight: 900, cursor: "pointer" }}
-        >
-          Accept all
-        </button>
-        <button
-          type="button"
-          onClick={() => saveChoice("essential")}
-          style={{ border: "1px solid rgba(245,240,232,0.12)", borderRadius: 12, padding: "12px 16px", background: "rgba(245,240,232,0.04)", color: "var(--color-marketing-text)", fontWeight: 800, cursor: "pointer" }}
-        >
-          Essential only
-        </button>
-        <button
-          type="button"
-          onClick={() => setPreferencesOpen((value) => !value)}
-          style={{ border: "1px solid rgba(52,211,153,0.22)", borderRadius: 12, padding: "12px 16px", background: "rgba(52,211,153,0.06)", color: "var(--color-marketing-accent)", fontWeight: 800, cursor: "pointer" }}
-        >
-          Preferences
-        </button>
+      <div className="rm-cookie-actions">
+        <button type="button" onClick={() => saveChoice("accepted")}>Accept all</button>
+        <button type="button" onClick={() => saveChoice("essential")}>Essential only</button>
+        <button type="button" onClick={() => setPreferencesOpen((value) => !value)}>Preferences</button>
       </div>
     </div>
   );
 }
 
-function TypewriterHero() {
-  const [displayed, setDisplayed] = useState("");
-  const [phase, setPhase] = useState<0 | 1 | 2>(0);
-  const [lineIdx, setLineIdx] = useState(0);
-  const [cursor, setCursor] = useState(true);
-
-  useEffect(() => {
-    const iv = window.setInterval(() => setCursor((p) => !p), 500);
-    return () => window.clearInterval(iv);
-  }, []);
-
-  useEffect(() => {
-    const line = heroLines[lineIdx];
-    let timeout: number | undefined;
-
-    if (phase === 0) {
-      if (displayed.length < line.length) {
-        timeout = window.setTimeout(() => {
-          setDisplayed(line.slice(0, displayed.length + 1));
-        }, 55);
-      } else {
-        timeout = window.setTimeout(() => setPhase(1), 1800);
-      }
-    } else if (phase === 1) {
-      timeout = window.setTimeout(() => setPhase(2), 200);
-    } else if (displayed.length > 0) {
-      timeout = window.setTimeout(() => {
-        setDisplayed((p) => p.slice(0, -1));
-      }, 28);
-    } else {
-      timeout = window.setTimeout(() => {
-        setLineIdx((p) => (p + 1) % heroLines.length);
-        setPhase(0);
-      }, 0);
-    }
-
-    return () => {
-      if (timeout !== undefined) {
-        window.clearTimeout(timeout);
-      }
-    };
-  }, [displayed, lineIdx, phase]);
-
+function ProductMockup() {
   return (
-    <div style={{ position: "relative" }}>
-      <h1
-        className="landing-hero-title"
-        style={{
-          fontFamily: "var(--font-headline), sans-serif",
-          fontSize: "clamp(48px, 9vw, 108px)",
-          lineHeight: 0.92,
-          letterSpacing: "-0.01em",
-          whiteSpace: "pre-line",
-          color: "var(--color-marketing-text)",
-          minHeight: "clamp(120px, 20vw, 220px)",
-        }}
-      >
-        {displayed}
-        <span
-          style={{
-            display: "inline-block",
-            width: "0.06em",
-            height: "0.85em",
-            background: "var(--color-marketing-accent)",
-            verticalAlign: "text-top",
-            marginLeft: "0.06em",
-            opacity: cursor ? 1 : 0,
-            transition: "opacity 0.1s",
-          }}
-        />
-      </h1>
+    <div className="rm-hero-visual" aria-label="ResumeMatch product preview">
+      <div className="rm-browser-bar">
+        <span />
+        <span />
+        <span />
+        <p>resumematch.live/builder</p>
+      </div>
+      <div className="rm-workspace">
+        <aside>
+          <nav>
+            <span className="active">Builder</span>
+            <span>Audit</span>
+            <span>Matches</span>
+            <span>Templates</span>
+          </nav>
+        </aside>
+        <main>
+          <div className="rm-upload-card">
+            <div>
+              <p className="rm-eyebrow">Resume import</p>
+              <h3>Do you have an existing resume?</h3>
+            </div>
+            <div className="rm-upload-actions">
+              <span><UploadCloud size={15} /> Yes, upload</span>
+              <span>No, start blank</span>
+            </div>
+          </div>
+          <div className="rm-editor-grid">
+            <div className="rm-form-panel">
+              {["Name", "Summary", "Experience", "Projects", "Skills"].map((item, index) => (
+                <div key={item} className="rm-field-row">
+                  <span>{item}</span>
+                  <div style={{ width: `${76 - index * 7}%` }} />
+                </div>
+              ))}
+            </div>
+            <div className="rm-resume-paper">
+              <h4>Pratik Singh</h4>
+              <p>Senior Software Engineer</p>
+              <div />
+              <section>
+                <strong>Experience</strong>
+                <span />
+                <span />
+                <span />
+              </section>
+              <section>
+                <strong>Projects</strong>
+                <span />
+                <span />
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function ReportMockup() {
+  return (
+    <div className="rm-report-card">
+      <div className="rm-report-head">
+        <div>
+          <p className="rm-eyebrow">ATS report</p>
+          <h3>Frontend Engineer at Stripe</h3>
+        </div>
+        <div className="rm-score">82</div>
+      </div>
+      <div className="rm-bars">
+        {[
+          ["React", 96],
+          ["TypeScript", 88],
+          ["Accessibility", 72],
+          ["Testing", 54],
+        ].map(([label, width]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <div><i style={{ width: `${width}%` }} /></div>
+          </div>
+        ))}
+      </div>
+      <div className="rm-warning">
+        <BarChart3 size={17} />
+        Add stronger testing evidence before applying.
+      </div>
     </div>
   );
 }
 
 export default function LandingPage() {
-  const [resumesAnalyzed, setResumesAnalyzed] = useState(200)
-
-  useEffect(() => {
-    let alive = true
-
-    const loadStats = async () => {
-      try {
-        const res = await fetch('/api/v1/landing/stats', { cache: 'no-store' })
-        if (!res.ok) return
-        const body = await res.json()
-        const next = Number(body?.data?.resumes_analyzed)
-        if (alive && Number.isFinite(next)) {
-          setResumesAnalyzed(next)
-        }
-      } catch {
-        // Keep the default 200 on network or API failure.
-      }
-    }
-
-    void loadStats()
-    const id = window.setInterval(loadStats, 60000)
-
-    return () => {
-      alive = false
-      window.clearInterval(id)
-    }
-  }, [])
-
   return (
     <>
       <style>{`
+        :root {
+          --rm-bg: #faf9f5;
+          --rm-panel: #f2f0e8;
+          --rm-panel-strong: #e8e3d5;
+          --rm-text: #0f0e0e;
+          --rm-muted: #44413f;
+          --rm-soft: #77716b;
+          --rm-line: #e2ded4;
+          --rm-black: #161616;
+          --rm-green: #2f8f68;
+          --rm-cream: #fffaf0;
+        }
+
         html { scroll-behavior: smooth; }
-        body { background: #080808; }
-        a { text-decoration: none; color: inherit; }
-        ::selection { background: rgba(52,211,153,0.2); color: #f5f0e8; }
+        body { background: var(--rm-bg); }
+        a { color: inherit; text-decoration: none; }
+        ::selection { background: #d8f3df; color: var(--rm-text); }
 
-        @keyframes template-float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-16px); }
+        .rm-page {
+          min-height: 100vh;
+          background: var(--rm-bg);
+          color: var(--rm-text);
+          font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          letter-spacing: 0;
         }
 
-        @keyframes template-float-soft {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        .rm-container {
+          width: min(100% - 48px, 1280px);
+          margin: 0 auto;
         }
 
-        @media (max-width: 960px) {
-          .landing-shell { overflow-x: clip; }
-          .landing-header { padding: 0 20px !important; }
-          .landing-nav { display: none !important; }
-          .landing-section { padding-left: 20px !important; padding-right: 20px !important; }
-          .landing-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
-          .landing-cta { padding: 40px 24px !important; }
-          .landing-proof-grid { grid-template-columns: 1fr !important; }
-          .landing-anchor-grid { grid-template-columns: 1fr !important; }
-          .landing-flow-grid { grid-template-columns: 1fr !important; }
-          .landing-flow-arrow { display: none !important; }
-          .landing-template-float { height: 440px !important; }
-          .landing-template-float-card { width: 250px !important; }
+        .rm-header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: rgba(250, 249, 245, 0.88);
+          backdrop-filter: blur(18px);
+        }
+
+        .rm-header-inner {
+          height: 72px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 28px;
+        }
+
+        .rm-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 21px;
+          font-weight: 760;
+          letter-spacing: -0.01em;
+        }
+
+        .rm-brand-match {
+          color: var(--rm-green);
+        }
+
+        .rm-nav {
+          display: flex;
+          align-items: center;
+          gap: 30px;
+          color: var(--rm-muted);
+          font-size: 14px;
+          font-weight: 560;
+        }
+
+        .rm-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 14px;
+          font-weight: 620;
+        }
+
+        .rm-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 42px;
+          border-radius: 999px;
+          padding: 0 18px;
+          font-size: 15px;
+          font-weight: 650;
+          transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+        }
+
+        .rm-button:active { transform: scale(0.97); }
+        .rm-button.primary { background: var(--rm-black); color: white; }
+        .rm-button.primary:hover { background: #2a2927; }
+        .rm-button.secondary {
+          background: white;
+          color: var(--rm-black);
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .rm-button.secondary:hover { box-shadow: 0 0 0 1px rgba(0,0,0,0.16), 0 3px 12px rgba(0,0,0,0.06); }
+
+        .rm-hero {
+          display: flex;
+          flex-direction: column;
+          gap: 72px;
+          padding: 66px 0 76px;
+        }
+
+        .rm-hero-copy {
+          max-width: 660px;
+        }
+
+        .rm-hero h1 {
+          max-width: 680px;
+          font-size: clamp(44px, 6vw, 76px);
+          line-height: 0.96;
+          letter-spacing: -0.045em;
+          font-weight: 650;
+        }
+
+        .rm-hero p {
+          margin-top: 22px;
+          max-width: 620px;
+          color: #302d2b;
+          font-size: clamp(18px, 2vw, 22px);
+          line-height: 1.32;
+        }
+
+        .rm-hero-actions {
+          margin-top: 26px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .rm-hero-visual {
+          overflow: hidden;
+          border-radius: 18px;
+          background: #171512;
+          min-height: 500px;
+          box-shadow: 0 26px 80px rgba(22, 22, 22, 0.16);
+        }
+
+        .rm-browser-bar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 48px;
+          padding: 0 18px;
+          background: #25221e;
+          color: #9f9a8e;
+          font-size: 13px;
+        }
+
+        .rm-browser-bar span {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #756f63;
+        }
+
+        .rm-browser-bar p { margin-left: 10px; }
+
+        .rm-workspace {
+          display: grid;
+          grid-template-columns: 220px 1fr;
+          min-height: 452px;
+        }
+
+        .rm-workspace aside {
+          padding: 26px 18px;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          background: #1e1b17;
+        }
+
+        .rm-workspace nav {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .rm-workspace nav span {
+          border-radius: 10px;
+          padding: 11px 12px;
+          color: #a9a295;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .rm-workspace nav .active {
+          background: #302b25;
+          color: #fff4dc;
+        }
+
+        .rm-workspace main {
+          padding: 26px;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,0.04), transparent 34%),
+            #191713;
+        }
+
+        .rm-upload-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+          border-radius: 16px;
+          padding: 20px;
+          background: #f6efe0;
+          color: #18140f;
+        }
+
+        .rm-eyebrow {
+          color: #817663;
+          font-size: 11px;
+          font-weight: 760;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+        }
+
+        .rm-upload-card h3 {
+          margin-top: 6px;
+          font-size: 24px;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          font-weight: 650;
+        }
+
+        .rm-upload-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .rm-upload-actions span {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          border-radius: 999px;
+          padding: 9px 13px;
+          background: #161616;
+          color: white;
+          font-size: 13px;
+          font-weight: 650;
+        }
+
+        .rm-upload-actions span + span {
+          background: white;
+          color: #161616;
+        }
+
+        .rm-editor-grid {
+          display: grid;
+          grid-template-columns: 1fr 330px;
+          gap: 20px;
+          margin-top: 22px;
+        }
+
+        .rm-form-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          border-radius: 16px;
+          padding: 18px;
+          background: rgba(255,255,255,0.06);
+        }
+
+        .rm-field-row {
+          display: grid;
+          grid-template-columns: 104px 1fr;
+          align-items: center;
+          gap: 12px;
+          color: #c8c0b2;
+          font-size: 13px;
+          font-weight: 620;
+        }
+
+        .rm-field-row div {
+          height: 38px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.11);
+        }
+
+        .rm-resume-paper {
+          min-height: 300px;
+          border-radius: 8px;
+          padding: 26px;
+          background: white;
+          color: #171717;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+        }
+
+        .rm-resume-paper h4 {
+          font-size: 24px;
+          font-weight: 760;
+          letter-spacing: -0.03em;
+        }
+
+        .rm-resume-paper p {
+          margin-top: 4px;
+          color: #555;
+          font-size: 12px;
+        }
+
+        .rm-resume-paper > div {
+          height: 2px;
+          margin: 16px 0;
+          background: #171717;
+        }
+
+        .rm-resume-paper section {
+          margin-top: 16px;
+        }
+
+        .rm-resume-paper strong {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 10px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .rm-resume-paper span {
+          display: block;
+          height: 8px;
+          margin-top: 7px;
+          border-radius: 4px;
+          background: #ddd8ce;
+        }
+
+        .rm-resume-paper span:nth-child(2) { width: 94%; }
+        .rm-resume-paper span:nth-child(3) { width: 82%; }
+        .rm-resume-paper span:nth-child(4) { width: 70%; }
+
+        .rm-logo-strip {
+          border-top: 1px solid var(--rm-line);
+          border-bottom: 1px solid var(--rm-line);
+          background: rgba(255,255,255,0.24);
+        }
+
+        .rm-logo-strip .rm-container {
+          display: flex;
+          justify-content: center;
+          gap: 38px;
+          overflow-x: auto;
+          padding: 20px 0;
+        }
+
+        .rm-logo-strip span {
+          white-space: nowrap;
+          color: #908a80;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+
+        .rm-flow-section {
+          overflow: hidden;
+          border-top: 1px solid var(--rm-line);
+          border-bottom: 1px solid var(--rm-line);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.36), rgba(242,240,232,0.74)),
+            var(--rm-bg);
+          padding: 70px 0 62px;
+        }
+
+        .rm-flow-stage {
+          position: relative;
+          min-height: 520px;
+        }
+
+        .rm-flow-track {
+          position: relative;
+          height: 470px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          perspective: 1200px;
+        }
+
+        .rm-flow-card {
+          position: absolute;
+          width: min(78vw, 360px);
+          overflow: hidden;
+          border: 1px solid var(--rm-line);
+          border-radius: 18px;
+          background: var(--rm-panel);
+          box-shadow: 0 28px 90px rgba(22,22,22,0.16);
+          transition: transform 520ms ease, opacity 520ms ease, border-color 520ms ease;
+        }
+
+        .rm-flow-card.active {
+          border-color: rgba(47,143,104,0.48);
+          box-shadow: 0 34px 100px rgba(22,22,22,0.22), 0 0 0 1px rgba(47,143,104,0.18);
+        }
+
+        .rm-flow-card.hidden-card {
+          pointer-events: none;
+        }
+
+        .rm-flow-preview {
+          height: 270px;
+          overflow: hidden;
+          border-bottom: 1px solid var(--rm-line);
+          background: #f8faf8;
+        }
+
+        .rm-flow-card-body {
+          padding: 20px 22px 24px;
+          color: var(--rm-text);
+        }
+
+        .rm-flow-card-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+        }
+
+        .rm-flow-card h3 {
+          font-size: 22px;
+          line-height: 1.1;
+          font-weight: 720;
+          letter-spacing: -0.02em;
+        }
+
+        .rm-flow-card-head span {
+          flex: none;
+          border-radius: 999px;
+          background: rgba(47,143,104,0.10);
+          padding: 8px 12px;
+          color: var(--rm-green);
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .rm-flow-meta {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 9px;
+          margin-top: 14px;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .rm-flow-meta span {
+          border-radius: 999px;
+          background: white;
+          padding: 6px 9px;
+          color: var(--rm-muted);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .rm-flow-meta strong {
+          color: var(--rm-green);
+        }
+
+        .rm-flow-card p {
+          margin-top: 14px;
+          color: var(--rm-muted);
+          font-size: 15px;
+          line-height: 1.45;
+        }
+
+        .rm-flow-arrow {
+          position: absolute;
+          top: 43%;
+          z-index: 45;
+          display: grid;
+          place-items: center;
+          width: 56px;
+          height: 56px;
+          border: 0;
+          border-radius: 50%;
+          background: var(--rm-green);
+          color: white;
+          box-shadow: 0 12px 34px rgba(22,22,22,0.16);
+          cursor: pointer;
+          transition: transform 150ms ease, background 150ms ease;
+        }
+
+        .rm-flow-arrow:hover {
+          background: #277a59;
+          transform: scale(1.04);
+        }
+
+        .rm-flow-arrow.left {
+          left: calc(50% - 420px);
+        }
+
+        .rm-flow-arrow.right {
+          right: calc(50% - 420px);
+        }
+
+        .rm-flow-dots {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .rm-flow-dots button {
+          width: 10px;
+          height: 10px;
+          border: 0;
+          border-radius: 999px;
+          background: rgba(22,22,22,0.16);
+          cursor: pointer;
+        }
+
+        .rm-flow-dots button.active {
+          width: 30px;
+          background: var(--rm-green);
+        }
+
+        .rm-section {
+          padding: 92px 0;
+        }
+
+        .rm-section-heading {
+          max-width: 690px;
+        }
+
+        .rm-section-heading h2 {
+          font-size: clamp(38px, 4vw, 56px);
+          line-height: 0.98;
+          letter-spacing: -0.04em;
+          font-weight: 650;
+        }
+
+        .rm-section-heading p {
+          margin-top: 18px;
+          color: #302d2b;
+          font-size: 20px;
+          line-height: 1.32;
+        }
+
+        .rm-example-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 22px;
+          margin-top: 44px;
+        }
+
+        .rm-example-card,
+        .rm-template-card,
+        .rm-step-card {
+          border: 1px solid rgba(0,0,0,0.02);
+          border-radius: 16px;
+          background: var(--rm-panel);
+        }
+
+        .rm-example-card {
+          display: flex;
+          min-height: 250px;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 28px;
+        }
+
+        .rm-example-card svg {
+          color: var(--rm-green);
+        }
+
+        .rm-example-card h3 {
+          font-size: 22px;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          font-weight: 650;
+        }
+
+        .rm-example-card p {
+          margin-top: 8px;
+          color: var(--rm-muted);
+          font-size: 16px;
+          line-height: 1.5;
+        }
+
+        .rm-workflow {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+          gap: 56px;
+          align-items: center;
+        }
+
+        .rm-step-list {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .rm-step-card {
+          padding: 24px;
+        }
+
+        .rm-step-card span {
+          color: #8b857a;
+          font-size: 11px;
+          font-weight: 780;
+          letter-spacing: 0.16em;
+        }
+
+        .rm-step-card h3 {
+          margin-top: 10px;
+          font-size: 24px;
+          line-height: 1.1;
+          letter-spacing: -0.025em;
+          font-weight: 650;
+        }
+
+        .rm-step-card p {
+          margin-top: 10px;
+          color: var(--rm-muted);
+          font-size: 16px;
+          line-height: 1.5;
+        }
+
+        .rm-report-card {
+          border-radius: 16px;
+          padding: 28px;
+          background: #161616;
+          color: white;
+          box-shadow: 0 24px 70px rgba(22, 22, 22, 0.16);
+        }
+
+        .rm-report-head {
+          display: flex;
+          align-items: start;
+          justify-content: space-between;
+          gap: 20px;
+        }
+
+        .rm-report-head h3 {
+          margin-top: 8px;
+          max-width: 300px;
+          font-size: 32px;
+          line-height: 1;
+          letter-spacing: -0.035em;
+          font-weight: 650;
+        }
+
+        .rm-score {
+          display: grid;
+          place-items: center;
+          width: 82px;
+          height: 82px;
+          border-radius: 50%;
+          background: #dbf2c7;
+          color: #183017;
+          font-size: 30px;
+          font-weight: 750;
+        }
+
+        .rm-bars {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 32px;
+        }
+
+        .rm-bars span {
+          display: block;
+          margin-bottom: 7px;
+          color: #cfc8ba;
+          font-size: 13px;
+          font-weight: 650;
+        }
+
+        .rm-bars div div {
+          height: 10px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.12);
+        }
+
+        .rm-bars i {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          background: #dbf2c7;
+        }
+
+        .rm-warning {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 30px;
+          border-radius: 14px;
+          padding: 14px;
+          background: rgba(255,255,255,0.08);
+          color: #fff6df;
+          font-size: 15px;
+          line-height: 1.4;
+        }
+
+        .rm-comparison {
+          position: relative;
+          margin-top: 50px;
+        }
+
+        .rm-comparison::before {
+          content: "";
+          position: absolute;
+          top: -10px;
+          right: 0;
+          bottom: -10px;
+          width: 47%;
+          border-radius: 18px;
+          background: white;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
+        }
+
+        .rm-comparison-grid {
+          position: relative;
+          display: grid;
+          grid-template-columns: 18% 35% 47%;
+          border-bottom: 1px solid var(--rm-line);
+        }
+
+        .rm-comparison-grid > div {
+          padding: 19px 22px;
+          color: var(--rm-muted);
+          font-size: 16px;
+          line-height: 1.45;
+        }
+
+        .rm-comparison-grid > div:first-child {
+          color: var(--rm-text);
+          font-weight: 650;
+        }
+
+        .rm-comparison-grid.header > div {
+          color: var(--rm-soft);
+          font-weight: 650;
+        }
+
+        .rm-compare-cell {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .rm-compare-cell svg {
+          flex: none;
+          margin-top: 3px;
+          color: #9c968d;
+        }
+
+        .rm-compare-cell.good {
+          color: var(--rm-text);
+        }
+
+        .rm-template-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 22px;
+          margin-top: 44px;
+        }
+
+        .rm-template-card {
+          display: flex;
+          min-height: 196px;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 24px;
+        }
+
+        .rm-template-icon {
+          display: grid;
+          place-items: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          background: white;
+          color: var(--rm-green);
+        }
+
+        .rm-template-card h3 {
+          font-size: 21px;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          font-weight: 650;
+        }
+
+        .rm-template-card p {
+          margin-top: 8px;
+          color: var(--rm-muted);
+          font-size: 15px;
+          line-height: 1.45;
+        }
+
+        .rm-final {
+          padding: 90px 0 100px;
+        }
+
+        .rm-final-panel {
+          position: relative;
+          overflow: hidden;
+          border-radius: 18px;
+          background:
+            linear-gradient(135deg, rgba(219, 242, 199, 0.88), rgba(246, 232, 182, 0.68)),
+            #eee2c7;
+          padding: clamp(34px, 8vw, 104px) 28px;
+          text-align: left;
+        }
+
+        .rm-final-panel h2 {
+          font-size: clamp(40px, 6vw, 72px);
+          line-height: 0.96;
+          letter-spacing: -0.045em;
+          font-weight: 650;
+        }
+
+        .rm-final-panel p {
+          margin: 18px 0 0;
+          max-width: 620px;
+          color: #3a392f;
+          font-size: 22px;
+          line-height: 1.25;
+        }
+
+        .rm-final-panel .rm-button {
+          margin-top: 30px;
+          color: #fff4dc;
+        }
+
+        .rm-footer {
+          padding: 74px 0 42px;
+          border-top: 1px solid var(--rm-line);
+        }
+
+        .rm-footer-top {
+          display: flex;
+          justify-content: space-between;
+          gap: 40px;
+          flex-wrap: wrap;
+        }
+
+        .rm-footer p {
+          margin-top: 12px;
+          max-width: 380px;
+          color: var(--rm-soft);
+          font-size: 18px;
+          line-height: 1.45;
+        }
+
+        .rm-footer-links {
+          display: flex;
+          gap: 30px;
+          flex-wrap: wrap;
+          color: var(--rm-muted);
+          font-size: 14px;
+          font-weight: 560;
+        }
+
+        .rm-footer-bottom {
+          margin-top: 52px;
+          color: #9a9489;
+          font-size: 12px;
+        }
+
+        .rm-cookie {
+          position: fixed;
+          left: 50%;
+          bottom: 22px;
+          z-index: 100;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 20px;
+          width: min(760px, calc(100vw - 28px));
+          transform: translateX(-50%);
+          border: 1px solid rgba(0,0,0,0.08);
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 28px 80px rgba(0,0,0,0.18);
+          padding: 20px;
+          backdrop-filter: blur(18px);
+        }
+
+        .rm-cookie h2 {
+          font-size: 18px;
+          line-height: 1.15;
+          font-weight: 680;
+        }
+
+        .rm-cookie p {
+          margin-top: 7px;
+          color: var(--rm-muted);
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .rm-cookie-note {
+          margin-top: 10px;
+          border-radius: 12px;
+          background: var(--rm-panel);
+          padding: 11px;
+          color: var(--rm-muted);
+          font-size: 12px;
+          line-height: 1.45;
+        }
+
+        .rm-cookie-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .rm-cookie button {
+          min-height: 36px;
+          border: 0;
+          border-radius: 999px;
+          padding: 0 13px;
+          background: var(--rm-black);
+          color: white;
+          font-size: 13px;
+          font-weight: 650;
+          cursor: pointer;
+        }
+
+        .rm-cookie button + button {
+          background: var(--rm-panel);
+          color: var(--rm-black);
+        }
+
+        @media (max-width: 980px) {
+          .rm-container { width: min(100% - 32px, 1280px); }
+          .rm-nav { display: none; }
+          .rm-hero { gap: 42px; padding-top: 48px; }
+          .rm-workspace { grid-template-columns: 1fr; }
+          .rm-workspace aside { display: none; }
+          .rm-editor-grid,
+          .rm-example-grid,
+          .rm-template-grid,
+          .rm-workflow {
+            grid-template-columns: 1fr;
+          }
+          .rm-comparison::before { display: none; }
+          .rm-comparison-grid {
+            grid-template-columns: 1fr;
+            border-bottom: 1px solid var(--rm-line);
+          }
+          .rm-comparison-grid.header { display: none; }
+          .rm-comparison-grid > div {
+            padding: 14px 0;
+          }
+          .rm-comparison-grid > div:first-child {
+            padding-top: 24px;
+          }
+          .rm-cookie { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 640px) {
-          .landing-header { height: 58px !important; padding: 0 12px !important; }
-          .landing-header > a:first-child { font-size: 19px !important; }
-          .landing-header > div:last-child { gap: 8px !important; }
-          .landing-header a[href="/login"] { display: inline-flex !important; font-size: 12px !important; color: rgba(245,240,232,0.62) !important; }
-          .landing-header a[href="/builder"] { height: 34px !important; padding: 0 12px !important; font-size: 12px !important; }
-          .landing-section { padding-left: 16px !important; padding-right: 16px !important; }
-          .landing-hero-title { font-size: clamp(44px, 17vw, 72px) !important; min-height: 156px !important; }
-          .landing-proof-grid { gap: 10px !important; }
-          .landing-proof-grid > div { padding: 14px !important; border: 1px solid rgba(245,240,232,0.055); }
-          .landing-flow-grid { gap: 14px !important; }
-          .landing-flow-grid a { min-height: auto !important; padding: 22px !important; border-radius: 22px !important; }
-          .landing-flow-grid h3 { font-size: 24px !important; }
-          .landing-template-float { height: 410px !important; }
-          .landing-template-float-card { width: 218px !important; }
-          .landing-template-float-card[data-offset="-3"] { transform: translateX(calc(-50% - 480px)) scale(0.72) !important; }
-          .landing-template-float-card[data-offset="-2"] { transform: translateX(calc(-50% - 320px)) scale(0.76) !important; }
-          .landing-template-float-card[data-offset="-1"] { transform: translateX(calc(-50% - 160px)) scale(0.8) !important; }
-          .landing-template-float-card[data-offset="0"] { transform: translateX(-50%) scale(1) !important; }
-          .landing-template-float-card[data-offset="1"] { transform: translateX(calc(-50% + 160px)) scale(0.8) !important; }
-          .landing-template-float-card[data-offset="2"] { transform: translateX(calc(-50% + 320px)) scale(0.76) !important; }
-          .landing-template-float-card[data-offset="3"] { transform: translateX(calc(-50% + 480px)) scale(0.72) !important; }
-          .landing-cta { border-radius: 22px !important; padding: 30px 20px !important; gap: 24px !important; }
-          .landing-cta a { width: 100% !important; justify-content: center !important; }
+          .rm-header-inner { height: 62px; }
+          .rm-brand { font-size: 18px; }
+          .rm-header-actions a:first-child { display: none; }
+          .rm-button { min-height: 38px; padding: 0 14px; font-size: 14px; }
+          .rm-hero h1 { font-size: clamp(42px, 13vw, 58px); }
+          .rm-hero p { font-size: 18px; }
+          .rm-hero-visual { min-height: auto; }
+          .rm-upload-card { align-items: flex-start; flex-direction: column; }
+          .rm-editor-grid { grid-template-columns: 1fr; }
+          .rm-form-panel { display: none; }
+          .rm-resume-paper { min-height: 270px; }
+          .rm-logo-strip .rm-container { justify-content: flex-start; }
+          .rm-flow-section { padding: 46px 0 48px; }
+          .rm-flow-stage { min-height: 470px; }
+          .rm-flow-track { height: 420px; }
+          .rm-flow-card { width: min(84vw, 320px); }
+          .rm-flow-preview { height: 235px; }
+          .rm-flow-arrow { width: 46px; height: 46px; }
+          .rm-flow-arrow.left { left: 16px; }
+          .rm-flow-arrow.right { right: 16px; }
+          .rm-section { padding: 64px 0; }
+          .rm-section-heading p { font-size: 18px; }
+          .rm-example-card { min-height: 210px; }
+          .rm-report-head { flex-direction: column; }
+          .rm-footer-links { gap: 18px; }
         }
       `}</style>
 
-      <div
-        className="landing-shell"
-        style={{
-          fontFamily: "var(--font-body), 'Helvetica Neue', sans-serif",
-          background: "var(--color-marketing-bg)",
-          color: "var(--color-marketing-text)",
-          minHeight: "100vh",
-          overflowX: "hidden",
-        }}
-      >
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-          <div
-            style={{
-              position: "absolute",
-              top: "-15%",
-              left: "-8%",
-              width: 700,
-              height: 700,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(52,211,153,0.055) 0%, transparent 65%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: "35%",
-              right: "-12%",
-              width: 600,
-              height: 600,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(59,130,246,0.035) 0%, transparent 65%)",
-            }}
-          />
-        </div>
-
-        <header
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-            borderBottom: "1px solid rgba(245,240,232,0.055)",
-            backdropFilter: "blur(24px)",
-            background: "rgba(8,8,8,0.82)",
-          }}
-        >
-          <div
-            className="landing-header"
-            style={{
-              maxWidth: 1280,
-              margin: "0 auto",
-              padding: "0 40px",
-              height: 64,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Link href="/" style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: 22, letterSpacing: "0.01em" }}>
-              Resume<span style={{ color: "var(--color-marketing-accent)" }}>Match</span>
+      <div className="rm-page">
+        <header className="rm-header">
+          <div className="rm-container rm-header-inner">
+            <Link href="/" className="rm-brand" aria-label="ResumeMatch">
+              <span>Resume<span className="rm-brand-match">Match</span></span>
             </Link>
-            <nav className="landing-nav" style={{ display: "flex", gap: 36, alignItems: "center" }}>
-                {[
-                { label: "Builder", href: "/builder", internal: true },
-                { label: "Templates", href: "#templates", internal: false },
-                { label: "How it works", href: "#how-it-works", internal: false },
-                              ].map((link) =>
-                link.internal ? (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "rgba(245,240,232,0.38)",
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "var(--color-marketing-text)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(245,240,232,0.38)";
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "rgba(245,240,232,0.38)",
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "var(--color-marketing-text)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(245,240,232,0.38)";
-                    }}
-                  >
-                    {link.label}
-                  </a>
-                )
-              )}
+            <nav className="rm-nav" aria-label="Primary navigation">
+              <a href="#workflow">Workflow</a>
+              <a href="#compare">Compare</a>
+              <a href="#templates">Templates</a>
             </nav>
-            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-              <Link
-                href="/login"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "rgba(245,240,232,0.35)",
-                  transition: "color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--color-marketing-text)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "rgba(245,240,232,0.35)";
-                }}
-              >
-                Log in
-              </Link>
-              <Link
-                href="/builder"
-                style={{
-                  height: 38,
-                  padding: "0 20px",
-                  borderRadius: 99,
-                  background: "var(--color-marketing-accent)",
-                  color: "var(--color-marketing-bg)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  letterSpacing: "0.01em",
-                }}
-              >
-                Build for free
-              </Link>
+            <div className="rm-header-actions">
+              <Link href="/login">Sign in</Link>
+              <Link href="/builder" className="rm-button primary">Try now</Link>
             </div>
           </div>
         </header>
 
-        <main style={{ position: "relative", zIndex: 1 }}>
-          <section
-            className="landing-section"
-            style={{ maxWidth: 1280, margin: "0 auto", padding: "76px 40px 48px" }}
-          >
-            <div style={{ maxWidth: 980, position: "relative" }}>
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: "absolute",
-                    inset: "-6% -4% auto -4%",
-                    height: 360,
-                    borderRadius: 40,
-                    background: "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(255,255,255,0.015) 48%, rgba(59,130,246,0.05))",
-                    filter: "blur(28px)",
-                    opacity: 0.9,
-                    pointerEvents: "none",
-                  }}
-                />
-                <div style={{ position: "relative" }}>
-                <TypewriterHero />
-
-                <div className="landing-hero-actions" style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <Link
-                    href="/builder"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      height: 52,
-                      padding: "0 28px",
-                      borderRadius: 99,
-                      background: "var(--color-marketing-text)",
-                      color: "var(--color-marketing-bg)",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Start in the builder <ArrowRight size={14} strokeWidth={2.5} />
-                  </Link>
-                  <a
-                    href="#how-it-works"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      height: 52,
-                      padding: "0 28px",
-                      borderRadius: 99,
-                      border: "1px solid rgba(245,240,232,0.1)",
-                      color: "rgba(245,240,232,0.6)",
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  >
-                    View workflow
-                  </a>
-                </div>
-
-                <div
-                  className="landing-proof-grid"
-                  style={{
-                    marginTop: 28,
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                    gap: 16,
-                  }}
-                >
-                  {[
-                    [String(resumesAnalyzed), "Resumes analyzed"],
-                    ["28 pts", "Average ATS score improvement"],
-                    ["3x", "Better interview response rate"],
-                  ].map(([value, label]) => (
-                    <div
-                      key={value}
-                      style={{
-                        padding: "18px 18px",
-                        borderRadius: 22,
-                        background: "rgba(245,240,232,0.018)",
-                        backdropFilter: "blur(14px)",
-                      }}
-                    >
-                      <div style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: 40, lineHeight: 0.95, color: "var(--color-marketing-text)" }}>
-                        {value}
-                      </div>
-                      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.55, color: "rgba(245,240,232,0.38)", letterSpacing: "0.04em" }}>
-                        {label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                </div>
+        <main>
+          <section className="rm-container rm-hero">
+            <div className="rm-hero-copy">
+              <h1>Make every job application feel tailored.</h1>
+              <p>
+                Upload your resume this morning. Choose an ATS-safe template by lunch. Know what to fix before you apply.
+              </p>
+              <div className="rm-hero-actions">
+                <Link href="/builder" className="rm-button secondary">
+                  Start building <ArrowRight size={16} />
+                </Link>
+                <Link href="/dashboard/templates" className="rm-button primary">
+                  Browse templates
+                </Link>
+              </div>
             </div>
+            <ProductMockup />
           </section>
 
-          <div style={{ borderTop: "1px solid rgba(245,240,232,0.04)", borderBottom: "1px solid rgba(245,240,232,0.04)", background: "rgba(245,240,232,0.012)" }}>
-            <div
-              className="landing-section"
-              style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "center" }}
-            >
-              {["LinkedIn", "Indeed", "Greenhouse", "Lever", "Workday", "iCIMS"].map((l) => (
-                <span
-                  key={l}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: "rgba(245,240,232,0.26)",
-                    whiteSpace: "nowrap",
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {l}
-                </span>
+          <section className="rm-logo-strip" aria-label="Supported job workflows">
+            <div className="rm-container">
+              {["PDF import", "ATS audit", "LaTeX export", "Job matching", "Live preview", "Template switching"].map((item) => (
+                <span key={item}>{item}</span>
               ))}
             </div>
-          </div>
+          </section>
 
-          <TemplateShowcase />
+          <LandingTemplateFlow />
 
-          <section
-            id="how-it-works"
-            className="landing-section"
-            style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 40px" }}
-          >
-            <div style={{ maxWidth: 1280, margin: "0 auto", position: "relative" }}>
-              <div
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  inset: "8% -4% 16% -4%",
-                  borderRadius: 40,
-                  background: "linear-gradient(135deg, rgba(245,240,232,0.02), rgba(52,211,153,0.05), rgba(255,255,255,0.012))",
-                  filter: "blur(26px)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div style={{ position: "relative" }}>
-              <div style={{ maxWidth: 620, marginBottom: 40 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-                  <div style={{ width: 20, height: 1, background: "var(--color-marketing-accent)" }} />
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: "0.22em",
-                      color: "rgba(245,240,232,0.25)",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    How it works
-                  </span>
-                </div>
-                <h2 style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: "clamp(40px, 5vw, 60px)", lineHeight: 0.94, color: "var(--color-marketing-text)", marginBottom: 18 }}>
-                  A clearer path from resume to application.
-                </h2>
-                <p style={{ fontSize: 16, lineHeight: 1.72, color: "rgba(245,240,232,0.4)", maxWidth: 560 }}>
-                  The workflow stays practical: write, improve, match, and apply. No extra noise, no unnecessary steps.
-                </p>
-              </div>
-
-              <div
-                className="landing-flow-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${scenes.length * 2 - 1}, minmax(0, 1fr))`,
-                  gap: 22,
-                  alignItems: "stretch",
-                }}
-              >
-                {scenes.map((scene, index) => (
-                  <Fragment key={scene.id}>
-                    <Link
-                      href={scene.href}
-                      style={{
-                        gridColumn: "span 1",
-                        padding: 30,
-                        minHeight: 260,
-                        border: "1px solid rgba(245,240,232,0.065)",
-                        borderRadius: 24,
-                        background: "linear-gradient(180deg, rgba(245,240,232,0.035) 0%, rgba(245,240,232,0.012) 100%)",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        transition: "transform 0.2s ease, border-color 0.2s ease, background 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-4px)";
-                        e.currentTarget.style.borderColor = "rgba(52,211,153,0.28)";
-                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(52,211,153,0.09) 0%, rgba(245,240,232,0.02) 100%)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.borderColor = "rgba(245,240,232,0.065)";
-                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(245,240,232,0.035) 0%, rgba(245,240,232,0.012) 100%)";
-                      }}
-                      >
-                      {scene.id !== "build" && (
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginBottom: 14,
-                            padding: "5px 10px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(245,240,232,0.1)",
-                            background: "rgba(245,240,232,0.02)",
-                            color: "rgba(245,240,232,0.68)",
-                            fontSize: 9,
-                            fontWeight: 800,
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          Coming soon
-                        </div>
-                      )}
-                      <div>
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "rgba(52,211,153,0.08)",
-                            border: "1px solid rgba(52,211,153,0.2)",
-                            color: "var(--color-marketing-accent)",
-                            marginBottom: 22,
-                            padding: "8px 12px",
-                            borderRadius: 999,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {scene.tag}
-                        </div>
-                        <h3 style={{ fontSize: 26, lineHeight: 1.05, color: "var(--color-marketing-text)", marginBottom: 16 }}>
-                          {scene.headline}
-                        </h3>
-                        <p style={{ fontSize: 14, lineHeight: 1.75, color: "rgba(245,240,232,0.42)" }}>
-                          {scene.body}
-                        </p>
-                      </div>
-                      <div style={{ marginTop: 24, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--color-marketing-accent)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                        {scene.cta} <ArrowUpRight size={13} />
-                      </div>
-                    </Link>
-
-                    {index < scenes.length - 1 ? (
-                      <div
-                        className="landing-flow-arrow"
-                        aria-hidden="true"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          minHeight: 260,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "100%",
-                            maxWidth: 120,
-                            height: 1,
-                            background: "linear-gradient(90deg, rgba(52,211,153,0.12), rgba(52,211,153,0.55), rgba(52,211,153,0.12))",
-                            position: "relative",
-                          }}
-                        >
-                          <ArrowRight
-                            size={18}
-                            color="var(--color-marketing-accent)"
-                            style={{
-                              position: "absolute",
-                              right: -4,
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </Fragment>
-                ))}
-              </div>
-              </div>
+          <section className="rm-container rm-section">
+            <div className="rm-section-heading">
+              <h2>The resume workspace that stays practical.</h2>
+              <p>
+                ResumeMatch turns the parts people usually do manually into one clean flow: import, edit, score, match, and export.
+              </p>
+            </div>
+            <div className="rm-example-grid">
+              {examples.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <article className="rm-example-card" key={item.title}>
+                    <Icon size={42} strokeWidth={1.6} />
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p>{item.body}</p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </section>
 
-          <section className="landing-section" style={{ padding: "28px 40px 92px" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-              <div
-                className="landing-cta"
-                style={{
-                  borderRadius: 28,
-                  padding: "56px 48px",
-                  background: "rgba(245,240,232,0.018)",
-                  backdropFilter: "blur(18px)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 48,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <h2 style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: "clamp(38px, 4.5vw, 60px)", lineHeight: 0.93, color: "var(--color-marketing-text)", marginBottom: 14 }}>
-                    Ready to turn your resume
-                    <br />
-                    into better applications?
-                  </h2>
-                  <p style={{ fontSize: 15, color: "rgba(245,240,232,0.38)", lineHeight: 1.72, maxWidth: 380 }}>
-                    Start in the builder, improve what matters, and move into matching roles without changing tools.
-                  </p>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                  <Link
-                    href="/builder"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 10,
-                      height: 54,
-                      padding: "0 32px",
-                      borderRadius: 99,
-                      background: "var(--color-marketing-text)",
-                      color: "var(--color-marketing-bg)",
-                      fontSize: 15,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Open the builder <ArrowRight size={15} strokeWidth={2.5} />
-                  </Link>
-                  <span style={{ fontSize: 11, color: "rgba(245,240,232,0.2)", paddingLeft: 4, fontWeight: 500 }}>
-                    No credit card · Sign in only at PDF download
-                  </span>
-                </div>
+          <section id="workflow" className="rm-container rm-section">
+            <div className="rm-workflow">
+              <div className="rm-step-list">
+                {workflow.map((item) => (
+                  <article className="rm-step-card" key={item.step}>
+                    <span>{item.step}</span>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                  </article>
+                ))}
               </div>
+              <ReportMockup />
+            </div>
+          </section>
+
+          <section id="compare" className="rm-container rm-section">
+            <div className="rm-section-heading">
+              <h2>Resume work the old way vs. ResumeMatch.</h2>
+              <p>
+                There is enough uncertainty in job hunting. Your resume workflow should not add more.
+              </p>
+            </div>
+            <div className="rm-comparison">
+              <div className="rm-comparison-grid header">
+                <div />
+                <div>The old workflow</div>
+                <div>With ResumeMatch</div>
+              </div>
+              {comparisonRows.map(([label, oldWay, newWay]) => (
+                <div className="rm-comparison-grid" key={label}>
+                  <div>{label}</div>
+                  <div className="rm-compare-cell">
+                    <Minus size={16} />
+                    <span>{oldWay}</span>
+                  </div>
+                  <div className="rm-compare-cell good">
+                    <Check size={16} />
+                    <span>{newWay}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="templates" className="rm-container rm-section">
+            <div className="rm-section-heading">
+              <h2>Start from the template that matches the role.</h2>
+              <p>
+                Keep the visual system quiet and recruiter-friendly, then let the content do the work.
+              </p>
+            </div>
+            <div className="rm-template-grid">
+              {templates.map((name) => (
+                <Link href="/builder" className="rm-template-card" key={name}>
+                  <span className="rm-template-icon">
+                    {name === "Software Engineer" ? <FileText size={24} /> : <LayoutTemplate size={24} />}
+                  </span>
+                  <div>
+                    <h3>{name}</h3>
+                    <p>Clean single-page structure with role-aware section hierarchy and ATS-readable spacing.</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="rm-container rm-final">
+            <div className="rm-final-panel">
+              <h2>Build the resume you will actually apply with.</h2>
+              <p>Bring your current resume, pick a better layout, and see what needs work before the application.</p>
+              <Link href="/builder" className="rm-button primary">
+                Open the builder <ArrowRight size={16} />
+              </Link>
             </div>
           </section>
         </main>
 
-        <footer style={{ borderTop: "1px solid rgba(245,240,232,0.055)", padding: "60px 40px" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 48, marginBottom: 56 }}>
+        <footer className="rm-footer">
+          <div className="rm-container">
+            <div className="rm-footer-top">
               <div>
-                <span style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: 20, letterSpacing: "0.01em" }}>
-                  Resume<span style={{ color: "var(--color-marketing-accent)" }}>Match</span>
-                </span>
-                <p style={{ marginTop: 10, fontSize: 13, color: "rgba(245,240,232,0.22)", lineHeight: 1.65, maxWidth: 220 }}>
-                  AI-powered resume optimization for modern job seekers.
-                </p>
+                <Link href="/" className="rm-brand">
+                  <span>Resume<span className="rm-brand-match">Match</span></span>
+                </Link>
+                <p>AI-powered resume building, audits, templates, and job matching for practical applications.</p>
               </div>
-              <div style={{ display: "flex", gap: 60, flexWrap: "wrap" }}>
-                {[
-                  {
-                    head: "Product",
-                    links: [
-                      { label: "Resume Builder", href: "/builder" },
-                      { label: "ATS Checker",    href: "/dashboard/resumes" },
-                      { label: "JD Matcher",     href: "/dashboard/matches" },
-                    ],
-                  },
-                  {
-                    head: "Account",
-                    links: [
-                      { label: "Sign in",   href: "/login" },
-                      { label: "Sign up",   href: "/signup" },
-                      { label: "Dashboard", href: "/dashboard" },
-                    ],
-                  },
-                  {
-                    head: "Resources",
-                    links: [
-                      { label: "How it works", href: "#how-it-works" },
-                                          ],
-                  },
-                ].map((col) => (
-                  <div key={col.head}>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", color: "rgba(245,240,232,0.18)", textTransform: "uppercase", marginBottom: 18 }}>
-                      {col.head}
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                      {col.links.map((link) =>
-                        link.href.startsWith("#") ? (
-                          <a key={link.label} href={link.href} style={{ fontSize: 13, color: "rgba(245,240,232,0.32)", fontWeight: 500 }}>
-                            {link.label}
-                          </a>
-                        ) : (
-                          <Link key={link.label} href={link.href} style={{ fontSize: 13, color: "rgba(245,240,232,0.32)", fontWeight: 500 }}>
-                            {link.label}
-                          </Link>
-                        )
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="rm-footer-links">
+                <Link href="/builder">Builder</Link>
+                <Link href="/dashboard/templates">Templates</Link>
+                <Link href="/login">Sign in</Link>
+                <Link href="/privacy">Privacy</Link>
+                <Link href="/terms">Terms</Link>
               </div>
             </div>
-            <div style={{ paddingTop: 28, borderTop: "1px solid rgba(245,240,232,0.04)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-              <span style={{ fontSize: 10, color: "rgba(245,240,232,0.18)", fontWeight: 600, letterSpacing: "0.12em" }}>
-                © {new Date().getFullYear()} RESUMEMATCH
-              </span>
-              <span style={{ fontSize: 10, color: "rgba(245,240,232,0.18)", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                Built for job seekers.
-              </span>
-            </div>
+            <div className="rm-footer-bottom">© {new Date().getFullYear()} ResumeMatch. Built for job seekers.</div>
           </div>
         </footer>
+
         <CookieBanner />
       </div>
     </>

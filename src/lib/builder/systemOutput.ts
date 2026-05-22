@@ -41,6 +41,7 @@ export interface ResumeSystemOutput {
   json: StructuredResumeJson
   html: string
   latex: string
+  rendercvYaml: string
 }
 
 function clean(value: string | undefined | null): string {
@@ -332,11 +333,132 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
   return lines.join('\n')
 }
 
+export function generateRenderCvYamlFromJson(json: StructuredResumeJson): string {
+  const lines: string[] = [
+    'cv:',
+    `  name: ${yamlString(json.name)}`,
+  ]
+
+  if (json.title) lines.push(`  headline: ${yamlString(json.title)}`)
+  if (json.contact.location) lines.push(`  location: ${yamlString(json.contact.location)}`)
+  if (json.contact.email) lines.push(`  email: ${yamlString(json.contact.email)}`)
+  if (json.contact.phone) lines.push(`  phone: ${yamlString(json.contact.phone)}`)
+  if (json.contact.portfolio) lines.push(`  website: ${yamlString(normalizeUrl(json.contact.portfolio))}`)
+
+  const socialNetworks = [
+    json.contact.linkedin ? { network: 'LinkedIn', username: stripSocialUsername(json.contact.linkedin, 'linkedin.com/in/') } : null,
+    json.contact.github ? { network: 'GitHub', username: stripSocialUsername(json.contact.github, 'github.com/') } : null,
+  ].filter(Boolean) as Array<{ network: string; username: string }>
+
+  if (socialNetworks.length) {
+    lines.push('  social_networks:')
+    for (const social of socialNetworks) {
+      lines.push(`    - network: ${yamlString(social.network)}`)
+      lines.push(`      username: ${yamlString(social.username)}`)
+    }
+  }
+
+  lines.push('  sections:')
+
+  if (json.summary) {
+    lines.push('    Summary:')
+    lines.push(`      - ${yamlString(json.summary)}`)
+  }
+
+  if (json.education.length) {
+    lines.push('    Education:')
+    for (const edu of json.education) {
+      const area = [edu.degree, edu.cgpa ? `CGPA: ${edu.cgpa}` : ''].filter(Boolean).join(' | ')
+      lines.push(`      - institution: ${yamlString(edu.school)}`)
+      lines.push(`        area: ${yamlString(area || edu.degree || 'Education')}`)
+      if (edu.year) lines.push(`        date: ${yamlString(edu.year)}`)
+    }
+  }
+
+  if (json.experience.length) {
+    lines.push('    Experience:')
+    for (const exp of json.experience) {
+      lines.push(`      - company: ${yamlString(exp.company)}`)
+      lines.push(`        position: ${yamlString(exp.role || 'Experience')}`)
+      if (exp.duration) lines.push(`        date: ${yamlString(exp.duration)}`)
+      appendYamlList(lines, '        highlights:', exp.bullets, 10)
+    }
+  }
+
+  if (json.projects.length) {
+    lines.push('    Projects:')
+    for (const project of json.projects) {
+      lines.push(`      - name: ${yamlString(project.name || 'Project')}`)
+      const summaryParts = [project.tech, project.link ? displayUrl(project.link) : '', project.description].filter(Boolean)
+      if (summaryParts.length) lines.push(`        summary: ${yamlString(summaryParts.join(' | '))}`)
+      appendYamlList(lines, '        highlights:', project.bullets, 10)
+    }
+  }
+
+  if (json.skills.length) {
+    lines.push('    Skills:')
+    lines.push('      - label: "Skills"')
+    lines.push(`        details: ${yamlString(json.skills.join(', '))}`)
+  }
+
+  if (json.honors.length) {
+    lines.push('    Honors and Awards:')
+    appendYamlBulletEntries(lines, json.honors)
+  }
+
+  if (json.publications.length) {
+    lines.push('    Publications:')
+    appendYamlBulletEntries(lines, json.publications)
+  }
+
+  lines.push('design:')
+  lines.push('  theme: engineeringresumes')
+  lines.push('  page:')
+  lines.push('    size: us-letter')
+  lines.push('    top_margin: 0.7in')
+  lines.push('    bottom_margin: 0.7in')
+  lines.push('    left_margin: 0.7in')
+  lines.push('    right_margin: 0.7in')
+  lines.push('locale:')
+  lines.push('  language: english')
+
+  return lines.join('\n')
+}
+
+function appendYamlList(lines: string[], heading: string, values: string[], indentSpaces: number): void {
+  const cleaned = cleanLines(values)
+  if (!cleaned.length) return
+
+  lines.push(heading)
+  const indent = ' '.repeat(indentSpaces)
+  for (const value of cleaned) {
+    lines.push(`${indent}- ${yamlString(value)}`)
+  }
+}
+
+function appendYamlBulletEntries(lines: string[], values: string[]): void {
+  for (const value of cleanLines(values)) {
+    lines.push(`      - bullet: ${yamlString(value)}`)
+  }
+}
+
+function yamlString(value: string): string {
+  return JSON.stringify(clean(value))
+}
+
+function stripSocialUsername(raw: string, marker: string): string {
+  const value = displayUrl(raw)
+  const index = value.toLowerCase().indexOf(marker)
+  const username = index >= 0 ? value.slice(index + marker.length) : value
+  return username.replace(/^@/, '').replace(/\/$/, '')
+}
+
 export function buildResumeSystemOutput(data: ResumeData): ResumeSystemOutput {
   const json = toStructuredResumeJson(data)
   return {
     json,
     html: renderResumeHtmlFromJson(json),
     latex: generateLatexFromJson(json),
+    rendercvYaml: generateRenderCvYamlFromJson(json),
   }
 }

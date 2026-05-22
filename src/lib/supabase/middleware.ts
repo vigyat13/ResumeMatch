@@ -13,6 +13,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+const DEFAULT_AUTHED_PATH = '/dashboard/templates'
+
 export async function updateSession(request: NextRequest) {
   // Start with a response we can attach cookies to
   let supabaseResponse = NextResponse.next({ request })
@@ -52,13 +54,14 @@ export async function updateSession(request: NextRequest) {
     // Not logged in → redirect to login
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.searchParams.set('next', `${request.nextUrl.pathname}${request.nextUrl.search}`)
     return withSecurityHeaders(NextResponse.redirect(url))
   }
 
   if (isAuthRoute && user) {
-    // Already logged in → redirect to dashboard
+    // Already logged in → redirect to the default workspace page
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = DEFAULT_AUTHED_PATH
     return withSecurityHeaders(NextResponse.redirect(url))
   }
 

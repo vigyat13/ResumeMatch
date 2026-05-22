@@ -43,41 +43,39 @@
   --color-amber-500: oklch(79.0% 0.150 72);
   --color-amber-600: oklch(70.0% 0.150 72);
 
-  /* ── Semantic Tokens (Default = Marketing Dark) ──────────── *
-   * The whole app shell uses the same dark/emerald palette as the
-   * landing page. Pages reference semantic tokens (`bg-background`,
-   * `text-foreground`, `bg-card`, `text-accent`…) and inherit the
-   * marketing surface automatically. The `.light` override at the
-   * bottom of this file lets us flip back to the warm light shell
-   * without touching any component code.
+  /* ── Semantic Tokens (Default = Landing Theme) ───────────── *
+   * The landing page defines the brand palette with `--rm-*` values.
+   * The app shell maps its semantic tokens to the same cream,
+   * charcoal, panel, line, and green colors so every route inherits
+   * the landing page theme without needing page-by-page redesigns.
    */
-  --color-background:           #080808;                 /* = --color-marketing-bg */
-  --color-foreground:           #f5f0e8;                 /* = --color-marketing-text */
-  --color-card:                 #0e0e0e;                 /* = --color-marketing-surface */
-  --color-card-foreground:      #f5f0e8;
-  --color-primary:              #34d399;                 /* emerald CTA */
-  --color-primary-foreground:   #080808;                 /* dark text on emerald */
-  --color-secondary:            rgba(245,240,232,0.06);
-  --color-secondary-foreground: #f5f0e8;
-  --color-muted:                rgba(245,240,232,0.04);
-  --color-muted-foreground:     rgba(245,240,232,0.55);
-  --color-accent:               #34d399;
-  --color-accent-foreground:    #080808;
-  --color-destructive:          #f87171;
-  --color-destructive-foreground: #080808;
-  --color-border:               rgba(245,240,232,0.08);
-  --color-input:                rgba(245,240,232,0.04);
-  --color-ring:                 #34d399;
+  --color-background:           #faf9f5;                 /* = --rm-bg */
+  --color-foreground:           #0f0e0e;                 /* = --rm-text */
+  --color-card:                 #f2f0e8;                 /* = --rm-panel */
+  --color-card-foreground:      #0f0e0e;
+  --color-primary:              #161616;                 /* = --rm-black */
+  --color-primary-foreground:   #fffaf0;                 /* = --rm-cream */
+  --color-secondary:            #e8e3d5;                 /* = --rm-panel-strong */
+  --color-secondary-foreground: #0f0e0e;
+  --color-muted:                #f2f0e8;
+  --color-muted-foreground:     #77716b;                 /* = --rm-soft */
+  --color-accent:               #2f8f68;                 /* = --rm-green */
+  --color-accent-foreground:    #fffaf0;
+  --color-destructive:          #d24b4b;
+  --color-destructive-foreground: #fffaf0;
+  --color-border:               #e2ded4;                 /* = --rm-line */
+  --color-input:                #fffaf0;
+  --color-ring:                 #2f8f68;
 
   /* Legacy aliases (still used by Sidebar, AuthModal, dashboard
    * cards, etc.). Defining them here means we don't have to touch
    * every component to flip the theme. */
-  --color-surface:              #080808;
-  --color-surface-raised:       #0e0e0e;
-  --color-surface-hover:        rgba(245,240,232,0.06);
-  --color-text-primary:         #f5f0e8;
-  --color-text-secondary:       rgba(245,240,232,0.70);
-  --color-text-muted:           rgba(245,240,232,0.45);
+  --color-surface:              #faf9f5;
+  --color-surface-raised:       #f2f0e8;
+  --color-surface-hover:        #e8e3d5;
+  --color-text-primary:         #0f0e0e;
+  --color-text-secondary:       #44413f;
+  --color-text-muted:           #77716b;
 
   /* ── Typography ─────────────────────────────────────────── */
   --font-headline: 'Inter', sans-serif;
@@ -86,30 +84,41 @@
   /* ── Shape ──────────────────────────────────────────────── */
   --radius: 12px;
 
-  /* ── Marketing Surface (landing + dark sections) ────────── *
-   * Used on the landing page and any other "showcase" surface
-   * where we want the dark + emerald brand identity, regardless
-   * of whether the user is in light or dark mode for the app
-   * shell. Keeping these as named tokens lets every page share
-   * one source of truth.
+  /* ── Marketing Surface (landing + showcase pages) ───────── *
+   * These tokens mirror the current landing page theme. Keep
+   * showcase pages on this palette even when they use a separate
+   * layout or older marketing-specific class names.
    */
-  --color-marketing-bg:       #080808;
-  --color-marketing-surface:  #0e0e0e;
-  --color-marketing-text:     #f5f0e8;
-  --color-marketing-accent:   #34d399;
-  --color-marketing-warn:     #fbbf24;
-  --color-marketing-error:    #f87171;
-  --color-marketing-info:     #3b82f6;
-  --color-marketing-muted:    rgba(245,240,232,0.40);
-  --color-marketing-faint:    rgba(245,240,232,0.18);
-  --color-marketing-line:     rgba(245,240,232,0.07);
+  --color-marketing-bg:       #faf9f5;
+  --color-marketing-surface:  #f2f0e8;
+  --color-marketing-text:     #0f0e0e;
+  --color-marketing-accent:   #2f8f68;
+  --color-marketing-warn:     #b7791f;
+  --color-marketing-error:    #d24b4b;
+  --color-marketing-info:     #315f93;
+  --color-marketing-muted:    #77716b;
+  --color-marketing-faint:    #e2ded4;
+  --color-marketing-line:     #e2ded4;
   --font-marketing-display:   'Inter', sans-serif;
 }
 
-/* ── Light Mode Override (opt-in) ─────────────────────────── *
- * Default = dark marketing surface (above). To force the warm
- * light shell on a specific surface, add `class="light"` to
- * the html or wrapper element.
+:root {
+  --rm-bg: #faf9f5;
+  --rm-panel: #f2f0e8;
+  --rm-panel-strong: #e8e3d5;
+  --rm-text: #0f0e0e;
+  --rm-muted: #44413f;
+  --rm-soft: #77716b;
+  --rm-line: #e2ded4;
+  --rm-black: #161616;
+  --rm-green: #2f8f68;
+  --rm-cream: #fffaf0;
+}
+
+/* ── Light Mode Override (legacy opt-in) ──────────────────── *
+ * The default shell now uses the landing page's warm light theme.
+ * Keep `.light` as a compatibility alias for older wrappers that
+ * already opt into the same surface.
  */
 .light {
   --color-background:           var(--color-brand-50);

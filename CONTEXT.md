@@ -5,6 +5,130 @@
 
 ---
 
+## 2026-05-15 — Dashboard Template Workspace Polish
+
+### Overview
+
+Replaced the dashboard templates placeholder with the real builder template flow, then refined the reusable template browser so `/dashboard/templates` feels like a functional workspace instead of a static list.
+
+### Changes
+
+- `/dashboard/templates` now fetches templates from Supabase and reuses the builder template browser.
+- Added searchable template filtering by name, category, badge, description, and tier.
+- Added compact library stats for total templates, ATS-safe templates, and pro layouts.
+- Updated category controls for better mobile horizontal scrolling and desktop wrapping.
+- Refined template cards with clearer hover/focus states, better mobile sizing, and direct builder affordances.
+- Added contained preview support for landing-page resume previews to prevent misaligned/cropped CV thumbnails.
+
+### Verification
+
+```bash
+npm run build
+curl http://127.0.0.1:8000/health
+```
+
+Both passed. The live browser backend was started on `http://localhost:8000`.
+
+---
+
+## 2026-05-15 — Template UI Design-System Refinement
+
+### Overview
+
+Applied the installed Figma skill guidance manually because the Figma skills are installed on disk but not active in the current Codex session. No Figma URL or MCP node was provided, so this was treated as design-system cleanup rather than a 1:1 Figma implementation.
+
+### Changes
+
+- Simplified the `/dashboard/templates` header from a decorative hero into a calmer dashboard workspace header.
+- Replaced pill-heavy decorative controls with rectangular, token-based controls.
+- Reduced hover spectacle on template cards and made actions more utilitarian.
+- Removed "FAANG-type" wording in favor of neutral "Company style" labeling.
+- Kept mobile behavior focused on scanability: compact filters, responsive grid, stable card sizing.
+
+### Verification
+
+```bash
+npm run build
+curl -I http://localhost:3000/dashboard/templates
+curl http://127.0.0.1:8000/health
+```
+
+Build passed. The Next dev server is running at `http://localhost:3000`, and the live browser backend is running at `http://localhost:8000`.
+
+---
+
+## 2026-05-15 — Job Search Command Prompt
+
+### Overview
+
+Updated the job search page interaction to use a centered command-style prompt, inspired by modern assistant/productivity interfaces, while preserving the existing RapidAPI search and live browser preview flow.
+
+### Changes
+
+- Replaced the initial split search/location form with a large centered command panel.
+- Reused the same command panel as the docked bottom prompt during active searches.
+- Added quick prompt chips for common job-search categories.
+- Kept location as a secondary inline filter inside the prompt panel.
+- Submit now supports Enter from the prompt textarea, with Shift+Enter reserved for a new line.
+
+### Verification
+
+```bash
+npm run build
+```
+
+Build passed.
+
+---
+
+## 2026-05-15 — Job Search Preview Timing + Cleanup
+
+### Overview
+
+Refined the job search run UI so it feels less annotated and more like a focused command surface.
+
+### Changes
+
+- Removed visible helper copy from the job page header and prompt surface.
+- Removed the unused plus action from the command bar.
+- Reduced the live browser preview width to a medium-sized panel.
+- Results are now fetched immediately but revealed after a short delay, giving the preview time to establish the agent run without making users wait on slow third-party sites.
+- Simplified the jobs-found header and reduced the focused job card animation intensity.
+
+### Verification
+
+```bash
+npm run build
+```
+
+Build passed.
+
+---
+
+## 2026-05-15 — Job Results List Refinement
+
+### Overview
+
+Redesigned job results into a cleaner comparison list. A brief Groq-backed prompt assistant experiment was removed before shipping.
+
+### Changes
+
+- Redesigned job result cards with stronger hierarchy: source badge, title, company, location/date/salary chips, concise snippet, and aligned actions.
+- Preserved supervised application semantics: "Draft apply" instead of implying silent submission.
+- Removed the temporary `/api/v1/jobs/assistant` route and all prompt-chat wiring.
+
+### Verification
+
+```bash
+npm run build
+curl -I http://localhost:3000/dashboard/jobs
+curl http://127.0.0.1:8000/health
+```
+
+Build passed. Dashboard redirects signed-out users to login with `next=/dashboard/jobs`; live browser backend is healthy.
+
+---
+
 ## 2026-05-11 — Intelligent Resume Parsing System + LinkedIn Import + AI Tailor
 
 ### Overview
@@ -161,3 +285,30 @@ npx vitest run src/lib/resume/__tests__/
 7. **Parser versioning**: Track which parser version was used for each resume
 8. **Image optimization**: Compress uploaded profile photos client-side before upload
 9. **Undo tailor**: Allow reverting to pre-tailored version
+
+---
+
+## 2026-05-15 — Hide Two Column Template Card
+
+- Added `isVisibleTemplate()` in `src/lib/builder/templateMeta.ts` with the exact `Two Column` template hidden.
+- Filtered hidden templates from the landing showcase API, public builder page, and dashboard template library.
+- Updated the shared template browser category so the hidden `Two Column` card no longer appears while other templates remain available.
+- Verification: `npm run build` passes.
+
+---
+
+## 2026-05-15 — Disable RapidAPI Jobs for Testing
+
+- Changed `src/app/api/v1/jobs/search/route.ts` to default to a quota-free local test job provider.
+- RapidAPI is now opt-in with `JOBS_USE_RAPIDAPI=true`; otherwise the endpoint returns 10 prompt-aware test listings and streams timed search steps for UI testing.
+- Bypassed the app's daily job-search rate limit while RapidAPI is disabled, so quota testing does not block UI iteration.
+- Updated the job search client error copy to remove RapidAPI-specific messaging.
+- Verification: `npm run build` passes.
+
+---
+
+## 2026-05-15 — Job Preview Before Results
+
+- Updated `src/components/dashboard/jobs/JobSearchAgent.tsx` so fetched jobs wait for the live browser preview sync before rendering result cards.
+- Added a 7 second minimum browser-preview window, making the browser animation appear first and the output appear after the preview sequence.
+- Verification: `npm run build` passes.

@@ -80,19 +80,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-7 pb-8">
-      <section className="relative overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-[linear-gradient(135deg,rgba(101,211,158,0.16),rgba(7,13,10,0.96)_42%,rgba(9,9,9,0.98))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-8">
-        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[var(--color-accent)]/20 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-white/5 blur-3xl" />
+      <section className="relative overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-[linear-gradient(135deg,rgba(219,242,199,0.72),rgba(246,232,182,0.46)_44%,var(--color-surface-raised))] p-6 shadow-[0_24px_80px_rgba(22,22,22,0.12)] sm:p-8">
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[var(--color-accent)]/12 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-[var(--color-primary)]/5 blur-3xl" />
         <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
                 Workspace
               </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              <span className="rounded-full border border-[var(--color-border)] bg-white/40 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
                 Builder live
               </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              <span className="rounded-full border border-[var(--color-border)] bg-white/40 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
                 ATS checks
               </span>
             </div>
@@ -111,20 +111,20 @@ export default async function DashboardPage() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/builder"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-5 py-3 text-sm font-semibold text-black transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-primary-foreground)] transition-transform hover:-translate-y-0.5"
               >
                 Open builder
               </Link>
               <Link
                 href="/dashboard/resumes"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-white/[0.08]"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-white/40 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-white/70"
               >
                 Upload resume
               </Link>
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-4 backdrop-blur">
+          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/45 p-4 backdrop-blur">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
               Next best action
             </p>
@@ -239,8 +239,8 @@ export default async function DashboardPage() {
           ) : (
             <ul className="divide-y divide-[var(--color-border)]">
               {resumes.map((resume) => (
-                <li key={resume.id} className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.025]">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-black/20 text-xs font-semibold text-[var(--color-accent)]">
+                <li key={resume.id} className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-[var(--color-surface-hover)]/45">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-white/55 text-xs font-semibold text-[var(--color-accent)]">
                     CV
                   </div>
                   <div className="flex-1 min-w-0">
@@ -298,7 +298,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-[var(--color-border)] bg-black/15 p-4 transition-colors hover:border-[var(--color-accent)]/40 hover:bg-black/25"
+      className="group rounded-2xl border border-[var(--color-border)] bg-white/35 p-4 transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/60"
     >
       <div className="flex items-start gap-3">
         <span className="rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-accent)]">
@@ -316,7 +316,7 @@ function QuickAction({
 
 function PipelineStep({ done, label, value }: { done: boolean; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-4">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-white/35 p-4">
       <div className="mb-4 flex items-center justify-between">
         <span className={`h-2.5 w-2.5 rounded-full ${done ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
@@ -342,7 +342,7 @@ function EmptyState({
 }) {
   return (
     <div className="px-5 py-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-black/20 text-xs font-bold text-[var(--color-accent)]">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-white/55 text-xs font-bold text-[var(--color-accent)]">
         RM
       </div>
       <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h3>

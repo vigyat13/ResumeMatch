@@ -2,8 +2,8 @@
 # Auto-commit and push all changes at end of day.
 # Scheduled via launchd — see com.resumematch.dailypush.plist
 
-REPO="/Users/vigyatsingh/Desktop/Resume /resumematch"
-LOG="/Users/vigyatsingh/Desktop/Resume /resumematch/tasks/daily-push.log"
+REPO="/Users/vigyatsingh/Desktop/Resume/resumematch"
+LOG="/Users/vigyatsingh/Desktop/Resume/resumematch/tasks/daily-push.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
 cd "$REPO" || exit 1

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sortTemplatesByPriority } from '@/lib/builder/templateOrdering'
+import { isVisibleTemplate } from '@/lib/builder/templateMeta'
+import { mergeWithBuiltInTemplates } from '@/lib/builder/builtinTemplates'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +21,9 @@ export async function GET() {
     )
   }
 
-  const templates = sortTemplatesByPriority(data ?? []).slice(0, 9)
+  const templates = sortTemplatesByPriority(
+    mergeWithBuiltInTemplates(data).filter(template => isVisibleTemplate(template.name))
+  ).slice(0, 9)
 
   return NextResponse.json({
     success: true,

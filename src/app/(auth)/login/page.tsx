@@ -20,7 +20,15 @@ import { createClient } from '@/lib/supabase/client'
 const OAUTH_ERRORS: Record<string, string> = {
   oauth_cancelled: 'Sign-in was cancelled. Please try again.',
   oauth_failed:    'OAuth sign-in failed. Please try again or use email/password.',
+  auth_link_expired: 'This email confirmation link is invalid or expired. Please sign up again or request a fresh confirmation email.',
   no_code:         'No auth code received from provider.',
+}
+
+const POST_LOGIN_PATH = '/dashboard/templates'
+
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return POST_LOGIN_PATH
+  return value
 }
 
 export default function LoginPage() {
@@ -30,6 +38,7 @@ export default function LoginPage() {
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
+  const [nextPath, setNextPath] = useState(POST_LOGIN_PATH)
 
   const supabase = createClient()
 
@@ -40,6 +49,7 @@ export default function LoginPage() {
     if (urlError) {
       setError(OAUTH_ERRORS[urlError] ?? (detail ? `OAuth error: ${detail}` : `Auth error: ${urlError}`))
     }
+    setNextPath(safeNextPath(params.get('next')))
   }, [])
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -61,7 +71,7 @@ export default function LoginPage() {
         return
       }
 
-      window.location.href = '/dashboard'
+      window.location.href = nextPath
     } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
@@ -74,7 +84,7 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}` },
       })
       if (error) {
         setError(error.message)

@@ -17,13 +17,23 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BuilderEditor } from '@/components/builder/BuilderEditor'
+import { findBuiltInTemplate } from '@/lib/builder/builtinTemplates'
+import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
 
 interface PageProps {
   params: Promise<{ template_id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { template_id } = await params
+  const builtIn = findBuiltInTemplate(template_id)
+  if (builtIn) {
+    return {
+      title: `${builtIn.name} Template — Build Your Resume`,
+    }
+  }
+
   const supabase = await createClient()
   const { data } = await supabase
     .from('templates')
@@ -36,8 +46,24 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function BuilderEditorPage({ params }: PageProps) {
+export default async function BuilderEditorPage({ params, searchParams }: PageProps) {
   const { template_id } = await params
+  const query = searchParams ? await searchParams : {}
+  const startBlank = query.start === 'blank'
+  const builtIn = findBuiltInTemplate(template_id)
+  if (builtIn) {
+    return (
+      <BuilderEditor
+        templateId={builtIn.id}
+        templateName={builtIn.name}
+        templateHtml={builtIn.html_content}
+        templateCss={builtIn.css_content}
+        initialData={startBlank ? DEFAULT_RESUME_DATA : undefined}
+        startBlank={startBlank}
+      />
+    )
+  }
+
   const supabase = await createClient()
 
   const { data: template } = await supabase
@@ -54,6 +80,8 @@ export default async function BuilderEditorPage({ params }: PageProps) {
       templateName={template.name}
       templateHtml={template.html_content}
       templateCss={template.css_content}
+      initialData={startBlank ? DEFAULT_RESUME_DATA : undefined}
+      startBlank={startBlank}
     />
   )
 }

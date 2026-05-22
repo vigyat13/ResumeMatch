@@ -7,13 +7,13 @@
  * Auth flow:
  * 1. User fills form → we POST to /api/v1/auth/signup
  * 2. API creates user in Supabase, sends verification email
- * 3. User redirected to /dashboard on success
+ * 3. User redirected to /dashboard/templates on success
  *
  * OAuth flow (Google/GitHub):
  * 1. User clicks button → browser redirects to Supabase OAuth URL
  * 2. User authenticates with Google/GitHub
  * 3. Supabase redirects to /auth/callback with a code
- * 4. Callback exchanges code for session, redirects to /dashboard
+ * 4. Callback exchanges code for session, redirects to /dashboard/templates
  */
 
 'use client'
@@ -26,8 +26,11 @@ import { createClient } from '@/lib/supabase/client'
 const OAUTH_ERRORS: Record<string, string> = {
   oauth_cancelled: 'Sign-in was cancelled. Please try again.',
   oauth_failed: 'OAuth sign-in failed. Make sure Google/GitHub is enabled in Supabase and the redirect URL http://localhost:3000/auth/callback is added under Authentication → URL Configuration.',
+  auth_link_expired: 'This email confirmation link is invalid or expired. Please sign up again or request a fresh confirmation email.',
   no_code: 'No auth code received from provider.',
 }
+
+const POST_SIGNUP_PATH = '/dashboard/templates'
 
 export default function SignupPage() {
   const [firstName, setFirstName]     = useState('')
@@ -70,8 +73,8 @@ export default function SignupPage() {
         return
       }
 
-      // Success → go to dashboard
-      window.location.href = '/dashboard'
+      // Success → go to the template library
+      window.location.href = POST_SIGNUP_PATH
     } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {

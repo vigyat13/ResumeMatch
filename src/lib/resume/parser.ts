@@ -48,15 +48,18 @@ export async function parseResume(
     return { text, skills }
   } catch (err) {
     console.error('[Parser] Failed to parse resume:', err)
-    return { text: '', skills: [], error: 'Parsing failed.' }
+    const detail = err instanceof Error && err.message
+      ? `Parsing failed: ${err.message.slice(0, 140)}`
+      : 'Parsing failed.'
+    return { text: '', skills: [], error: detail }
   }
 }
 
 async function parsePdf(buffer: Buffer): Promise<string> {
   // pdf-parse v2 exports a PDFParse class, not the old v1 function API.
-  // Loading lazily keeps Next.js route collection stable in production.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PDFParse } = require('pdf-parse') as {
+  // Dynamic import keeps Next route collection stable and avoids bundling it
+  // into a browser/edge-like execution path.
+  const { PDFParse } = await import('pdf-parse') as {
     PDFParse: new (options: { data: Buffer | Uint8Array }) => {
       getText: () => Promise<{ text?: string }>
       destroy: () => Promise<void>

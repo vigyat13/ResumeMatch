@@ -16,6 +16,7 @@ interface Props {
   template: TemplateLike
   sample?: ResumeData
   scale?: number
+  fit?: 'cover' | 'contain'
   className?: string
 }
 
@@ -33,6 +34,7 @@ export function TemplatePreview({
   template,
   sample,
   scale = 0.28,
+  fit = 'cover',
   className = '',
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,10 +61,11 @@ export function TemplatePreview({
     const compute = () => {
       const { width, height } = el.getBoundingClientRect()
       if (!width || !height) return
-      // "cover" behaviour: fill the card on the narrower axis.
-      // Content that extends beyond the card height is clipped by overflow:hidden,
-      // which is correct for a thumbnail — we always want no white space.
-      const next = Math.max(width / PAGE_WIDTH, height / PAGE_HEIGHT)
+      const xScale = width / PAGE_WIDTH
+      const yScale = height / PAGE_HEIGHT
+      const next = fit === 'contain'
+        ? Math.min(xScale, yScale)
+        : Math.max(xScale, yScale)
       setFitScale(Number.isFinite(next) && next > 0 ? next : scale)
     }
 
@@ -70,15 +73,20 @@ export function TemplatePreview({
     const observer = new ResizeObserver(compute)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [scale])
+  }, [fit, scale])
 
   return (
     <div ref={containerRef} className={`relative h-full w-full overflow-hidden bg-white ${className}`}>
       <style>{scopedCss}</style>
       <div
         style={{
-          transform:       `scale(${fitScale})`,
-          transformOrigin: 'top left',
+          position:        fit === 'contain' ? 'absolute' : 'relative',
+          left:            fit === 'contain' ? '50%' : undefined,
+          top:             fit === 'contain' ? '50%' : undefined,
+          transform:       fit === 'contain'
+            ? `translate(-50%, -50%) scale(${fitScale})`
+            : `scale(${fitScale})`,
+          transformOrigin: fit === 'contain' ? 'center center' : 'top left',
           width:           `${PAGE_WIDTH}px`,
           height:          `${PAGE_HEIGHT}px`,
           pointerEvents:   'none',

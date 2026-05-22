@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { logAuditEvent } from '@/lib/audit/log'
 import { ResumeDataSchema } from '@/lib/builder/schema'
+import { isBuiltInTemplateId } from '@/lib/builder/builtinTemplates'
 
 const BodySchema = z.object({
   resumeData: ResumeDataSchema,
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { resumeData: d, templateId } = parsed.data
+  const storedTemplateId = isBuiltInTemplateId(templateId) ? null : (templateId ?? null)
 
   const parsedText = [
     d.name, d.title, d.email, d.summary,
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
       parsing_status:   'processed',
       parsed_text:      parsedText,
       extracted_skills: extractedSkills,
-      template_id:      templateId ?? null,
+      template_id:      storedTemplateId,
     })
     .select('id')
     .single()

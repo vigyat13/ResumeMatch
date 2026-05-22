@@ -72,6 +72,13 @@ const templates = [
   "Intern",
 ] as const;
 
+const heroPhrases = [
+  "ATS-ready\nin minutes.",
+  "Actually\nshortlisted.",
+  "Rewritten\nby AI.",
+  "Land the\noffer.",
+] as const;
+
 interface ShowcaseTemplate {
   id: string;
   name: string;
@@ -289,6 +296,62 @@ function ProductMockup() {
   );
 }
 
+function TypedHeroTitle() {
+  const [text, setText] = useState("");
+  const [phase, setPhase] = useState<"typing" | "holding" | "deleting">("typing");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [cursorVisible, setCursorVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCursorVisible((value) => !value);
+    }, 500);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const phrase = heroPhrases[phraseIndex];
+    let timeout: number | undefined;
+
+    if (phase === "typing") {
+      if (text.length < phrase.length) {
+        timeout = window.setTimeout(() => {
+          setText(phrase.slice(0, text.length + 1));
+        }, 55);
+      } else {
+        timeout = window.setTimeout(() => setPhase("holding"), 1800);
+      }
+    } else if (phase === "holding") {
+      timeout = window.setTimeout(() => setPhase("deleting"), 200);
+    } else if (text.length > 0) {
+      timeout = window.setTimeout(() => {
+        setText((value) => value.slice(0, -1));
+      }, 28);
+    } else {
+      timeout = window.setTimeout(() => {
+        setPhraseIndex((value) => (value + 1) % heroPhrases.length);
+        setPhase("typing");
+      }, 0);
+    }
+
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+  }, [text, phase, phraseIndex]);
+
+  return (
+    <h1 className="rm-typed-title">
+      {text}
+      <span
+        className="rm-typed-cursor"
+        style={{ opacity: cursorVisible ? 1 : 0 }}
+        aria-hidden="true"
+      />
+    </h1>
+  );
+}
+
 function ReportMockup() {
   return (
     <div className="rm-report-card">
@@ -435,12 +498,28 @@ export default function LandingPage() {
           max-width: 660px;
         }
 
-        .rm-hero h1 {
+        .rm-hero h1,
+        .rm-typed-title {
           max-width: 680px;
           font-size: clamp(44px, 6vw, 76px);
           line-height: 0.96;
-          letter-spacing: -0.045em;
+          letter-spacing: -0.01em;
           font-weight: 650;
+        }
+
+        .rm-typed-title {
+          min-height: clamp(120px, 20vw, 178px);
+          white-space: pre-line;
+        }
+
+        .rm-typed-cursor {
+          display: inline-block;
+          width: 0.06em;
+          height: 0.85em;
+          margin-left: 0.06em;
+          background: var(--rm-green);
+          vertical-align: text-top;
+          transition: opacity 100ms ease;
         }
 
         .rm-hero p {
@@ -1283,7 +1362,9 @@ export default function LandingPage() {
           .rm-brand { font-size: 18px; }
           .rm-header-actions a:first-child { display: none; }
           .rm-button { min-height: 38px; padding: 0 14px; font-size: 14px; }
-          .rm-hero h1 { font-size: clamp(42px, 13vw, 58px); }
+          .rm-hero h1,
+          .rm-typed-title { font-size: clamp(42px, 13vw, 58px); }
+          .rm-typed-title { min-height: 114px; }
           .rm-hero p { font-size: 18px; }
           .rm-hero-visual { min-height: auto; }
           .rm-upload-card { align-items: flex-start; flex-direction: column; }
@@ -1328,7 +1409,7 @@ export default function LandingPage() {
         <main>
           <section className="rm-container rm-hero">
             <div className="rm-hero-copy">
-              <h1>Make every job application feel tailored.</h1>
+              <TypedHeroTitle />
               <p>
                 Upload your resume this morning. Choose an ATS-safe template by lunch. Know what to fix before you apply.
               </p>

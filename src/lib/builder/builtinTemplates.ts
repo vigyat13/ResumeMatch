@@ -271,6 +271,211 @@ export const BUILT_IN_TEMPLATES: BuilderTemplate[] = [
 .rendercv-engineering li{margin-bottom:3px!important;color:#111;font-size:14px!important;line-height:1.28!important}
 `,
   },
+  {
+    id: '11111111-1111-4111-8111-111111111112',
+    name: 'LaTeXCV Classic Timeline',
+    description: 'Classic latexcv-inspired professional CV with compact metadata rows and strong ruled sections.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: latexCvStandardHtml('latexcv-classic', 'Summary', 'Experience', 'Education', 'Projects', 'Skills', 'Honors'),
+    css_content: baseCss('#078096', 'Arial, Helvetica, sans-serif') + `
+.latexcv-classic .header{border-top:2px solid #078096;border-bottom:2px solid #078096;padding:14px 0;text-align:center}
+.latexcv-classic .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin:14px 0 4px;font-size:12px;color:#444}
+.latexcv-classic h2{background:#078096;color:#fff;border-bottom:0;padding:6px 9px;letter-spacing:.04em}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111113',
+    name: 'LaTeXCV Modern Orange',
+    description: 'Modern latexcv-inspired CV with a photo header, orange section bands, and business-friendly spacing.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: photoHeaderHtml('latexcv-modern', 'Profile', 'Experience', 'Education', 'Projects', 'Skills', 'Awards'),
+    css_content: baseCss('#f59e0b', 'Raleway, Arial, sans-serif') + `
+.latexcv-modern .header{display:grid;grid-template-columns:86px 1fr;gap:18px;align-items:center;border-bottom:0}
+.latexcv-modern .photo-slot img{width:78px!important;height:78px!important;border-radius:0!important;border:5px solid #f59e0b}
+.latexcv-modern h1{font-size:36px;font-weight:300}
+.latexcv-modern h2{background:#f59e0b;color:#fff;border-bottom:0;padding:6px 10px;text-transform:none;font-size:13px}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111114',
+    name: 'LaTeXCV Sidebar Photo',
+    description: 'Photo-led sidebar CV inspired by latexcv, useful for business, consulting, and general profiles.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: sidebarPhotoHtml('latexcv-sidebar'),
+    css_content: baseCss('#087894', 'Arial, Helvetica, sans-serif') + `
+.latexcv-sidebar{display:grid;grid-template-columns:250px 1fr;padding:0}
+.latexcv-sidebar aside{min-height:1123px;background:#6b7280;color:#fff;padding:28px 24px}
+.latexcv-sidebar aside *{color:#fff!important}
+.latexcv-sidebar .photo-slot img{width:100%!important;height:170px!important;border-radius:0!important;object-fit:cover!important;margin:-28px -24px 22px;width:calc(100% + 48px)!important;max-width:none!important}
+.latexcv-sidebar .main{padding:42px 44px}
+.latexcv-sidebar h2{background:#087894;color:#fff;border-bottom:0;padding:6px 9px}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111115',
+    name: 'LaTeXCV Left Sidebar',
+    description: 'Left-sidebar latexcv-style profile with front-loaded skills, contact, education, and certifications.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: leftSidebarHtml('latexcv-left-sidebar'),
+    css_content: baseCss('#2563eb', 'Arial, Helvetica, sans-serif') + `
+.latexcv-left-sidebar{display:grid;grid-template-columns:238px 1fr;padding:0}
+.latexcv-left-sidebar aside{min-height:1123px;background:#111827;color:#fff;padding:30px 24px}
+.latexcv-left-sidebar aside *{color:#fff!important}
+.latexcv-left-sidebar .photo-slot img{width:132px!important;height:132px!important;border-radius:50%!important;margin:0 auto 18px;border:4px solid #60a5fa}
+.latexcv-left-sidebar .main{padding:42px 46px}
+.latexcv-left-sidebar h2{border-bottom:2px solid #2563eb;color:#2563eb}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111116',
+    name: 'LaTeXCV Two Column',
+    description: 'Dense two-column latexcv-inspired CV for balanced education, projects, skills, and experience.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume latexcv-two-col">
+  <header class="header"><div class="photo-slot">{{profile_image}}</div><div><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></div></header>
+  <section><h2>Summary</h2><p>{{summary}}</p></section>
+  <div class="columns"><div><section><h2>Education</h2>{{education}}</section><section><h2>Skills</h2><p>{{skills}}</p></section><section><h2>Projects</h2>{{projects}}</section></div><div><section><h2>Experience</h2>{{experience}}</section><section><h2>Honors</h2>{{honors}}</section></div></div>
+</main>`,
+    css_content: baseCss('#0f766e', 'Arial, Helvetica, sans-serif') + `
+.latexcv-two-col .header{display:grid;grid-template-columns:96px 1fr;gap:18px;align-items:center;border-bottom:5px solid #0f766e}
+.latexcv-two-col .photo-slot img{width:88px!important;height:88px!important;border-radius:0!important;object-fit:cover!important}
+.latexcv-two-col .columns{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.latexcv-two-col h2{background:#0f766e;color:#fff;border-bottom:0;padding:6px 9px}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111117',
+    name: 'LaTeXCV Minimal Research',
+    description: 'Minimal latexcv-inspired academic layout with publication, research, project, and education emphasis.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume latexcv-minimal">
+  <header class="header"><div><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></div><div class="photo-slot">{{profile_image}}</div></header>
+  <section><h2>Profile</h2><p>{{summary}}</p></section>
+  <section><h2>Publications</h2>{{publications}}</section>
+  <section><h2>Research Projects</h2>{{projects}}</section>
+  <section><h2>Experience</h2>{{experience}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+</main>`,
+    css_content: baseCss('#111827', 'Georgia, Times New Roman, serif') + `
+.latexcv-minimal{padding:54px 64px}
+.latexcv-minimal .header{display:grid;grid-template-columns:1fr 100px;gap:22px;border-bottom:1px solid #111}
+.latexcv-minimal .photo-slot img{width:94px!important;height:94px!important;border-radius:50%!important;filter:grayscale(100%)}
+.latexcv-minimal h1{font-size:35px;font-weight:400}
+.latexcv-minimal h2{color:#111;border-bottom:1px solid #111;text-transform:none;font-size:16px;letter-spacing:0}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111118',
+    name: 'LaTeXCV Infographic Skills',
+    description: 'Infographic-style latexcv layout with skill bars and visual sections for creative technical profiles.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume latexcv-infographic">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <section class="hero"><h2>Summary</h2><p>{{summary}}</p></section>
+  <div class="columns"><div><section><h2>Technologies</h2>{{skills_bars}}</section><section><h2>Education</h2>{{education}}</section><section><h2>Awards</h2>{{honors}}</section></div><div><section><h2>Experience</h2>{{experience}}</section><section><h2>Projects</h2>{{projects}}</section></div></div>
+</main>`,
+    css_content: baseCss('#0ea5e9', 'Arial, Helvetica, sans-serif') + `
+.latexcv-infographic .header{background:#111827;color:#fff;border-bottom:0;margin:-8px -8px 18px;padding:28px}
+.latexcv-infographic .header *{color:#fff!important}
+.latexcv-infographic .columns{display:grid;grid-template-columns:230px 1fr;gap:28px}
+.latexcv-infographic h2{border-bottom:0;background:#e0f2fe;color:#075985;padding:6px 10px;border-radius:16px}
+.latexcv-infographic .hero{border-left:5px solid #0ea5e9;padding-left:14px}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111119',
+    name: 'LaTeXCV Rows',
+    description: 'Row-based latexcv template for technical resumes with compact metadata and readable sections.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: latexCvStandardHtml('latexcv-rows', 'Technical Profile', 'Experience', 'Education', 'Projects', 'Stack', 'Activities'),
+    css_content: baseCss('#475569', 'Arial, Helvetica, sans-serif') + `
+.latexcv-rows .header{border-bottom:0;background:#f1f5f9;padding:20px}
+.latexcv-rows .meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 2px;font-size:11px;color:#475569}
+.latexcv-rows h2{border-bottom:0;border-left:6px solid #475569;background:#f8fafc;padding:6px 9px;color:#334155}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111120',
+    name: 'YAAC Architect CV',
+    description: 'YAAC-inspired architect CV with photo header, social line, skill tags, and compact technical sections.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: photoHeaderHtml('yaac-architect', 'Headline', 'Experience', 'Education', 'Projects', 'Competences', 'References'),
+    css_content: baseCss('#000066', 'Source Sans Pro, Arial, sans-serif') + `
+.yaac-architect .header{display:grid;grid-template-columns:1fr 92px;gap:20px;align-items:center;border-bottom:1px solid #989898}
+.yaac-architect .photo-slot{grid-column:2;grid-row:1 / span 3}
+.yaac-architect .photo-slot img{width:88px!important;height:88px!important;border-radius:50%!important;object-fit:cover!important}
+.yaac-architect h1{color:#000066;font-size:34px}
+.yaac-architect h2{color:#000066;border-bottom:1px solid #989898;text-transform:none;font-size:17px;letter-spacing:0}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111121',
+    name: 'Awesome CV Red',
+    description: 'Awesome-CV-inspired resume with centered header, red highlights, quote block, and crisp sections.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume awesome-cv-red">
+  <header class="header"><div class="photo-slot">{{profile_image}}</div><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p><p class="quote">{{summary}}</p></header>
+  <section><h2>Experience</h2>{{experience}}</section>
+  <section><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Honors</h2>{{honors}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+</main>`,
+    css_content: baseCss('#dc3545', 'Arial, Helvetica, sans-serif') + `
+.awesome-cv-red{padding:42px 54px}
+.awesome-cv-red .header{text-align:center;border-bottom:0}
+.awesome-cv-red .photo-slot img{width:76px!important;height:76px!important;border-radius:50%!important;margin:0 auto 10px}
+.awesome-cv-red h1{font-weight:300;font-size:38px}
+.awesome-cv-red .quote{margin:13px auto 0;max-width:520px;color:#777;font-style:italic}
+.awesome-cv-red h2{color:#dc3545;border-bottom:1px solid #555;text-transform:none;font-size:17px;letter-spacing:0}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111122',
+    name: 'Raphael Timeline CV',
+    description: 'ModernCV timeline-inspired layout for cloud, infrastructure, open-source, and consulting backgrounds.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume raphael-timeline">
+  <header class="header"><div><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></div><div class="photo-slot">{{profile_image}}</div></header>
+  <section><h2>Profile</h2><p>{{summary}}</p></section>
+  <section class="timeline"><h2>Experience</h2>{{experience}}</section>
+  <section class="timeline"><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+  <section><h2>Publications</h2>{{publications}}</section>
+</main>`,
+    css_content: baseCss('#2563eb', 'Arial, Helvetica, sans-serif') + `
+.raphael-timeline{padding:48px 58px}
+.raphael-timeline .header{display:grid;grid-template-columns:1fr 78px;gap:18px;align-items:center;border-bottom:2px solid #2563eb}
+.raphael-timeline .photo-slot img{width:70px!important;height:70px!important;border-radius:4px!important;object-fit:cover!important}
+.raphael-timeline h1{color:#1f2937}
+.raphael-timeline h2{color:#2563eb;border-bottom:1px solid #93c5fd;text-transform:none;font-size:16px;letter-spacing:0}
+.raphael-timeline .timeline{border-left:3px solid #bfdbfe;padding-left:16px}
+`,
+  },
 ]
 
 export function mergeWithBuiltInTemplates<T extends BuilderTemplate>(templates: T[] | null | undefined): BuilderTemplate[] {
@@ -303,6 +508,75 @@ function standardHtml(summary: string, experience: string, education: string, sk
   <section><h2>${education}</h2>{{education}}</section>
   <section><h2>${skills}</h2><p>{{skills}}</p></section>
   <section><h2>${honors}</h2>{{honors}}</section>
+</main>`
+}
+
+function latexCvStandardHtml(className: string, summary: string, experience: string, education: string, projects: string, skills: string, honors: string): string {
+  return `<main class="resume ${className}">
+  <header class="header">
+    <h1>{{name}}</h1>
+    <p class="title">{{title}}</p>
+    <p class="contact">{{contact}}</p>
+  </header>
+  <div class="meta-grid"><span>{{location}}</span><span>{{email}}</span><span>{{github}}</span><span>{{linkedin}}</span></div>
+  <section><h2>${summary}</h2><p>{{summary}}</p></section>
+  <section><h2>${experience}</h2>{{experience}}</section>
+  <section><h2>${projects}</h2>{{projects}}</section>
+  <section><h2>${education}</h2>{{education}}</section>
+  <section><h2>${skills}</h2><p>{{skills}}</p></section>
+  <section><h2>${honors}</h2>{{honors}}</section>
+</main>`
+}
+
+function photoHeaderHtml(className: string, summary: string, experience: string, education: string, projects: string, skills: string, honors: string): string {
+  return `<main class="resume ${className}">
+  <header class="header">
+    <div><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></div>
+    <div class="photo-slot">{{profile_image}}</div>
+  </header>
+  <section><h2>${summary}</h2><p>{{summary}}</p></section>
+  <section><h2>${skills}</h2><p>{{skills}}</p></section>
+  <section><h2>${experience}</h2>{{experience}}</section>
+  <section><h2>${projects}</h2>{{projects}}</section>
+  <section><h2>${education}</h2>{{education}}</section>
+  <section><h2>${honors}</h2>{{honors}}</section>
+</main>`
+}
+
+function sidebarPhotoHtml(className: string): string {
+  return `<main class="resume ${className}">
+  <aside>
+    <div class="photo-slot">{{profile_image}}</div>
+    <h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p>
+    <section><h2>Fields</h2><p>{{skills}}</p></section>
+    <section><h2>Education</h2>{{education}}</section>
+    <section><h2>Activities</h2>{{honors}}</section>
+  </aside>
+  <div class="main">
+    <section><h2>Status</h2><p>{{summary}}</p></section>
+    <section><h2>Experience</h2>{{experience}}</section>
+    <section><h2>Projects</h2>{{projects}}</section>
+    <section><h2>Publications</h2>{{publications}}</section>
+  </div>
+</main>`
+}
+
+function leftSidebarHtml(className: string): string {
+  return `<main class="resume ${className}">
+  <aside>
+    <div class="photo-slot">{{profile_image}}</div>
+    <section><h2>Skills</h2><p>{{skills}}</p></section>
+    <section><h2>Contact</h2><p>{{contact}}</p></section>
+    <section><h2>Education</h2>{{education}}</section>
+    <section><h2>Certifications</h2>{{honors}}</section>
+  </aside>
+  <div class="main">
+    <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p></header>
+    <section><h2>Profile</h2><p>{{summary}}</p></section>
+    <section><h2>Work Experience</h2>{{experience}}</section>
+    <section><h2>Projects</h2>{{projects}}</section>
+    <section><h2>Publications</h2>{{publications}}</section>
+  </div>
 </main>`
 }
 

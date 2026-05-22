@@ -17,6 +17,9 @@ const TECHNICAL = new Set([
   'RenderCV EngineeringResumes',
   'Cybersecurity',
   'Cloud DevOps',
+  'LaTeXCV Rows',
+  'YAAC Architect CV',
+  'Raphael Timeline CV',
 ])
 
 const COMMERCE = new Set([
@@ -30,6 +33,28 @@ const BUSINESS = new Set([
   'HR & Admin',
   'Operations & Supply Chain',
   'General Professional',
+  'LaTeXCV Classic Timeline',
+  'LaTeXCV Modern Orange',
+])
+
+const ACADEMIC = new Set([
+  'Academic',
+  'LaTeXCV Minimal Research',
+])
+
+const CREATIVE = new Set([
+  'Creative',
+  'UI UX Designer',
+  'LaTeXCV Infographic Skills',
+])
+
+const PHOTO = new Set([
+  'LaTeXCV Sidebar Photo',
+  'LaTeXCV Left Sidebar',
+  'LaTeXCV Two Column',
+  'YAAC Architect CV',
+  'Awesome CV Red',
+  'Raphael Timeline CV',
 ])
 
 const FALLBACK_DESCRIPTIONS: Record<string, string> = {
@@ -64,6 +89,17 @@ const FALLBACK_DESCRIPTIONS: Record<string, string> = {
   'Cloud DevOps':       'Infrastructure-focused layout for DevOps, SRE, cloud, platform, and backend engineers.',
   'UI UX Designer':     'Portfolio-friendly ATS-safe CV for UX, UI, product design, and research roles.',
   'General Professional': 'Flexible all-purpose CV for non-technical corporate, support, and management roles.',
+  'LaTeXCV Classic Timeline': 'Classic latexcv-inspired professional CV with compact metadata rows and strong ruled sections.',
+  'LaTeXCV Modern Orange': 'Modern latexcv-inspired CV with a photo header, orange section bands, and business-friendly spacing.',
+  'LaTeXCV Sidebar Photo': 'Photo-led sidebar CV inspired by latexcv, useful for business, consulting, and general profiles.',
+  'LaTeXCV Left Sidebar': 'Left-sidebar latexcv-style profile with front-loaded skills, contact, education, and certifications.',
+  'LaTeXCV Two Column': 'Dense two-column latexcv-inspired CV for balanced education, projects, skills, and experience.',
+  'LaTeXCV Minimal Research': 'Minimal latexcv-inspired academic layout with publication, research, project, and education emphasis.',
+  'LaTeXCV Infographic Skills': 'Infographic-style latexcv layout with skill bars and visual sections for creative technical profiles.',
+  'LaTeXCV Rows': 'Row-based latexcv template for technical resumes with compact metadata and readable sections.',
+  'YAAC Architect CV': 'YAAC-inspired architect CV with photo header, social line, skill tags, and compact technical sections.',
+  'Awesome CV Red': 'Awesome-CV-inspired resume with centered header, red highlights, quote block, and crisp sections.',
+  'Raphael Timeline CV': 'ModernCV timeline-inspired layout for cloud, infrastructure, open-source, and consulting backgrounds.',
 }
 
 export function isCompanyInspiredTemplate(_name: string): boolean {
@@ -76,9 +112,12 @@ export function isVisibleTemplate(name: string): boolean {
 }
 
 export function getTemplateBadge(name: string): string {
-  if (TECHNICAL.has(name))  return 'Technical'
+  if (TECHNICAL.has(name))  return 'Tech'
   if (COMMERCE.has(name))   return 'Commerce'
   if (BUSINESS.has(name))   return 'Business'
+  if (ACADEMIC.has(name))   return 'Academic'
+  if (CREATIVE.has(name))   return 'Creative'
+  if (PHOTO.has(name))      return 'Photo CV'
   if (TWO_COLUMN.has(name)) return 'Two Column'
   return 'ATS Ready'
 }

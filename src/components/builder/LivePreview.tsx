@@ -32,11 +32,10 @@ interface Props {
   templateCss:  string
   data:         ResumeData
   tuning:       PreviewTuning
+  onPageCountChange?: (pageCount: number) => void
 }
 
-// Same ATS override applied in TemplatePreview so the live builder view
-// matches the gallery thumbnails exactly.
-const ATS_OVERRIDE = `.preview-sheet a{color:#111!important;text-decoration:none!important}.preview-sheet *{color:inherit}.preview-sheet{color:#111}`
+const LINK_PRINT_OVERRIDE = `.preview-sheet a{color:inherit;text-decoration:none}`
 
 const PAGE_WIDTH_MM = 210
 const PAGE_HEIGHT_MM = 297
@@ -45,6 +44,7 @@ export interface PreviewTuning {
   spacing:       number
   contentScale:  number
   cropBottomMm:  number
+  sideInsetMm:   number
 }
 
 function normalizeTuning(tuning: PreviewTuning): PreviewTuning {
@@ -52,6 +52,7 @@ function normalizeTuning(tuning: PreviewTuning): PreviewTuning {
     spacing:      Math.max(-2, Math.min(2, tuning.spacing)),
     contentScale: Math.max(90, Math.min(120, tuning.contentScale)),
     cropBottomMm: Math.max(0, Math.min(120, tuning.cropBottomMm)),
+    sideInsetMm:  Math.max(0, Math.min(22, tuning.sideInsetMm)),
   }
 }
 
@@ -67,20 +68,26 @@ export function previewSpacingCss(tuning: PreviewTuning, scope = '.preview-sheet
   const lineHeight = 1.28 + normalized.spacing * 0.04
   const pageHeight = previewPageHeightMm(normalized)
   const zoom       = normalized.contentScale / 100
+  const resumeRoot = `${scope} .cv,${scope} .resume`
+  const sideInsetCss = normalized.sideInsetMm
+    ? `${resumeRoot}{padding-left:${normalized.sideInsetMm}mm!important;padding-right:${normalized.sideInsetMm}mm!important}`
+    : ''
 
   return `
-    ${scope}{width:${PAGE_WIDTH_MM}mm;min-height:${pageHeight}mm;background-color:#fff;background-image:repeating-linear-gradient(to bottom,#fff 0,#fff calc(${pageHeight}mm - 1px),#d7d7d7 calc(${pageHeight}mm - 1px),#d7d7d7 ${pageHeight}mm);background-size:100% ${pageHeight}mm;overflow:hidden}
-    ${scope} .cv{width:calc(100% / ${zoom})!important;min-height:${pageHeight}mm!important;height:auto!important;max-width:none!important;margin:0!important;overflow:visible!important;zoom:${zoom}}
+    ${scope}{width:${PAGE_WIDTH_MM}mm;min-height:${pageHeight}mm;background-color:#fff;background-image:repeating-linear-gradient(to bottom,#fff 0,#fff calc(${pageHeight}mm - 1px),#d7d7d7 calc(${pageHeight}mm - 1px),#d7d7d7 ${pageHeight}mm);background-size:100% ${pageHeight}mm;overflow:hidden;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    ${scope} *,${scope} *::before,${scope} *::after{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    ${resumeRoot}{width:calc(100% / ${zoom})!important;min-height:${pageHeight}mm!important;height:auto!important;max-width:none!important;margin:0!important;overflow:visible!important;zoom:${zoom}}
     ${scope} h1{break-after:avoid}
     ${scope} h2{break-after:avoid;margin-top:${sectionGap}px!important;margin-bottom:${Math.max(4, sectionGap - 8)}px!important}
     ${scope} p{line-height:${lineHeight}!important;margin-bottom:${Math.max(3, bulletGap + 1)}px!important;overflow-wrap:anywhere}
     ${scope} ul{margin-top:3px!important;margin-bottom:${entryGap}px!important}
     ${scope} li{line-height:${lineHeight}!important;margin-bottom:${bulletGap}px!important;overflow-wrap:anywhere}
     ${scope} .exp-entry,${scope} .proj-entry,${scope} .edu-entry{break-inside:avoid;margin-bottom:${entryGap}px!important}
+    ${sideInsetCss}
   `
 }
 
-export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) {
+export function LivePreview({ templateHtml, templateCss, data, tuning, onPageCountChange }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null)
   const [pageCount, setPageCount] = useState(1)
   const pageHeightMm = previewPageHeightMm(tuning)
@@ -96,7 +103,7 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
   const scopedCss = useMemo(
     () =>
       scopeTemplateCss(templateCss, '.preview-sheet') +
-      ATS_OVERRIDE +
+      LINK_PRINT_OVERRIDE +
       previewSpacingCss(tuning),
     [templateCss, tuning]
   )
@@ -108,7 +115,9 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
     const computePages = () => {
       const pageHeight = sheet.getBoundingClientRect().width * pageRatio
       if (!pageHeight) return
-      setPageCount(Math.max(1, Math.ceil(sheet.scrollHeight / pageHeight)))
+      const nextPageCount = Math.max(1, Math.ceil(sheet.scrollHeight / pageHeight))
+      setPageCount(nextPageCount)
+      onPageCountChange?.(nextPageCount)
     }
 
     const frame = requestAnimationFrame(computePages)
@@ -118,7 +127,7 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [pageRatio, renderedHtml, tuning])
+  }, [onPageCountChange, pageRatio, renderedHtml, tuning])
 
   return (
     <>
@@ -128,6 +137,7 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
           body > *:not(.print-target) { display: none !important; }
           .print-target { display: block !important; position: fixed; inset: 0; z-index: 9999; }
           .preview-sheet { box-shadow: none !important; border-radius: 0 !important; }
+          .preview-sheet, .preview-sheet * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
         }
       `}</style>
 

@@ -45,9 +45,12 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [spacing, setSpacing]           = useState(0)
   const [contentScale, setContentScale] = useState(100)
   const [cropBottomMm, setCropBottomMm] = useState(0)
+  const [sideInsetMm, setSideInsetMm] = useState(0)
   const [layoutPanelOpen, setLayoutPanelOpen] = useState(false)
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit')
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'saving' | 'downloading' | 'ready'>('idle')
+  const [pageCount, setPageCount] = useState(1)
+  const [directHtml, setDirectHtml] = useState<string | null>(null)
 
   // LaTeX editor state
   const [editedLatex, setEditedLatex]         = useState<string | null>(null)
@@ -66,7 +69,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       try {
         const parsed = JSON.parse(imported) as ResumeData
         if (hasResumeContent(parsed)) {
-          setData(parsed)
+          setTimeout(() => setData(parsed), 0)
           localStorage.removeItem(importKey(templateId))
           shouldLoadDraft = false
         }
@@ -75,7 +78,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 
     if (startBlank) {
       localStorage.removeItem(DRAFT_KEY)
-      setData(DEFAULT_RESUME_DATA)
+      setTimeout(() => setData(DEFAULT_RESUME_DATA), 0)
       shouldLoadDraft = false
     }
 
@@ -103,8 +106,8 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const systemOutput = useMemo(() => buildResumeSystemOutput(data), [data])
   const latexCode    = systemOutput.latex
   const previewTuning = useMemo(
-    () => ({ spacing, contentScale, cropBottomMm }),
-    [contentScale, cropBottomMm, spacing]
+    () => ({ spacing, contentScale, cropBottomMm, sideInsetMm }),
+    [contentScale, cropBottomMm, sideInsetMm, spacing]
   )
 
   // Active LaTeX shown in Monaco: edited version or freshly generated
@@ -159,6 +162,12 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     setUploadedImages(prev => prev.filter(i => i.name !== name))
   }
 
+  function applyRelaxedFit() {
+    setSpacing(1)
+    setContentScale(105)
+    setCropBottomMm(0)
+  }
+
   async function handleDownload() {
     if (!isLoggedIn) { setShowAuth(true); return }
     await saveAndDownload()
@@ -177,22 +186,25 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       setDownloadStatus('downloading')
     }
 
-    const renderedHtml = renderTemplate(templateHtml, data)
+    const isCanvasExport = tab === 'direct' && directHtml
+    const renderedHtml = isCanvasExport ? `<main class="system-resume">${directHtml}</main>` : renderTemplate(templateHtml, data)
     const fileName = `${safeFileName(data.name || 'resume')}.pdf`
     const pageHeightMm = previewPageHeightMm(previewTuning)
+    const printCss = isCanvasExport
+      ? systemResumePrintCss(previewTuning)
+      : `${templateCss}\n${previewSpacingCss(previewTuning, 'body')}`
     const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>${fileName}</title>
 <style>
-*{box-sizing:border-box;-webkit-hyphens:none;hyphens:none}
+*{box-sizing:border-box;-webkit-hyphens:none;hyphens:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 html,body{margin:0;padding:0;background:#fff;width:210mm;min-height:${pageHeightMm}mm;color:#111}
 a{color:inherit;text-decoration:none}
-${templateCss}
-${previewSpacingCss(previewTuning, 'body')}
+${printCss}
 @page{size:210mm ${pageHeightMm}mm;margin:0}
-@media print{body{margin:0;background-image:none!important}.cv{box-shadow:none!important;border-radius:0!important}}
+@media print{html,body{margin:0!important;padding:0!important;background:#fff!important}.cv,.resume,.system-resume{box-shadow:none!important;border-radius:0!important}}
 </style>
 </head>
 <body>${renderedHtml}</body>
@@ -237,11 +249,11 @@ ${previewSpacingCss(previewTuning, 'body')}
           <div className="absolute right-0 top-0 h-full w-[min(88vw,340px)] border-l border-border bg-background shadow-2xl">
             <LayoutControls
               spacing={spacing}
-              setSpacing={setSpacing}
               contentScale={contentScale}
-              setContentScale={setContentScale}
-              cropBottomMm={cropBottomMm}
-              setCropBottomMm={setCropBottomMm}
+              sideInsetMm={sideInsetMm}
+              pageCount={pageCount}
+              onRelaxedFit={applyRelaxedFit}
+              setSideInsetMm={setSideInsetMm}
               onClose={() => setLayoutPanelOpen(false)}
             />
           </div>
@@ -358,17 +370,17 @@ ${previewSpacingCss(previewTuning, 'body')}
           {/* Right panel — live preview */}
           <div className={`${mobilePane === 'preview' ? 'flex' : 'hidden'} min-h-[calc(100dvh-157px)] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-8 print:bg-white print:p-0 sm:px-8 sm:py-8 lg:flex lg:min-h-0`}>
             <div className="print-target max-w-full">
-              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
+              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} onPageCountChange={setPageCount} />
             </div>
           </div>
           <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
             <LayoutControls
               spacing={spacing}
-              setSpacing={setSpacing}
               contentScale={contentScale}
-              setContentScale={setContentScale}
-              cropBottomMm={cropBottomMm}
-              setCropBottomMm={setCropBottomMm}
+              sideInsetMm={sideInsetMm}
+              pageCount={pageCount}
+              onRelaxedFit={applyRelaxedFit}
+              setSideInsetMm={setSideInsetMm}
             />
           </aside>
         </div>
@@ -379,20 +391,20 @@ ${previewSpacingCss(previewTuning, 'body')}
         <div className="flex min-h-[calc(100dvh-104px)] bg-muted/40 lg:min-h-[calc(100vh-53px)]">
           <div className="flex flex-1 flex-col items-center gap-4 overflow-auto px-4 py-5 sm:px-8 sm:py-6">
             <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg max-w-xl text-center">
-              This canvas renders the canonical semantic HTML output. Direct edits here are local-only and do not rewrite the form state.
+              Direct canvas edits are included when you download from this tab. They do not rewrite the form fields.
             </p>
             <div className="print-target">
-              <DirectEditPreview renderedHtml={systemOutput.html} />
+              <DirectEditPreview renderedHtml={systemOutput.html} onChange={setDirectHtml} />
             </div>
           </div>
           <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
             <LayoutControls
               spacing={spacing}
-              setSpacing={setSpacing}
               contentScale={contentScale}
-              setContentScale={setContentScale}
-              cropBottomMm={cropBottomMm}
-              setCropBottomMm={setCropBottomMm}
+              sideInsetMm={sideInsetMm}
+              pageCount={pageCount}
+              onRelaxedFit={applyRelaxedFit}
+              setSideInsetMm={setSideInsetMm}
             />
           </aside>
         </div>
@@ -539,11 +551,11 @@ ${previewSpacingCss(previewTuning, 'body')}
           <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
             <LayoutControls
               spacing={spacing}
-              setSpacing={setSpacing}
               contentScale={contentScale}
-              setContentScale={setContentScale}
-              cropBottomMm={cropBottomMm}
-              setCropBottomMm={setCropBottomMm}
+              sideInsetMm={sideInsetMm}
+              pageCount={pageCount}
+              onRelaxedFit={applyRelaxedFit}
+              setSideInsetMm={setSideInsetMm}
             />
           </aside>
         </div>
@@ -567,6 +579,24 @@ function spacingLabel(value: number): string {
 
 function safeFileName(value: string): string {
   return value.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'resume'
+}
+
+function systemResumePrintCss(tuning: { spacing: number; contentScale: number; cropBottomMm: number; sideInsetMm: number }): string {
+  const pageHeightMm = previewPageHeightMm(tuning)
+  const scale = Math.max(90, Math.min(120, tuning.contentScale)) / 100
+  const sectionGap = 18 + tuning.spacing * 3
+  const bulletGap = Math.max(4, 8 + tuning.spacing * 2)
+  const sidePadding = tuning.sideInsetMm > 0 ? tuning.sideInsetMm : 14
+
+  return `
+.system-resume{width:calc(210mm / ${scale});min-height:${pageHeightMm}mm;margin:0;padding:12mm ${sidePadding}mm;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;zoom:${scale};overflow:visible}
+.system-resume img{display:block;width:88px;height:88px;object-fit:cover;margin:0 0 16px auto;border:1px solid #111}
+.system-resume h1{margin:0;font-size:28px;line-height:1.2;font-weight:700}
+.system-resume h2{margin:${sectionGap}px 0 8px;font-size:14px;line-height:1.3;font-weight:700;text-transform:uppercase;border-bottom:1px solid #111;padding-bottom:4px;break-after:avoid}
+.system-resume p{margin:0 0 ${bulletGap}px;font-size:12px;line-height:1.5;color:#111;white-space:pre-wrap;overflow-wrap:anywhere}
+.system-resume ul{margin:0 0 ${bulletGap + 2}px 18px;padding:0}
+.system-resume li{margin:0 0 ${Math.max(2, bulletGap - 4)}px;font-size:12px;line-height:1.5;color:#111;white-space:pre-wrap;overflow-wrap:anywhere}
+`
 }
 
 function importKey(templateId: string): string {
@@ -639,23 +669,21 @@ function printA4Document(html: string, onPrintOpened: () => void) {
   iframe.srcdoc = html
 }
 
-type NumberSetter = React.Dispatch<React.SetStateAction<number>>
-
 function LayoutControls({
   spacing,
-  setSpacing,
   contentScale,
-  setContentScale,
-  cropBottomMm,
-  setCropBottomMm,
+  sideInsetMm,
+  pageCount,
+  onRelaxedFit,
+  setSideInsetMm,
   onClose,
 }: {
   spacing: number
-  setSpacing: NumberSetter
   contentScale: number
-  setContentScale: NumberSetter
-  cropBottomMm: number
-  setCropBottomMm: NumberSetter
+  sideInsetMm: number
+  pageCount: number
+  onRelaxedFit: () => void
+  setSideInsetMm: React.Dispatch<React.SetStateAction<number>>
   onClose?: () => void
 }) {
   return (
@@ -663,9 +691,9 @@ function LayoutControls({
       <div className="flex items-start justify-between border-b border-border px-5 py-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Layout</p>
-          <h2 className="mt-1 text-lg font-semibold text-foreground">Page controls</h2>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Fit resume</h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Tune the A4 preview and exported PDF without changing resume content.
+            Keep the page normal, then adjust spacing or side margins only when needed.
           </p>
         </div>
         {onClose && (
@@ -679,110 +707,82 @@ function LayoutControls({
         )}
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-        <LayoutStepper
-          label="Whitespace"
-          value={spacingLabel(spacing)}
-          helper="Controls section gaps, bullet spacing, and resume density."
-          decreaseLabel="Decrease whitespace"
-          increaseLabel="Increase whitespace"
-          onDecrease={() => setSpacing(v => Math.max(-2, v - 1))}
-          onIncrease={() => setSpacing(v => Math.min(2, v + 1))}
-          disableDecrease={spacing <= -2}
-          disableIncrease={spacing >= 2}
-        />
-        <LayoutStepper
-          label="Content size"
-          value={`${contentScale}%`}
-          helper="Scale text and resume blocks while keeping the page A4."
-          decreaseLabel="Make content smaller"
-          increaseLabel="Make content larger"
-          onDecrease={() => setContentScale(v => Math.max(90, v - 5))}
-          onIncrease={() => setContentScale(v => Math.min(120, v + 5))}
-          disableDecrease={contentScale <= 90}
-          disableIncrease={contentScale >= 120}
-        />
-        <LayoutStepper
-          label="Bottom crop"
-          value={`${cropBottomMm}mm`}
-          helper="Cuts unused page height from the final preview/export."
-          decreaseLabel="Show more bottom area"
-          increaseLabel="Crop more bottom whitespace"
-          onDecrease={() => setCropBottomMm(v => Math.max(0, v - 5))}
-          onIncrease={() => setCropBottomMm(v => Math.min(120, v + 5))}
-          disableDecrease={cropBottomMm <= 0}
-          disableIncrease={cropBottomMm >= 120}
-        />
-      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                {pageCount === 1 ? 'Fits on 1 page' : `Currently ${pageCount} pages`}
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Download uses the same edited content and template colors.
+              </p>
+            </div>
+            <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground">
+              {spacingLabel(spacing)} / {contentScale}% / {sideMarginLabel(sideInsetMm)}
+            </span>
+          </div>
+        </div>
 
-      <div className="border-t border-border px-5 py-4">
         <button
-          onClick={() => {
-            setSpacing(0)
-            setContentScale(100)
-            setCropBottomMm(0)
-          }}
-          className="w-full rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted"
+          type="button"
+          onClick={onRelaxedFit}
+          className="w-full rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted"
         >
-          Reset layout
+          <span className="block text-sm font-semibold text-foreground">Fill page gently</span>
+          <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+            Adds breathing room when the resume ends too early on the page.
+          </span>
+        </button>
+
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Side margins</h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Reduce left/right borders when the content needs more width.
+              </p>
+            </div>
+            <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground">
+              {sideMarginLabel(sideInsetMm)}
+            </span>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setSideInsetMm((value) => value === 0 ? 16 : Math.max(8, value - 2))}
+              className="rounded-xl border border-border px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted"
+            >
+              Narrower
+            </button>
+            <button
+              type="button"
+              onClick={() => setSideInsetMm((value) => value === 0 ? 18 : Math.min(22, value + 2))}
+              className="rounded-xl border border-border px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted"
+            >
+              Wider
+            </button>
+          </div>
+        </section>
+
+        <button
+          type="button"
+          onClick={() => setSideInsetMm(0)}
+          className="w-full rounded-xl border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted"
+        >
+          Use template margins
         </button>
       </div>
     </div>
   )
 }
 
-function LayoutStepper({
-  label,
-  value,
-  helper,
-  onDecrease,
-  onIncrease,
-  disableDecrease,
-  disableIncrease,
-  decreaseLabel,
-  increaseLabel,
-}: {
-  label: string
-  value: string
-  helper: string
-  onDecrease: () => void
-  onIncrease: () => void
-  disableDecrease: boolean
-  disableIncrease: boolean
-  decreaseLabel: string
-  increaseLabel: string
-}) {
-  return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">{label}</h3>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">{helper}</p>
-        </div>
-        <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground">
-          {value}
-        </span>
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          onClick={onDecrease}
-          disabled={disableDecrease}
-          title={decreaseLabel}
-          className="rounded-xl border border-border px-3 py-2 text-lg font-semibold leading-none transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          -
-        </button>
-        <button
-          onClick={onIncrease}
-          disabled={disableIncrease}
-          title={increaseLabel}
-          className="rounded-xl border border-border px-3 py-2 text-lg font-semibold leading-none transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          +
-        </button>
-      </div>
-    </section>
-  )
+function sideMarginLabel(value: number): string {
+  if (!value) return 'Template'
+  if (value <= 10) return 'Very narrow'
+  if (value <= 14) return 'Narrow'
+  if (value <= 18) return 'Balanced'
+  return 'Wide'
 }
 
 function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
@@ -796,7 +796,7 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
   )
 }
 
-function DirectEditPreview({ renderedHtml }: { renderedHtml: string }) {
+function DirectEditPreview({ renderedHtml, onChange }: { renderedHtml: string; onChange: (html: string) => void }) {
   const ref    = useRef<HTMLDivElement>(null)
   const inited = useRef(false)
 
@@ -805,7 +805,7 @@ function DirectEditPreview({ renderedHtml }: { renderedHtml: string }) {
       ref.current.innerHTML = renderedHtml
       inited.current = true
     }
-  }, [renderedHtml])
+  }, [onChange, renderedHtml])
 
   return (
     <>
@@ -825,6 +825,7 @@ function DirectEditPreview({ renderedHtml }: { renderedHtml: string }) {
         className="preview-sheet bg-white shadow-xl rounded-lg"
         style={{ minHeight: '29.7cm', width: '21cm', maxWidth: '100%', padding: '1cm', cursor: 'text' }}
         spellCheck={false}
+        onInput={() => onChange(ref.current?.innerHTML ?? renderedHtml)}
       />
     </>
   )
@@ -852,6 +853,7 @@ function SystemHtmlStyles() {
       .preview-sheet p { margin:0 0 8px; font-size:12px; line-height:1.5; color:#111; white-space:pre-wrap; overflow-wrap:anywhere; }
       .preview-sheet ul { margin:0 0 10px 18px; padding:0; }
       .preview-sheet li { margin:0 0 4px; font-size:12px; line-height:1.5; color:#111; white-space:pre-wrap; overflow-wrap:anywhere; }
+      .preview-sheet, .preview-sheet * { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
     `}</style>
   )
 }

@@ -278,67 +278,6 @@ function CookieBanner() {
   );
 }
 
-function ProductMockup() {
-  return (
-    <div className="rm-hero-visual" aria-label="ResumeMatch product preview">
-      <div className="rm-browser-bar">
-        <span />
-        <span />
-        <span />
-        <p>resumematch.live/builder</p>
-      </div>
-      <div className="rm-workspace">
-        <aside>
-          <nav>
-            <span className="active">Builder</span>
-            <span>Audit</span>
-            <span>Matches</span>
-            <span>Templates</span>
-          </nav>
-        </aside>
-        <main>
-          <div className="rm-upload-card">
-            <div>
-              <p className="rm-eyebrow">Resume import</p>
-              <h3>Do you have an existing resume?</h3>
-            </div>
-            <div className="rm-upload-actions">
-              <span><UploadCloud size={15} /> Yes, upload</span>
-              <span>No, start blank</span>
-            </div>
-          </div>
-          <div className="rm-editor-grid">
-            <div className="rm-form-panel">
-              {["Name", "Summary", "Experience", "Projects", "Skills"].map((item, index) => (
-                <div key={item} className="rm-field-row">
-                  <span>{item}</span>
-                  <div style={{ width: `${76 - index * 7}%` }} />
-                </div>
-              ))}
-            </div>
-            <div className="rm-resume-paper">
-              <h4>Pratik Singh</h4>
-              <p>Senior Software Engineer</p>
-              <div />
-              <section>
-                <strong>Experience</strong>
-                <span />
-                <span />
-                <span />
-              </section>
-              <section>
-                <strong>Projects</strong>
-                <span />
-                <span />
-              </section>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
-
 function TypedHeroTitle() {
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<"typing" | "holding" | "deleting">("typing");
@@ -538,7 +477,7 @@ export default function LandingPage() {
         }
 
         .rm-hero-copy {
-          max-width: 660px;
+          max-width: 980px;
         }
 
         .rm-hero h1,
@@ -583,31 +522,25 @@ export default function LandingPage() {
         .rm-hero-stats {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
+          gap: 16px;
           margin-top: 28px;
-          width: min(100%, 980px);
+          width: 100%;
+          max-width: 980px;
         }
 
         .rm-hero-stat-card {
-          min-height: 112px;
-          border: 1px solid rgba(0,0,0,0.03);
-          border-radius: 16px;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.12)),
-            var(--rm-panel);
-          padding: 20px 22px;
-          box-shadow: 0 16px 48px rgba(22, 22, 22, 0.07);
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          border-radius: 22px;
+          background: rgba(22, 22, 22, 0.025);
+          padding: 18px;
+          box-shadow: none;
         }
 
         .rm-hero-stat-card strong {
           display: block;
           color: var(--rm-text);
-          font-family: var(--font-body), Arial, sans-serif;
-          font-size: clamp(38px, 4.2vw, 58px);
-          line-height: 1;
+          font-family: var(--font-headline), var(--font-body), Arial, sans-serif;
+          font-size: 40px;
+          line-height: 0.95;
           font-weight: 650;
           letter-spacing: 0;
           white-space: nowrap;
@@ -615,213 +548,13 @@ export default function LandingPage() {
 
         .rm-hero-stat-card span {
           display: block;
-          margin-top: 14px;
-          max-width: 220px;
+          margin-top: 8px;
           color: var(--rm-soft);
-          font-size: clamp(13px, 1.1vw, 16px);
-          line-height: 1.25;
-          font-weight: 600;
-          letter-spacing: 0;
-        }
-
-        .rm-hero-visual {
-          overflow: hidden;
-          border-radius: 18px;
-          background: #171512;
-          min-height: 500px;
-          box-shadow: 0 26px 80px rgba(22, 22, 22, 0.16);
-        }
-
-        .rm-browser-bar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          height: 48px;
-          padding: 0 18px;
-          background: #25221e;
-          color: #9f9a8e;
-          font-size: 13px;
-        }
-
-        .rm-browser-bar span {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #756f63;
-        }
-
-        .rm-browser-bar p { margin-left: 10px; }
-
-        .rm-workspace {
-          display: grid;
-          grid-template-columns: 220px 1fr;
-          min-height: 452px;
-        }
-
-        .rm-workspace aside {
-          padding: 26px 18px;
-          border-right: 1px solid rgba(255,255,255,0.08);
-          background: #1e1b17;
-        }
-
-        .rm-workspace nav {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .rm-workspace nav span {
-          border-radius: 10px;
-          padding: 11px 12px;
-          color: #a9a295;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .rm-workspace nav .active {
-          background: #302b25;
-          color: #fff4dc;
-        }
-
-        .rm-workspace main {
-          padding: 26px;
-          background:
-            linear-gradient(135deg, rgba(255,255,255,0.04), transparent 34%),
-            #191713;
-        }
-
-        .rm-upload-card {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
-          border-radius: 16px;
-          padding: 20px;
-          background: #f6efe0;
-          color: #18140f;
-        }
-
-        .rm-eyebrow {
-          color: #817663;
-          font-size: 11px;
-          font-weight: 760;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-        }
-
-        .rm-upload-card h3 {
-          margin-top: 6px;
-          font-size: 24px;
-          line-height: 1.1;
-          letter-spacing: -0.02em;
-          font-weight: 650;
-        }
-
-        .rm-upload-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .rm-upload-actions span {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          border-radius: 999px;
-          padding: 9px 13px;
-          background: #161616;
-          color: white;
-          font-size: 13px;
-          font-weight: 650;
-        }
-
-        .rm-upload-actions span + span {
-          background: white;
-          color: #161616;
-        }
-
-        .rm-editor-grid {
-          display: grid;
-          grid-template-columns: 1fr 330px;
-          gap: 20px;
-          margin-top: 22px;
-        }
-
-        .rm-form-panel {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          border-radius: 16px;
-          padding: 18px;
-          background: rgba(255,255,255,0.06);
-        }
-
-        .rm-field-row {
-          display: grid;
-          grid-template-columns: 104px 1fr;
-          align-items: center;
-          gap: 12px;
-          color: #c8c0b2;
-          font-size: 13px;
-          font-weight: 620;
-        }
-
-        .rm-field-row div {
-          height: 38px;
-          border-radius: 10px;
-          background: rgba(255,255,255,0.11);
-        }
-
-        .rm-resume-paper {
-          min-height: 300px;
-          border-radius: 8px;
-          padding: 26px;
-          background: white;
-          color: #171717;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.22);
-        }
-
-        .rm-resume-paper h4 {
-          font-size: 24px;
-          font-weight: 760;
-          letter-spacing: -0.03em;
-        }
-
-        .rm-resume-paper p {
-          margin-top: 4px;
-          color: #555;
           font-size: 12px;
+          line-height: 1.55;
+          font-weight: 600;
+          letter-spacing: 0.04em;
         }
-
-        .rm-resume-paper > div {
-          height: 2px;
-          margin: 16px 0;
-          background: #171717;
-        }
-
-        .rm-resume-paper section {
-          margin-top: 16px;
-        }
-
-        .rm-resume-paper strong {
-          display: block;
-          margin-bottom: 8px;
-          font-size: 10px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-        }
-
-        .rm-resume-paper span {
-          display: block;
-          height: 8px;
-          margin-top: 7px;
-          border-radius: 4px;
-          background: #ddd8ce;
-        }
-
-        .rm-resume-paper span:nth-child(2) { width: 94%; }
-        .rm-resume-paper span:nth-child(3) { width: 82%; }
-        .rm-resume-paper span:nth-child(4) { width: 70%; }
 
         .rm-logo-strip {
           border-top: 1px solid var(--rm-line);
@@ -1422,9 +1155,6 @@ export default function LandingPage() {
           .rm-nav { display: none; }
           .rm-hero { gap: 42px; padding-top: 48px; }
           .rm-hero-stats { grid-template-columns: 1fr; }
-          .rm-workspace { grid-template-columns: 1fr; }
-          .rm-workspace aside { display: none; }
-          .rm-editor-grid,
           .rm-example-grid,
           .rm-template-grid,
           .rm-workflow {
@@ -1454,11 +1184,6 @@ export default function LandingPage() {
           .rm-typed-title { font-size: clamp(48px, 15vw, 70px); }
           .rm-typed-title { min-height: 140px; }
           .rm-hero p { font-size: 18px; }
-          .rm-hero-visual { min-height: auto; }
-          .rm-upload-card { align-items: flex-start; flex-direction: column; }
-          .rm-editor-grid { grid-template-columns: 1fr; }
-          .rm-form-panel { display: none; }
-          .rm-resume-paper { min-height: 270px; }
           .rm-logo-strip .rm-container { justify-content: flex-start; }
           .rm-flow-section { padding: 46px 0 48px; }
           .rm-flow-stage { min-height: 470px; }
@@ -1511,7 +1236,6 @@ export default function LandingPage() {
               </div>
               <HeroStats />
             </div>
-            <ProductMockup />
           </section>
 
           <section className="rm-logo-strip" aria-label="Supported job workflows">

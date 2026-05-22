@@ -484,16 +484,16 @@ export default function LandingPage() {
 
         .rm-hero h1,
         .rm-typed-title {
-          max-width: 760px;
-          font-size: clamp(56px, 8vw, 104px);
-          line-height: 0.94;
+          max-width: 720px;
+          font-size: clamp(36px, 4.8vw, 58px);
+          line-height: 1;
           letter-spacing: 0;
           font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           font-weight: 650;
         }
 
         .rm-typed-title {
-          min-height: clamp(150px, 24vw, 236px);
+          min-height: clamp(82px, 10vw, 118px);
           white-space: pre-line;
         }
 
@@ -1185,8 +1185,8 @@ export default function LandingPage() {
           .rm-header-actions a:first-child { display: none; }
           .rm-button { min-height: 38px; padding: 0 14px; font-size: 14px; }
           .rm-hero h1,
-          .rm-typed-title { font-size: clamp(48px, 15vw, 70px); }
-          .rm-typed-title { min-height: 140px; }
+          .rm-typed-title { font-size: clamp(40px, 12vw, 58px); }
+          .rm-typed-title { min-height: 116px; }
           .rm-hero p { font-size: 18px; }
           .rm-logo-strip .rm-container { justify-content: flex-start; }
           .rm-flow-section { padding: 46px 0 48px; }

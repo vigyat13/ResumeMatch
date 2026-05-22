@@ -422,8 +422,8 @@ export default function LandingPage() {
           align-items: center;
           gap: 10px;
           font-size: 21px;
-          font-family: var(--font-headline), var(--font-body), sans-serif;
-          font-weight: 800;
+          font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-weight: 760;
           letter-spacing: 0;
         }
 
@@ -488,8 +488,8 @@ export default function LandingPage() {
           font-size: clamp(56px, 8vw, 104px);
           line-height: 0.94;
           letter-spacing: 0;
-          font-family: var(--font-headline), var(--font-body), sans-serif;
-          font-weight: 800;
+          font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-weight: 650;
         }
 
         .rm-typed-title {
@@ -542,10 +542,10 @@ export default function LandingPage() {
         .rm-hero-stat-card strong {
           display: block;
           color: var(--rm-text);
-          font-family: var(--font-headline), var(--font-body), Arial, sans-serif;
+          font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           font-size: 40px;
           line-height: 0.95;
-          font-weight: 800;
+          font-weight: 750;
           letter-spacing: 0;
           white-space: nowrap;
         }
@@ -755,7 +755,7 @@ export default function LandingPage() {
           font-size: clamp(38px, 4vw, 56px);
           line-height: 0.98;
           letter-spacing: 0;
-          font-weight: 800;
+          font-weight: 650;
         }
 
         .rm-section-heading p {
@@ -1038,7 +1038,7 @@ export default function LandingPage() {
           font-size: clamp(40px, 6vw, 72px);
           line-height: 0.96;
           letter-spacing: 0;
-          font-weight: 800;
+          font-weight: 650;
         }
 
         .rm-final-panel p {

@@ -78,7 +78,7 @@
   --color-text-muted:           #6f6a61;
 
   /* ── Typography ─────────────────────────────────────────── */
-  --font-headline: 'Manrope', 'Inter', sans-serif;
+  --font-headline: 'Inter', sans-serif;
   --font-body:     'Inter', sans-serif;
 
   /* ── Shape ──────────────────────────────────────────────── */
@@ -99,7 +99,7 @@
   --color-marketing-muted:    #6f6a61;
   --color-marketing-faint:    #ded8cc;
   --color-marketing-line:     #ded8cc;
-  --font-marketing-display:   'Manrope', 'Inter', sans-serif;
+  --font-marketing-display:   'Inter', sans-serif;
 }
 
 :root {

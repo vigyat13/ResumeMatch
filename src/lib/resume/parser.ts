@@ -15,10 +15,18 @@
 
 import mammoth from 'mammoth'
 import { extractSkills } from './skills'
+import type { ResumeData } from '@/lib/builder/types'
+import { parseResumeToBuilderData } from './structuredParser'
 
 export type ParseResult = {
   text:   string
   skills: string[]
+  parsed?: {
+    resumeData: ResumeData
+    sections: Array<{ type: string; confidence: number }>
+    confidence: { overall: number }
+    warnings: string[]
+  }
   error?: string
 }
 
@@ -28,9 +36,20 @@ export type ParseResult = {
  */
 export async function parseResume(
   buffer:   Buffer,
-  fileType: 'pdf' | 'docx'
+  fileType: 'pdf' | 'docx' | 'image',
+  options: { useAI?: boolean; useOCR?: boolean } = {}
 ): Promise<ParseResult> {
   try {
+    if (fileType === 'image') {
+      return {
+        text: '',
+        skills: [],
+        error: options.useOCR
+          ? 'Image OCR parsing is not available in this environment. Please upload a PDF or DOCX.'
+          : 'Image parsing is not available. Please upload a PDF or DOCX.',
+      }
+    }
+
     const rawText = fileType === 'pdf'
       ? await parsePdf(buffer)
       : await parseDocx(buffer)
@@ -45,6 +64,20 @@ export async function parseResume(
     }
 
     const skills = extractSkills(text)
+    if (options.useAI) {
+      const structured = await parseResumeToBuilderData(text, skills)
+      return {
+        text: structured.text,
+        skills: structured.skills,
+        parsed: {
+          resumeData: structured.data,
+          sections: [],
+          confidence: { overall: structured.confidence },
+          warnings: structured.warnings,
+        },
+      }
+    }
+
     return { text, skills }
   } catch (err) {
     console.error('[Parser] Failed to parse resume:', err)

@@ -89,6 +89,49 @@ interface ShowcaseTemplate {
   css_content: string;
 }
 
+function HeroStats() {
+  const [downloaded, setDownloaded] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStats() {
+      try {
+        const res = await fetch("/api/v1/landing/stats");
+        const json = await res.json();
+        const value = json?.data?.resumes_downloaded ?? json?.data?.resumes_analyzed;
+        if (!cancelled && typeof value === "number") {
+          setDownloaded(value);
+        }
+      } catch {
+        if (!cancelled) setDownloaded(null);
+      }
+    }
+
+    loadStats();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = [
+    [downloaded === null ? "200+" : downloaded.toLocaleString(), "Resumes downloaded"],
+    ["28 pts", "Average ATS score improvement"],
+    ["3x", "Better interview response rate"],
+  ] as const;
+
+  return (
+    <div className="rm-hero-stats" aria-label="ResumeMatch impact metrics">
+      {stats.map(([value, label]) => (
+        <div className="rm-hero-stat-card" key={label}>
+          <strong>{value}</strong>
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function LandingTemplateFlow() {
   const [items, setItems] = useState<ShowcaseTemplate[]>([]);
   const [active, setActive] = useState(0);
@@ -500,15 +543,15 @@ export default function LandingPage() {
 
         .rm-hero h1,
         .rm-typed-title {
-          max-width: 680px;
-          font-size: clamp(44px, 6vw, 76px);
-          line-height: 0.96;
+          max-width: 760px;
+          font-size: clamp(56px, 8vw, 104px);
+          line-height: 0.94;
           letter-spacing: -0.01em;
           font-weight: 650;
         }
 
         .rm-typed-title {
-          min-height: clamp(120px, 20vw, 178px);
+          min-height: clamp(150px, 24vw, 236px);
           white-space: pre-line;
         }
 
@@ -535,6 +578,50 @@ export default function LandingPage() {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
+        }
+
+        .rm-hero-stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          margin-top: 28px;
+          width: min(100%, 980px);
+        }
+
+        .rm-hero-stat-card {
+          min-height: 112px;
+          border: 1px solid rgba(0,0,0,0.03);
+          border-radius: 16px;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.12)),
+            var(--rm-panel);
+          padding: 20px 22px;
+          box-shadow: 0 16px 48px rgba(22, 22, 22, 0.07);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .rm-hero-stat-card strong {
+          display: block;
+          color: var(--rm-text);
+          font-family: var(--font-body), Arial, sans-serif;
+          font-size: clamp(38px, 4.2vw, 58px);
+          line-height: 1;
+          font-weight: 650;
+          letter-spacing: 0;
+          white-space: nowrap;
+        }
+
+        .rm-hero-stat-card span {
+          display: block;
+          margin-top: 14px;
+          max-width: 220px;
+          color: var(--rm-soft);
+          font-size: clamp(13px, 1.1vw, 16px);
+          line-height: 1.25;
+          font-weight: 600;
+          letter-spacing: 0;
         }
 
         .rm-hero-visual {
@@ -1334,6 +1421,7 @@ export default function LandingPage() {
           .rm-container { width: min(100% - 32px, 1280px); }
           .rm-nav { display: none; }
           .rm-hero { gap: 42px; padding-top: 48px; }
+          .rm-hero-stats { grid-template-columns: 1fr; }
           .rm-workspace { grid-template-columns: 1fr; }
           .rm-workspace aside { display: none; }
           .rm-editor-grid,
@@ -1363,8 +1451,8 @@ export default function LandingPage() {
           .rm-header-actions a:first-child { display: none; }
           .rm-button { min-height: 38px; padding: 0 14px; font-size: 14px; }
           .rm-hero h1,
-          .rm-typed-title { font-size: clamp(42px, 13vw, 58px); }
-          .rm-typed-title { min-height: 114px; }
+          .rm-typed-title { font-size: clamp(48px, 15vw, 70px); }
+          .rm-typed-title { min-height: 140px; }
           .rm-hero p { font-size: 18px; }
           .rm-hero-visual { min-height: auto; }
           .rm-upload-card { align-items: flex-start; flex-direction: column; }
@@ -1421,6 +1509,7 @@ export default function LandingPage() {
                   Browse templates
                 </Link>
               </div>
+              <HeroStats />
             </div>
             <ProductMockup />
           </section>

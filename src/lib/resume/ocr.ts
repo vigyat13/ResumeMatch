@@ -47,12 +47,28 @@ export async function ocrImage(
   }
 }
 
-let _tesseractModule: typeof import('tesseract.js') | null = null
+type TesseractWorker = {
+  recognize: (input: Buffer) => Promise<{ data: { text?: string } }>
+  terminate: () => Promise<void>
+}
 
-async function loadTesseract(): Promise<typeof import('tesseract.js') | null> {
+type TesseractModule = {
+  createWorker: (
+    lang?: string,
+    oem?: unknown,
+    options?: { logger?: unknown }
+  ) => Promise<TesseractWorker>
+}
+
+let _tesseractModule: TesseractModule | null = null
+
+async function loadTesseract(): Promise<TesseractModule | null> {
   if (_tesseractModule) return _tesseractModule
   try {
-    _tesseractModule = await import('tesseract.js')
+    const importer = new Function('specifier', 'return import(specifier)') as (
+      specifier: string
+    ) => Promise<unknown>
+    _tesseractModule = (await importer('tesseract.js')) as TesseractModule
     return _tesseractModule
   } catch {
     return null

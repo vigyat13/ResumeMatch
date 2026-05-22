@@ -421,8 +421,9 @@ export default function LandingPage() {
           align-items: center;
           gap: 10px;
           font-size: 21px;
-          font-weight: 760;
-          letter-spacing: -0.01em;
+          font-family: var(--font-headline), var(--font-body), sans-serif;
+          font-weight: 800;
+          letter-spacing: 0;
         }
 
         .rm-brand-match {
@@ -485,8 +486,9 @@ export default function LandingPage() {
           max-width: 760px;
           font-size: clamp(56px, 8vw, 104px);
           line-height: 0.94;
-          letter-spacing: -0.01em;
-          font-weight: 650;
+          letter-spacing: 0;
+          font-family: var(--font-headline), var(--font-body), sans-serif;
+          font-weight: 800;
         }
 
         .rm-typed-title {
@@ -541,7 +543,7 @@ export default function LandingPage() {
           font-family: var(--font-headline), var(--font-body), Arial, sans-serif;
           font-size: 40px;
           line-height: 0.95;
-          font-weight: 650;
+          font-weight: 800;
           letter-spacing: 0;
           white-space: nowrap;
         }
@@ -750,8 +752,8 @@ export default function LandingPage() {
         .rm-section-heading h2 {
           font-size: clamp(38px, 4vw, 56px);
           line-height: 0.98;
-          letter-spacing: -0.04em;
-          font-weight: 650;
+          letter-spacing: 0;
+          font-weight: 800;
         }
 
         .rm-section-heading p {
@@ -1033,8 +1035,8 @@ export default function LandingPage() {
         .rm-final-panel h2 {
           font-size: clamp(40px, 6vw, 72px);
           line-height: 0.96;
-          letter-spacing: -0.045em;
-          font-weight: 650;
+          letter-spacing: 0;
+          font-weight: 800;
         }
 
         .rm-final-panel p {

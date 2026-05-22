@@ -370,22 +370,22 @@ export default function LandingPage() {
     <>
       <style>{`
         :root {
-          --rm-bg: #faf9f5;
-          --rm-panel: #f2f0e8;
-          --rm-panel-strong: #e8e3d5;
+          --rm-bg: #f7f6f1;
+          --rm-panel: #ffffff;
+          --rm-panel-strong: #ebe7dd;
           --rm-text: #0f0e0e;
-          --rm-muted: #44413f;
-          --rm-soft: #77716b;
-          --rm-line: #e2ded4;
+          --rm-muted: #3c3933;
+          --rm-soft: #6f6a61;
+          --rm-line: #ded8cc;
           --rm-black: #161616;
-          --rm-green: #2f8f68;
+          --rm-green: #20b26b;
           --rm-cream: #fffaf0;
         }
 
         html { scroll-behavior: smooth; }
         body { background: var(--rm-bg); }
         a { color: inherit; text-decoration: none; }
-        ::selection { background: #d8f3df; color: var(--rm-text); }
+        ::selection { background: #d8f7e4; color: var(--rm-text); }
 
         .rm-page {
           min-height: 100vh;
@@ -404,7 +404,8 @@ export default function LandingPage() {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: rgba(250, 249, 245, 0.88);
+          border-bottom: 1px solid rgba(15, 14, 14, 0.06);
+          background: rgba(247, 246, 241, 0.9);
           backdrop-filter: blur(18px);
         }
 
@@ -466,9 +467,9 @@ export default function LandingPage() {
         .rm-button.secondary {
           background: white;
           color: var(--rm-black);
-          box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+          box-shadow: 0 0 0 1px rgba(15,14,14,0.08), 0 2px 8px rgba(15,14,14,0.04);
         }
-        .rm-button.secondary:hover { box-shadow: 0 0 0 1px rgba(0,0,0,0.16), 0 3px 12px rgba(0,0,0,0.06); }
+        .rm-button.secondary:hover { box-shadow: 0 0 0 1px rgba(32,178,107,0.22), 0 8px 22px rgba(15,14,14,0.08); }
 
         .rm-hero {
           display: flex;
@@ -532,9 +533,10 @@ export default function LandingPage() {
 
         .rm-hero-stat-card {
           border-radius: 22px;
-          background: rgba(22, 22, 22, 0.025);
+          border: 1px solid rgba(15,14,14,0.06);
+          background: rgba(255,255,255,0.7);
           padding: 18px;
-          box-shadow: none;
+          box-shadow: 0 18px 46px rgba(15,14,14,0.045);
         }
 
         .rm-hero-stat-card strong {
@@ -561,7 +563,7 @@ export default function LandingPage() {
         .rm-logo-strip {
           border-top: 1px solid var(--rm-line);
           border-bottom: 1px solid var(--rm-line);
-          background: rgba(255,255,255,0.24);
+          background: rgba(255,255,255,0.42);
         }
 
         .rm-logo-strip .rm-container {
@@ -574,7 +576,7 @@ export default function LandingPage() {
 
         .rm-logo-strip span {
           white-space: nowrap;
-          color: #908a80;
+          color: #817b71;
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.14em;
@@ -586,7 +588,7 @@ export default function LandingPage() {
           border-top: 1px solid var(--rm-line);
           border-bottom: 1px solid var(--rm-line);
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.36), rgba(242,240,232,0.74)),
+            linear-gradient(180deg, rgba(255,255,255,0.72), rgba(235,231,221,0.58)),
             var(--rm-bg);
           padding: 70px 0 62px;
         }
@@ -617,8 +619,8 @@ export default function LandingPage() {
         }
 
         .rm-flow-card.active {
-          border-color: rgba(47,143,104,0.48);
-          box-shadow: 0 34px 100px rgba(22,22,22,0.22), 0 0 0 1px rgba(47,143,104,0.18);
+          border-color: rgba(32,178,107,0.48);
+          box-shadow: 0 34px 100px rgba(22,22,22,0.18), 0 0 0 1px rgba(32,178,107,0.18);
         }
 
         .rm-flow-card.hidden-card {
@@ -654,7 +656,7 @@ export default function LandingPage() {
         .rm-flow-card-head span {
           flex: none;
           border-radius: 999px;
-          background: rgba(47,143,104,0.10);
+          background: rgba(32,178,107,0.10);
           padding: 8px 12px;
           color: var(--rm-green);
           font-size: 13px;

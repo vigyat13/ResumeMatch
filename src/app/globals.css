@@ -49,33 +49,33 @@
    * charcoal, panel, line, and green colors so every route inherits
    * the landing page theme without needing page-by-page redesigns.
    */
-  --color-background:           #faf9f5;                 /* = --rm-bg */
+  --color-background:           #f7f6f1;                 /* = --rm-bg */
   --color-foreground:           #0f0e0e;                 /* = --rm-text */
-  --color-card:                 #f2f0e8;                 /* = --rm-panel */
+  --color-card:                 #ffffff;                 /* = --rm-panel */
   --color-card-foreground:      #0f0e0e;
   --color-primary:              #161616;                 /* = --rm-black */
   --color-primary-foreground:   #fffaf0;                 /* = --rm-cream */
-  --color-secondary:            #e8e3d5;                 /* = --rm-panel-strong */
+  --color-secondary:            #ebe7dd;                 /* = --rm-panel-strong */
   --color-secondary-foreground: #0f0e0e;
-  --color-muted:                #f2f0e8;
-  --color-muted-foreground:     #77716b;                 /* = --rm-soft */
-  --color-accent:               #2f8f68;                 /* = --rm-green */
+  --color-muted:                #f0ede6;
+  --color-muted-foreground:     #6f6a61;                 /* = --rm-soft */
+  --color-accent:               #20b26b;                 /* = --rm-green */
   --color-accent-foreground:    #fffaf0;
   --color-destructive:          #d24b4b;
   --color-destructive-foreground: #fffaf0;
-  --color-border:               #e2ded4;                 /* = --rm-line */
+  --color-border:               #ded8cc;                 /* = --rm-line */
   --color-input:                #fffaf0;
-  --color-ring:                 #2f8f68;
+  --color-ring:                 #20b26b;
 
   /* Legacy aliases (still used by Sidebar, AuthModal, dashboard
    * cards, etc.). Defining them here means we don't have to touch
    * every component to flip the theme. */
-  --color-surface:              #faf9f5;
-  --color-surface-raised:       #f2f0e8;
-  --color-surface-hover:        #e8e3d5;
+  --color-surface:              #f7f6f1;
+  --color-surface-raised:       #ffffff;
+  --color-surface-hover:        #ebe7dd;
   --color-text-primary:         #0f0e0e;
-  --color-text-secondary:       #44413f;
-  --color-text-muted:           #77716b;
+  --color-text-secondary:       #3c3933;
+  --color-text-muted:           #6f6a61;
 
   /* ── Typography ─────────────────────────────────────────── */
   --font-headline: 'Manrope', 'Inter', sans-serif;
@@ -89,29 +89,29 @@
    * showcase pages on this palette even when they use a separate
    * layout or older marketing-specific class names.
    */
-  --color-marketing-bg:       #faf9f5;
-  --color-marketing-surface:  #f2f0e8;
+  --color-marketing-bg:       #f7f6f1;
+  --color-marketing-surface:  #ffffff;
   --color-marketing-text:     #0f0e0e;
-  --color-marketing-accent:   #2f8f68;
+  --color-marketing-accent:   #20b26b;
   --color-marketing-warn:     #b7791f;
   --color-marketing-error:    #d24b4b;
   --color-marketing-info:     #315f93;
-  --color-marketing-muted:    #77716b;
-  --color-marketing-faint:    #e2ded4;
-  --color-marketing-line:     #e2ded4;
+  --color-marketing-muted:    #6f6a61;
+  --color-marketing-faint:    #ded8cc;
+  --color-marketing-line:     #ded8cc;
   --font-marketing-display:   'Manrope', 'Inter', sans-serif;
 }
 
 :root {
-  --rm-bg: #faf9f5;
-  --rm-panel: #f2f0e8;
-  --rm-panel-strong: #e8e3d5;
+  --rm-bg: #f7f6f1;
+  --rm-panel: #ffffff;
+  --rm-panel-strong: #ebe7dd;
   --rm-text: #0f0e0e;
-  --rm-muted: #44413f;
-  --rm-soft: #77716b;
-  --rm-line: #e2ded4;
+  --rm-muted: #3c3933;
+  --rm-soft: #6f6a61;
+  --rm-line: #ded8cc;
   --rm-black: #161616;
-  --rm-green: #2f8f68;
+  --rm-green: #20b26b;
   --rm-cream: #fffaf0;
 }
 

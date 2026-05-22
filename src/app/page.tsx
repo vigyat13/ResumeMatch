@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   Check,
   FileText,
   LayoutTemplate,
@@ -35,24 +34,6 @@ const examples = [
   },
 ] as const;
 
-const workflow = [
-  {
-    step: "STEP 1",
-    title: "Bring in your existing resume",
-    body: "Start from a blank template or upload your current PDF/DOCX. ResumeMatch detects contact details, education, projects, experience, and skills.",
-  },
-  {
-    step: "STEP 2",
-    title: "Shape it into an ATS-safe version",
-    body: "Pick a role-specific layout, edit live, tune spacing, and export clean HTML, PDF, or LaTeX from one source of truth.",
-  },
-  {
-    step: "STEP 3",
-    title: "Know what to fix before applying",
-    body: "Run audits and job-description matching to see missing keywords, weak sections, and practical next edits.",
-  },
-] as const;
-
 const comparisonRows = [
   ["Parsing", "Manual copy-paste from old documents.", "PDF/DOCX import with structured field mapping."],
   ["Templates", "One generic layout for every role.", "Role-specific ATS-safe templates for different industries."],
@@ -78,39 +59,6 @@ const logoStripItems = [
   "Live preview",
   "Template switching",
 ] as const;
-
-const reportMetrics = [
-  ["React", 96],
-  ["TypeScript", 88],
-  ["Accessibility", 72],
-  ["Testing", 54],
-] as const;
-
-function ReportMockup() {
-  return (
-    <div className="rm-report-card">
-      <div className="rm-report-head">
-        <div>
-          <p className="rm-eyebrow">ATS report</p>
-          <h3>Frontend Engineer at Stripe</h3>
-        </div>
-        <div className="rm-score">82</div>
-      </div>
-      <div className="rm-bars">
-        {reportMetrics.map(([label, width]) => (
-          <div key={label}>
-            <span>{label}</span>
-            <div><i style={{ width: `${width}%` }} /></div>
-          </div>
-        ))}
-      </div>
-      <div className="rm-warning">
-        <BarChart3 size={17} />
-        Add stronger testing evidence before applying.
-      </div>
-    </div>
-  );
-}
 
 export default function LandingPage() {
   return (
@@ -520,8 +468,7 @@ export default function LandingPage() {
         }
 
         .rm-example-card,
-        .rm-template-card,
-        .rm-step-card {
+        .rm-template-card {
           border: 1px solid rgba(0,0,0,0.02);
           border-radius: 16px;
           background: var(--rm-panel);
@@ -551,123 +498,6 @@ export default function LandingPage() {
           color: var(--rm-muted);
           font-size: 16px;
           line-height: 1.5;
-        }
-
-        .rm-workflow {
-          display: grid;
-          grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
-          gap: 56px;
-          align-items: center;
-        }
-
-        .rm-step-list {
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-        }
-
-        .rm-step-card {
-          padding: 24px;
-        }
-
-        .rm-step-card span {
-          color: #8b857a;
-          font-size: 11px;
-          font-weight: 780;
-          letter-spacing: 0.16em;
-        }
-
-        .rm-step-card h3 {
-          margin-top: 10px;
-          font-size: 24px;
-          line-height: 1.1;
-          letter-spacing: -0.025em;
-          font-weight: 650;
-        }
-
-        .rm-step-card p {
-          margin-top: 10px;
-          color: var(--rm-muted);
-          font-size: 16px;
-          line-height: 1.5;
-        }
-
-        .rm-report-card {
-          border-radius: 16px;
-          padding: 28px;
-          background: #161616;
-          color: white;
-          box-shadow: 0 24px 70px rgba(22, 22, 22, 0.16);
-        }
-
-        .rm-report-head {
-          display: flex;
-          align-items: start;
-          justify-content: space-between;
-          gap: 20px;
-        }
-
-        .rm-report-head h3 {
-          margin-top: 8px;
-          max-width: 300px;
-          font-size: 32px;
-          line-height: 1;
-          letter-spacing: -0.035em;
-          font-weight: 650;
-        }
-
-        .rm-score {
-          display: grid;
-          place-items: center;
-          width: 82px;
-          height: 82px;
-          border-radius: 50%;
-          background: #dbf2c7;
-          color: #183017;
-          font-size: 30px;
-          font-weight: 750;
-        }
-
-        .rm-bars {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-top: 32px;
-        }
-
-        .rm-bars span {
-          display: block;
-          margin-bottom: 7px;
-          color: #cfc8ba;
-          font-size: 13px;
-          font-weight: 650;
-        }
-
-        .rm-bars div div {
-          height: 10px;
-          overflow: hidden;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.12);
-        }
-
-        .rm-bars i {
-          display: block;
-          height: 100%;
-          border-radius: inherit;
-          background: #dbf2c7;
-        }
-
-        .rm-warning {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-top: 30px;
-          border-radius: 14px;
-          padding: 14px;
-          background: rgba(255,255,255,0.08);
-          color: #fff6df;
-          font-size: 15px;
-          line-height: 1.4;
         }
 
         .rm-comparison {
@@ -907,8 +737,7 @@ export default function LandingPage() {
           .rm-hero { gap: 42px; padding-top: 48px; }
           .rm-hero-stats { grid-template-columns: 1fr; }
           .rm-example-grid,
-          .rm-template-grid,
-          .rm-workflow {
+          .rm-template-grid {
             grid-template-columns: 1fr;
           }
           .rm-comparison::before { display: none; }
@@ -947,7 +776,6 @@ export default function LandingPage() {
           .rm-section { padding: 64px 0; }
           .rm-section-heading p { font-size: 18px; }
           .rm-example-card { min-height: 210px; }
-          .rm-report-head { flex-direction: column; }
           .rm-footer-links { gap: 18px; }
         }
       `}</style>
@@ -959,7 +787,6 @@ export default function LandingPage() {
               <span>Resume<span className="rm-brand-match">Match</span></span>
             </Link>
             <nav className="rm-nav" aria-label="Primary navigation">
-              <a href="#workflow">Workflow</a>
               <a href="#compare">Compare</a>
               <a href="#templates">Templates</a>
             </nav>
@@ -1019,21 +846,6 @@ export default function LandingPage() {
                   </article>
                 );
               })}
-            </div>
-          </section>
-
-          <section id="workflow" className="rm-container rm-section">
-            <div className="rm-workflow">
-              <div className="rm-step-list">
-                {workflow.map((item) => (
-                  <article className="rm-step-card" key={item.step}>
-                    <span>{item.step}</span>
-                    <h3>{item.title}</h3>
-                    <p>{item.body}</p>
-                  </article>
-                ))}
-              </div>
-              <ReportMockup />
             </div>
           </section>
 

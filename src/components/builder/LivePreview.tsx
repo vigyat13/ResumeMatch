@@ -22,7 +22,7 @@
  * The builder form and controls vanish — only the resume prints.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { renderTemplate } from '@/lib/builder/render'
 import type { ResumeData } from '@/lib/builder/types'
 import { scopeTemplateCss } from '@/lib/builder/scopeCss'
@@ -81,10 +81,6 @@ export function previewSpacingCss(tuning: PreviewTuning, scope = '.preview-sheet
 }
 
 export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) {
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const [pageCount, setPageCount] = useState(1)
-  const pageHeightMm = previewPageHeightMm(tuning)
-  const pageRatio    = pageHeightMm / PAGE_WIDTH_MM
   const renderedHtml = useMemo(
     () => renderTemplate(templateHtml, data),
     [templateHtml, data]
@@ -100,25 +96,6 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
       previewSpacingCss(tuning),
     [templateCss, tuning]
   )
-
-  useEffect(() => {
-    const sheet = sheetRef.current
-    if (!sheet) return
-
-    const computePages = () => {
-      const pageHeight = sheet.getBoundingClientRect().width * pageRatio
-      if (!pageHeight) return
-      setPageCount(Math.max(1, Math.ceil(sheet.scrollHeight / pageHeight)))
-    }
-
-    const frame = requestAnimationFrame(computePages)
-    const observer = new ResizeObserver(computePages)
-    observer.observe(sheet)
-    return () => {
-      cancelAnimationFrame(frame)
-      observer.disconnect()
-    }
-  }, [pageRatio, renderedHtml, tuning])
 
   return (
     <>
@@ -136,11 +113,7 @@ export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) 
 
       {/* The resume preview */}
       <div className="relative">
-        <div className="absolute -top-7 right-0 text-[11px] font-medium text-muted-foreground print:hidden">
-          {pageCount} {tuning.cropBottomMm ? 'cropped' : 'A4'} page{pageCount === 1 ? '' : 's'}
-        </div>
         <div
-          ref={sheetRef}
           className="preview-sheet bg-white shadow-xl rounded-sm overflow-visible"
           style={{ width: '21cm', maxWidth: '100%' }}
           dangerouslySetInnerHTML={{ __html: renderedHtml }}

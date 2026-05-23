@@ -3,6 +3,7 @@
 import Script from 'next/script'
 import { useCallback, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { detectInAppBrowser } from '@/lib/auth/inAppBrowser'
 
 type OneTapContext = 'signin' | 'signup' | 'use'
 
@@ -55,6 +56,7 @@ export function GoogleOneTap({
 
   const startOneTap = useCallback(async () => {
     if (!GOOGLE_CLIENT_ID || promptedRef.current) return
+    if (detectInAppBrowser(window.navigator.userAgent).isInAppBrowser) return
 
     const googleId = window.google?.accounts?.id
     if (!googleId) return

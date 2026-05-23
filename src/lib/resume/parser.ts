@@ -119,10 +119,66 @@ async function parsePdf(buffer: Buffer): Promise<string> {
   const parser = new PDFParse({ data: buffer })
   try {
     const data = await parser.getText()
-    return data.text ?? ''
+    return appendPdfLinks(data.text ?? '', await extractPdfLinks(buffer))
   } finally {
     await parser.destroy()
   }
+}
+
+async function extractPdfLinks(buffer: Buffer): Promise<string[]> {
+  try {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs') as {
+      getDocument: (options: { data: Uint8Array; disableWorker: boolean }) => {
+        promise: Promise<{
+          numPages: number
+          getPage: (pageNumber: number) => Promise<{
+            getAnnotations: (options: { intent: 'display' }) => Promise<Array<{
+              subtype?: string
+              url?: string
+              unsafeUrl?: string
+            }>>
+          }>
+          destroy: () => Promise<void>
+        }>
+      }
+    }
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true }).promise
+    const urls: string[] = []
+
+    try {
+      for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
+        const page = await doc.getPage(pageNumber)
+        const annotations = await page.getAnnotations({ intent: 'display' })
+        for (const annotation of annotations) {
+          if (annotation.subtype !== 'Link') continue
+          const url = clean(annotation.url ?? annotation.unsafeUrl ?? '')
+          if (url) urls.push(url)
+        }
+      }
+    } finally {
+      await doc.destroy()
+    }
+
+    return unique(urls)
+  } catch (error) {
+    console.warn('[Parser] Could not extract PDF link annotations:', error)
+    return []
+  }
+}
+
+function appendPdfLinks(text: string, urls: string[]): string {
+  if (!urls.length) return text
+
+  const lines = urls.map(url => {
+    if (/linkedin\.com/i.test(url)) return `LinkedIn URL: ${url}`
+    if (/github\.com\/[^/]+$/i.test(url)) return `GitHub URL: ${url}`
+    if (/github\.com/i.test(url)) return `Project GitHub URL: ${url}`
+    if (/udemy\.com\/certificate/i.test(url)) return `Certification URL: ${url}`
+    if (/unstop\.com\/certificate/i.test(url)) return `Hackathon Certificate URL: ${url}`
+    return `Project Live URL: ${url}`
+  })
+
+  return `${text.trim()}\n\nEXTRACTED PDF LINKS\n${lines.join('\n')}`
 }
 
 async function parseDocx(buffer: Buffer): Promise<string> {
@@ -139,4 +195,12 @@ function normalizeResumeText(text: string): string {
     .replace(/\r/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+}
+
+function clean(value: unknown): string {
+  return String(value ?? '').replace(/\s+/g, ' ').trim()
+}
+
+function unique(values: string[]): string[] {
+  return [...new Map(values.map(value => [value.toLowerCase(), value])).values()]
 }

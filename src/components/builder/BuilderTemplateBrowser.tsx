@@ -74,7 +74,7 @@ export function BuilderTemplateBrowser({ templates }: { templates: Template[] })
           >
             Browse layouts
           </h2>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-[#302d2b]">
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--rm-muted)]">
             Filter by role, format, or style. Each selection opens the full editor with live preview and export.
           </p>
         </div>
@@ -85,7 +85,7 @@ export function BuilderTemplateBrowser({ templates }: { templates: Template[] })
             value={query}
             onChange={event => setQuery(event.target.value)}
             placeholder="Search templates"
-            className="h-12 w-full rounded-full border border-[var(--rm-line)] bg-white pl-11 pr-4 text-sm font-medium text-[var(--rm-text)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-[var(--rm-soft)] focus:border-[var(--rm-green)]"
+            className="h-12 w-full rounded-full border border-[var(--rm-line)] bg-[rgba(245,240,232,0.04)] pl-11 pr-4 text-sm font-medium text-[var(--rm-text)] outline-none transition-colors placeholder:text-[var(--rm-soft)] focus:border-[var(--rm-green)]"
           />
         </label>
       </div>
@@ -99,8 +99,8 @@ export function BuilderTemplateBrowser({ templates }: { templates: Template[] })
               onClick={() => setCategory(cat)}
               className={`h-10 flex-shrink-0 rounded-full px-4 text-sm font-semibold transition-all ${
                 category === cat
-                  ? 'border border-[var(--rm-black)] bg-[var(--rm-black)] text-white'
-                  : 'border border-[var(--rm-line)] bg-white text-[var(--rm-muted)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-[var(--rm-black)] hover:text-[var(--rm-text)]'
+                  ? 'border border-[var(--rm-green)] bg-[var(--rm-green)] text-[var(--rm-bg)]'
+                  : 'border border-[var(--rm-line)] bg-[rgba(245,240,232,0.04)] text-[var(--rm-muted)] hover:border-[var(--rm-green)] hover:text-[var(--rm-text)]'
               }`}
             >
               {cat}

@@ -33,21 +33,48 @@ export default async function BuilderPage() {
     <div className="rm-builder-page">
       <style>{`
         .rm-builder-page {
-          --rm-bg: #faf9f5;
-          --rm-panel: #f2f0e8;
-          --rm-panel-strong: #e8e3d5;
-          --rm-text: #0f0e0e;
-          --rm-muted: #44413f;
-          --rm-soft: #77716b;
-          --rm-line: #e2ded4;
-          --rm-black: #161616;
-          --rm-green: #2f8f68;
-          --rm-cream: #fffaf0;
+          --rm-bg: var(--color-marketing-bg);
+          --rm-panel: var(--color-marketing-surface);
+          --rm-panel-strong: rgba(245,240,232,0.06);
+          --rm-text: var(--color-marketing-text);
+          --rm-muted: rgba(245,240,232,0.56);
+          --rm-soft: rgba(245,240,232,0.36);
+          --rm-line: var(--color-marketing-line);
+          --rm-black: #080808;
+          --rm-green: var(--color-marketing-accent);
+          --rm-cream: rgba(245,240,232,0.04);
           min-height: 100vh;
           background: var(--rm-bg);
           color: var(--rm-text);
-          font-family: var(--font-body), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-family: var(--font-body), sans-serif;
           letter-spacing: 0;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .rm-builder-page::before,
+        .rm-builder-page::after {
+          content: "";
+          position: fixed;
+          z-index: 0;
+          pointer-events: none;
+          border-radius: 50%;
+        }
+
+        .rm-builder-page::before {
+          top: -15%;
+          left: -8%;
+          width: 700px;
+          height: 700px;
+          background: radial-gradient(circle, rgba(52,211,153,0.055) 0%, transparent 65%);
+        }
+
+        .rm-builder-page::after {
+          top: 35%;
+          right: -12%;
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(59,130,246,0.035) 0%, transparent 65%);
         }
 
         .rm-builder-page a {
@@ -56,6 +83,8 @@ export default async function BuilderPage() {
         }
 
         .rm-builder-container {
+          position: relative;
+          z-index: 1;
           width: min(100% - 48px, 1280px);
           margin: 0 auto;
         }
@@ -64,9 +93,9 @@ export default async function BuilderPage() {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: rgba(250, 249, 245, 0.88);
-          backdrop-filter: blur(18px);
-          border-bottom: 1px solid transparent;
+          background: rgba(8,8,8,0.82);
+          backdrop-filter: blur(24px);
+          border-bottom: 1px solid rgba(245,240,232,0.055);
         }
 
         .rm-builder-header-inner {
@@ -116,27 +145,28 @@ export default async function BuilderPage() {
         }
 
         .rm-builder-button.primary {
-          background: var(--rm-black);
-          color: white;
+          background: var(--rm-green);
+          color: var(--rm-bg);
         }
 
         .rm-builder-button.primary:hover {
-          background: #2a2927;
+          background: #65e2b0;
         }
 
         .rm-builder-button.secondary {
-          background: white;
-          color: var(--rm-black);
-          box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+          background: rgba(245,240,232,0.04);
+          color: var(--rm-text);
+          box-shadow: 0 0 0 1px rgba(245,240,232,0.10);
         }
 
         .rm-builder-button.secondary:hover {
-          box-shadow: 0 0 0 1px rgba(0,0,0,0.16), 0 3px 12px rgba(0,0,0,0.06);
+          background: rgba(245,240,232,0.07);
+          box-shadow: 0 0 0 1px rgba(245,240,232,0.18);
         }
 
         .rm-builder-hero {
           padding: 42px 0 58px;
-          background: var(--rm-bg);
+          background: transparent;
         }
 
         .rm-builder-hero-grid {
@@ -165,7 +195,7 @@ export default async function BuilderPage() {
         .rm-builder-copy p {
           margin-top: 22px;
           max-width: 620px;
-          color: #302d2b;
+          color: rgba(245,240,232,0.52);
           font-size: clamp(16px, 1.6vw, 19px);
           line-height: 1.42;
         }
@@ -216,7 +246,7 @@ export default async function BuilderPage() {
           border: 1px solid var(--rm-line);
           border-radius: 18px;
           background: white;
-          box-shadow: 0 26px 80px rgba(22, 22, 22, 0.16);
+          box-shadow: 0 28px 90px rgba(0,0,0,0.28);
         }
 
         .rm-builder-preview-caption {
@@ -241,9 +271,11 @@ export default async function BuilderPage() {
         }
 
         .rm-builder-gallery {
-          border-top: 1px solid var(--rm-line);
+          position: relative;
+          z-index: 1;
+          border-top: 1px solid rgba(245,240,232,0.045);
           padding: 56px 0 76px;
-          background: var(--rm-bg);
+          background: linear-gradient(180deg, rgba(245,240,232,0.012), rgba(52,211,153,0.018), rgba(245,240,232,0.008));
         }
 
         @media (min-width: 1024px) {

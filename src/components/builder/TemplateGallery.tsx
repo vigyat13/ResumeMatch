@@ -44,7 +44,7 @@ export function TemplateGallery({ templates }: Props) {
             <Link
               key={t.id}
               href={`/builder/${t.id}/start`}
-              className="group overflow-hidden rounded-2xl border border-black/[0.02] bg-[var(--rm-panel)] transition-colors duration-200 hover:border-[var(--rm-green)]/45 focus:outline-none focus-visible:border-[var(--rm-green)]"
+              className="group overflow-hidden rounded-2xl border border-[var(--rm-line)] bg-[var(--rm-panel)] transition-colors duration-200 hover:border-[var(--rm-green)]/45 focus:outline-none focus-visible:border-[var(--rm-green)]"
             >
               {/* Live preview thumbnail */}
               <div className="relative h-72 overflow-hidden bg-white sm:h-64">
@@ -73,7 +73,7 @@ export function TemplateGallery({ templates }: Props) {
                   <ArrowUpRight className="mt-1 h-4 w-4 flex-shrink-0 text-[var(--rm-soft)] transition-colors group-hover:text-[var(--rm-green)]" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--rm-muted)]">
+                  <span className="inline-flex items-center rounded-full bg-[rgba(245,240,232,0.06)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--rm-muted)]">
                     {getTemplateBadge(t.name)}
                   </span>
                   {t.is_ats_safe && (
@@ -97,7 +97,7 @@ export function TemplateGallery({ templates }: Props) {
         <div className="flex flex-col items-center gap-2 mt-10">
           <button
             onClick={() => setShown(s => s + PAGE_SIZE)}
-            className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-[var(--rm-line)] bg-white px-6 text-sm font-semibold text-[var(--rm-black)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-[var(--rm-black)]"
+            className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-[var(--rm-line)] bg-[rgba(245,240,232,0.04)] px-6 text-sm font-semibold text-[var(--rm-text)] transition-all hover:border-[var(--rm-green)]"
           >
             Load {Math.min(PAGE_SIZE, remaining)} more templates
           </button>

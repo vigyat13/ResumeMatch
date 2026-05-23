@@ -59,8 +59,33 @@ function normalizeUrl(raw: string): string {
   return `https://${value}`
 }
 
+function displayLinkLabel(raw: string): string {
+  const value = clean(raw)
+  if (!value) return ''
+
+  const parsed = parseLink(value)
+  const host = parsed?.hostname.replace(/^www\./i, '').toLowerCase() ?? value.replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i, '').toLowerCase()
+
+  if (host.includes('linkedin.com')) return 'LinkedIn'
+  if (host.includes('github.com')) return 'GitHub'
+  if (host.includes('gitlab.com')) return 'GitLab'
+  if (host.includes('bitbucket.org')) return 'Bitbucket'
+  if (host.includes('vercel.app')) return 'Vercel'
+  if (host.includes('netlify.app')) return 'Netlify'
+
+  return host || value
+}
+
 function displayUrl(raw: string): string {
   return clean(raw).replace(/^https?:\/\//i, '').replace(/\/$/, '')
+}
+
+function parseLink(raw: string): URL | null {
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
+  } catch {
+    return null
+  }
 }
 
 function contactLinkLabel(kind: 'github' | 'linkedin'): string {
@@ -102,7 +127,7 @@ function contactParts(json: StructuredResumeJson): string[] {
     json.contact.location,
     json.contact.linkedin ? contactLinkLabel('linkedin') : '',
     json.contact.github ? contactLinkLabel('github') : '',
-    json.contact.portfolio,
+    json.contact.portfolio ? displayLinkLabel(json.contact.portfolio) : '',
   ].filter(Boolean)
 }
 
@@ -166,7 +191,7 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
     ]),
     json.projects.length ? '<h2>Projects</h2>' : '',
     ...json.projects.flatMap((entry) => [
-      `<p>${[entry.name, entry.tech, entry.link].filter(Boolean).map(escHtml).join(' | ')}</p>`,
+      `<p>${[entry.name, entry.tech, entry.link ? displayLinkLabel(entry.link) : ''].filter(Boolean).map(escHtml).join(' | ')}</p>`,
       entry.description ? `<p>${escHtml(entry.description)}</p>` : '',
       htmlList(entry.bullets),
     ]),
@@ -235,7 +260,7 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
   if (json.contact.location)  contactParts.push(escLatex(json.contact.location))
   if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(contactLinkLabel('linkedin'))}}}`)
   if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(contactLinkLabel('github'))}}}`)
-  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayUrl(json.contact.portfolio))}}}`)
+  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayLinkLabel(json.contact.portfolio))}}}`)
   const contactLine = contactParts.join(' $|$ ')
 
   const lines: string[] = [
@@ -292,7 +317,7 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
     lines.push('    \\resumeSubHeadingListStart')
     for (const proj of json.projects) {
       const techStr = proj.tech ? ` $|$ \\emph{${escLatex(proj.tech)}}` : ''
-      const linkStr = proj.link ? ` $|$ \\href{${escLatex(normalizeUrl(proj.link))}}{\\underline{${escLatex(displayUrl(proj.link))}}}` : ''
+      const linkStr = proj.link ? ` $|$ \\href{${escLatex(normalizeUrl(proj.link))}}{\\underline{${escLatex(displayLinkLabel(proj.link))}}}` : ''
       lines.push(`      \\resumeProjectHeading{\\textbf{${escLatex(proj.name)}}${techStr}${linkStr}}{}`)
       if (proj.bullets.length) {
         lines.push('          \\resumeItemListStart')
@@ -393,7 +418,7 @@ export function generateRenderCvYamlFromJson(json: StructuredResumeJson): string
     lines.push('    Projects:')
     for (const project of json.projects) {
       lines.push(`      - name: ${yamlString(project.name || 'Project')}`)
-      const summaryParts = [project.tech, project.link ? displayUrl(project.link) : '', project.description].filter(Boolean)
+      const summaryParts = [project.tech, project.link ? displayLinkLabel(project.link) : '', project.description].filter(Boolean)
       if (summaryParts.length) lines.push(`        summary: ${yamlString(summaryParts.join(' | '))}`)
       appendYamlList(lines, '        highlights:', project.bullets, 10)
     }

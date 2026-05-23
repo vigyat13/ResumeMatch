@@ -11,7 +11,7 @@ export function renderTemplate(html: string, data: ResumeData): string {
     data.location  ? esc(data.location) : null,
     data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(contactLinkLabel('linkedin'))}</a>` : null,
     data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(contactLinkLabel('github'))}</a>` : null,
-    data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(data.portfolio)}</a>` : null,
+    data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(displayLinkLabel(data.portfolio))}</a>` : null,
   ].filter(Boolean).join(' | ')
 
   let output = html
@@ -24,7 +24,7 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{location\}\}/g,  esc(data.location))
     .replace(/\{\{github\}\}/g,    data.github ? esc(contactLinkLabel('github')) : '')
     .replace(/\{\{linkedin\}\}/g,  data.linkedin ? esc(contactLinkLabel('linkedin')) : '')
-    .replace(/\{\{portfolio\}\}/g, esc(data.portfolio))
+    .replace(/\{\{portfolio\}\}/g, data.portfolio ? esc(displayLinkLabel(data.portfolio)) : '')
     .replace(/\{\{summary\}\}/g,   esc(data.summary))
     .replace(/\{\{experience\}\}/g, renderExperience(data.experience))
     .replace(/\{\{projects\}\}/g,   renderProjects(data.projects))
@@ -92,7 +92,7 @@ function renderProjects(entries: ProjectEntry[]): string {
     <div class="proj-entry" style="margin-bottom:10px;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
         <strong style="font-size:0.95em;min-width:0">${esc(p.name)}</strong>
-        ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(p.link)}</a>` : ''}
+        ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(displayLinkLabel(p.link))}</a>` : ''}
       </div>
       ${p.tech.trim() ? `<div style="font-size:0.82em;color:#444;margin-bottom:3px;font-style:italic">${esc(p.tech)}</div>` : ''}
       ${p.description.trim() ? `<div style="font-size:0.875em;color:#333;margin-bottom:2px">${esc(p.description)}</div>` : ''}
@@ -220,4 +220,29 @@ function linkHref(url: string): string {
 
 function contactLinkLabel(kind: 'github' | 'linkedin'): string {
   return kind === 'github' ? 'GitHub' : 'LinkedIn'
+}
+
+function displayLinkLabel(url: string): string {
+  const raw = (url ?? '').trim()
+  if (!raw) return ''
+
+  const parsed = parseLink(raw)
+  const host = parsed?.hostname.replace(/^www\./i, '').toLowerCase() ?? raw.replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i, '').toLowerCase()
+
+  if (host.includes('linkedin.com')) return 'LinkedIn'
+  if (host.includes('github.com')) return 'GitHub'
+  if (host.includes('gitlab.com')) return 'GitLab'
+  if (host.includes('bitbucket.org')) return 'Bitbucket'
+  if (host.includes('vercel.app')) return 'Vercel'
+  if (host.includes('netlify.app')) return 'Netlify'
+
+  return host || raw
+}
+
+function parseLink(url: string): URL | null {
+  try {
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`)
+  } catch {
+    return null
+  }
 }

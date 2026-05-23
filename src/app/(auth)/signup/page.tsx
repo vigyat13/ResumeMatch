@@ -22,6 +22,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { GoogleOneTap } from '@/components/auth/GoogleOneTap'
 
 const OAUTH_ERRORS: Record<string, string> = {
   oauth_cancelled: 'Sign-in was cancelled. Please try again.',
@@ -45,12 +46,16 @@ export default function SignupPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlError = params.get('error')
-    const detail   = params.get('detail')
-    if (urlError) {
-      setError(OAUTH_ERRORS[urlError] ?? (detail ? `OAuth error: ${detail}` : `Auth error: ${urlError}`))
-    }
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(window.location.search)
+      const urlError = params.get('error')
+      const detail   = params.get('detail')
+      if (urlError) {
+        setError(OAUTH_ERRORS[urlError] ?? (detail ? `OAuth error: ${detail}` : `Auth error: ${urlError}`))
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   // ── Email/Password Signup ─────────────────────────────────
@@ -104,6 +109,11 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+      <GoogleOneTap
+        context="signup"
+        nextPath={POST_SIGNUP_PATH}
+        onError={setError}
+      />
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

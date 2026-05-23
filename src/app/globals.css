@@ -115,67 +115,12 @@
   --rm-cream: #fffaf0;
 }
 
-/* ── Production Theme (matches resumematch.live) ──────────── */
-[data-theme="dark"],
-.dark {
-  color-scheme: dark;
-
-  --color-background:           #080808;
-  --color-foreground:           #f5f0e8;
-  --color-card:                 #0e0e0e;
-  --color-card-foreground:      #f5f0e8;
-  --color-primary:              #34d399;
-  --color-primary-foreground:   #080808;
-  --color-secondary:            #f5f0e80f;
-  --color-secondary-foreground: #f5f0e8;
-  --color-muted:                #f5f0e80a;
-  --color-muted-foreground:     #f5f0e88c;
-  --color-accent:               #34d399;
-  --color-accent-foreground:    #080808;
-  --color-destructive:          #f87171;
-  --color-destructive-foreground: #080808;
-  --color-border:               #f5f0e814;
-  --color-input:                #f5f0e80a;
-  --color-ring:                 #34d399;
-
-  --color-surface:              #080808;
-  --color-surface-raised:       #0e0e0e;
-  --color-surface-hover:        #f5f0e80f;
-  --color-text-primary:         #f5f0e8;
-  --color-text-secondary:       #f5f0e8b3;
-  --color-text-muted:           #f5f0e873;
-
-  --color-marketing-bg:       #080808;
-  --color-marketing-surface:  #0e0e0e;
-  --color-marketing-text:     #f5f0e8;
-  --color-marketing-accent:   #34d399;
-  --color-marketing-warn:     #fbbf24;
-  --color-marketing-error:    #f87171;
-  --color-marketing-info:     #60a5fa;
-  --color-marketing-muted:    #f5f0e873;
-  --color-marketing-faint:    #f5f0e840;
-  --color-marketing-line:     #f5f0e814;
-
-  --rm-bg: #080808;
-  --rm-panel: #0e0e0e;
-  --rm-panel-strong: #f5f0e80f;
-  --rm-text: #f5f0e8;
-  --rm-muted: #f5f0e8b3;
-  --rm-soft: #f5f0e873;
-  --rm-line: #f5f0e814;
-  --rm-black: #080808;
-  --rm-green: #34d399;
-  --rm-cream: #f5f0e8;
-}
-
-/* ── Legacy Light Alias ───────────────────────────────────── *
- * The app uses the production black/emerald theme by default.
- * Keep `.light` only as a compatibility alias for any older wrapper
- * that still applies it explicitly.
+/* ── Light Mode Override (legacy opt-in) ──────────────────── *
+ * The default shell now uses the landing page's warm light theme.
+ * Keep `.light` as a compatibility alias for older wrappers that
+ * already opt into the same surface.
  */
 .light {
-  color-scheme: light;
-
   --color-background:           var(--color-brand-50);
   --color-foreground:           var(--color-brand-950);
   --color-card:                 var(--color-brand-100);

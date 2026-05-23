@@ -26,6 +26,8 @@ const ALLOWED_TYPES = new Map([
   ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'],
 ])
 
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

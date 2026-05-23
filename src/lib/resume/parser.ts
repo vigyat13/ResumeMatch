@@ -14,9 +14,15 @@
  */
 
 import mammoth from 'mammoth'
+import { DOMMatrix, DOMPoint, DOMRect } from '@napi-rs/canvas'
 import { extractSkills } from './skills'
 import type { ResumeData } from '@/lib/builder/types'
 import { parseResumeToBuilderData } from './structuredParser'
+
+const pdfGlobal = globalThis as Record<string, unknown>
+pdfGlobal.DOMMatrix ??= DOMMatrix
+pdfGlobal.DOMPoint ??= DOMPoint
+pdfGlobal.DOMRect ??= DOMRect
 
 export type ParseResult = {
   text:   string
@@ -89,8 +95,6 @@ export async function parseResume(
 }
 
 async function parsePdf(buffer: Buffer): Promise<string> {
-  await ensurePdfDomPolyfills()
-
   // pdf-parse v2 exports a PDFParse class, not the old v1 function API.
   // Dynamic import keeps Next route collection stable and avoids bundling it
   // into a browser/edge-like execution path.
@@ -108,17 +112,6 @@ async function parsePdf(buffer: Buffer): Promise<string> {
   } finally {
     await parser.destroy()
   }
-}
-
-async function ensurePdfDomPolyfills(): Promise<void> {
-  const target = globalThis as Record<string, unknown>
-
-  if (target.DOMMatrix && target.DOMPoint && target.DOMRect) return
-
-  const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas')
-  target.DOMMatrix ??= DOMMatrix
-  target.DOMPoint ??= DOMPoint
-  target.DOMRect ??= DOMRect
 }
 
 async function parseDocx(buffer: Buffer): Promise<string> {

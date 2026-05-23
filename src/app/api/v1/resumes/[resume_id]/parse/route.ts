@@ -6,6 +6,8 @@ interface Params {
   params: Promise<{ resume_id: string }>
 }
 
+export const runtime = 'nodejs'
+
 export async function POST(_req: NextRequest, { params }: Params) {
   const { resume_id } = await params
   const supabase = await createClient()

@@ -1,8 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 import { TemplateGallery } from './TemplateGallery'
 import { sortTemplatesByPriority } from '@/lib/builder/templateOrdering'
+import { getTemplateBadge, getTemplateDescription, isVisibleTemplate } from '@/lib/builder/templateMeta'
 
 interface Template {
   id:           string
@@ -16,62 +18,113 @@ interface Template {
 
 const CATEGORIES: Record<string, string[]> = {
   All:            [],
-  Tech:           ['FAANG Standard', 'Modern Tech', 'ML Engineer', 'Backend Engineer', 'Frontend Engineer', 'Data Science'],
-  Professional:   ['Executive', 'Consulting', 'Product Manager', 'Simple Universal'],
+  Tech:           ['FAANG Standard', 'Modern Tech', 'ML Engineer', 'Backend Engineer', 'Frontend Engineer', 'Data Science', 'Cybersecurity', 'Cloud DevOps'],
+  Commerce:       ['Commerce Analyst', 'Accounting & Finance', 'Banking & Risk'],
+  Business:       ['Marketing & Sales', 'HR & Admin', 'Operations & Supply Chain', 'General Professional'],
+  Professional:   ['Executive', 'Consulting', 'Product Manager', 'Simple Universal', 'General Professional'],
   Minimal:        ['Minimal', 'Mono Clean', 'High Density'],
-  'Two Column':   ['Two Column', 'Europass'],
-  Specialty:      ['Academic', 'Startup', 'Creative', 'Intern / Entry Level', 'UK CV'],
+  'Two Column':   ['Europass'],
+  Specialty:      ['Academic', 'Startup', 'Creative', 'Intern / Entry Level', 'UK CV', 'UI UX Designer'],
 }
 
 export function BuilderTemplateBrowser({ templates }: { templates: Template[] }) {
   const [category, setCategory] = useState('All')
+  const [query, setQuery] = useState('')
+
+  const availableTemplates = useMemo(
+    () => templates.filter(template => isVisibleTemplate(template.name)),
+    [templates]
+  )
 
   const visibleTemplates = useMemo(() => {
     const categoryNames = CATEGORIES[category] ?? []
-    return sortTemplatesByPriority(
+    const normalizedQuery = query.trim().toLowerCase()
+    const categoryTemplates =
       category === 'All'
-        ? templates
-        : templates.filter(t => categoryNames.includes(t.name))
+        ? availableTemplates
+        : availableTemplates.filter(t => categoryNames.includes(t.name))
+
+    return sortTemplatesByPriority(
+      normalizedQuery
+        ? categoryTemplates.filter(t => {
+            const haystack = [
+              t.name,
+              getTemplateBadge(t.name),
+              getTemplateDescription(t.name, t.description),
+              t.tier ?? '',
+            ].join(' ').toLowerCase()
+            return haystack.includes(normalizedQuery)
+          })
+        : categoryTemplates
     )
-  }, [category, templates])
+  }, [availableTemplates, category, query])
 
   return (
     <>
-      <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-headline), sans-serif', fontSize: 'clamp(28px, 4vw, 50px)', lineHeight: 0.93, letterSpacing: '-0.01em', color: 'var(--color-marketing-text)', fontWeight: 700, margin: 0 }}>
-            Choose your template
+      <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-end">
+        <div className="min-w-0">
+          <h2
+            className="text-[var(--rm-text)]"
+            style={{
+              fontSize: 'clamp(30px, 3vw, 42px)',
+              lineHeight: 1.02,
+              letterSpacing: '-0.03em',
+              fontWeight: 650,
+            }}
+          >
+            Browse layouts
           </h2>
-          <p className="text-[rgba(245,240,232,0.45)] text-base mt-2">
-            All templates are ATS-safe unless marked otherwise
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[#302d2b]">
+            Filter by role, format, or style. Each selection opens the full editor with live preview and export.
           </p>
         </div>
-        <span className="text-sm text-[rgba(245,240,232,0.45)] sm:pb-1 sm:text-base">{visibleTemplates.length} templates</span>
+
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--rm-soft)]" />
+          <input
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            placeholder="Search templates"
+            className="h-12 w-full rounded-full border border-[var(--rm-line)] bg-white pl-11 pr-4 text-sm font-medium text-[var(--rm-text)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-[var(--rm-soft)] focus:border-[var(--rm-green)]"
+          />
+        </label>
       </div>
 
-      <div className="-mx-4 mb-8 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-        {Object.entries(CATEGORIES).map(([cat, names]) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setCategory(cat)}
-            className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              category === cat
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'border border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
-            }`}
-          >
-            {cat}
-            {cat !== 'All' && (
-              <span className={`ml-1.5 text-[10px] ${category === cat ? 'opacity-70' : 'opacity-50'}`}>
-                {names.length}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          {Object.entries(CATEGORIES).map(([cat, names]) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCategory(cat)}
+              className={`h-10 flex-shrink-0 rounded-full px-4 text-sm font-semibold transition-all ${
+                category === cat
+                  ? 'border border-[var(--rm-black)] bg-[var(--rm-black)] text-white'
+                  : 'border border-[var(--rm-line)] bg-white text-[var(--rm-muted)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-[var(--rm-black)] hover:text-[var(--rm-text)]'
+              }`}
+            >
+              {cat}
+              {cat !== 'All' && (
+                <span className={`ml-1.5 text-[10px] ${category === cat ? 'opacity-70' : 'opacity-50'}`}>
+                  {names.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm font-semibold text-[var(--rm-soft)]">
+          {visibleTemplates.length} shown
+        </span>
       </div>
 
-      <TemplateGallery templates={visibleTemplates} />
+      {visibleTemplates.length > 0 ? (
+        <TemplateGallery templates={visibleTemplates} />
+      ) : (
+        <div className="rounded-2xl border border-dashed border-[var(--rm-line)] bg-[var(--rm-panel)] px-5 py-12 text-center">
+          <p className="text-base font-semibold text-[var(--rm-text)]">No templates match that filter</p>
+          <p className="mt-2 text-sm text-[var(--rm-muted)]">Try another keyword or switch back to All.</p>
+        </div>
+      )}
     </>
   )
 }

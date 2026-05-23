@@ -23,13 +23,19 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code     = searchParams.get('code')
   const errParam = searchParams.get('error')
+  const errCode  = searchParams.get('error_code')
   const errDesc  = searchParams.get('error_description')
-  const next     = '/builder'
+  const next     = safeNextPath(searchParams.get('next'))
 
-  // Supabase sends ?error=... when OAuth fails at the provider level (bad credentials, user denied, etc.)
+  // Supabase also sends ?error=... for expired email confirmation links.
+  // Keep that separate from OAuth failures so users see the right recovery path.
   if (errParam) {
-    console.error('[OAuth Callback] Provider error:', errParam, errDesc)
-    const params = new URLSearchParams({ error: 'oauth_failed', detail: errDesc ?? errParam })
+    console.error('[Auth Callback] Provider/link error:', errParam, errCode, errDesc)
+    const expiredLink = errCode === 'otp_expired' || /expired|invalid/i.test(errDesc ?? '')
+    const params = new URLSearchParams({
+      error: expiredLink ? 'auth_link_expired' : 'oauth_failed',
+      detail: errDesc ?? errCode ?? errParam,
+    })
     return NextResponse.redirect(`${origin}/login?${params.toString()}`)
   }
 
@@ -111,4 +117,9 @@ function getFirstName(metadata: Record<string, unknown>): string {
   }
 
   return 'there'
+}
+
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard/templates'
+  return value
 }

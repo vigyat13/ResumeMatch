@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import {
   getTemplateBadge,
   getTemplateDescription,
@@ -26,24 +27,6 @@ interface Props {
 
 const PAGE_SIZE = 20
 
-// Normalised base CSS for gallery thumbnails — overrides browser defaults so
-// every card renders at a consistent text size regardless of the template's
-// own CSS (which is stripped so cards don't bleed colour into each other).
-const GALLERY_BASE_CSS = `
-  body,html{margin:0;padding:0}
-  *{box-sizing:border-box}
-  body{font-family:Arial,sans-serif;font-size:13px;line-height:1.4;color:#111;padding:24px 28px}
-  h1{font-size:17px;font-weight:700;margin:0 0 3px}
-  h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid #333;padding-bottom:2px;margin:10px 0 5px}
-  h3{font-size:12px;font-weight:600;margin:0 0 2px}
-  p,li{font-size:11.5px;line-height:1.4;margin:0 0 2px}
-  ul{margin:3px 0 3px 14px;padding:0}
-  a{color:inherit;text-decoration:none}
-  .twocol,.two-col,.layout-two-col,.europass-wrap{display:flex;gap:0}
-  .twocol .sidebar,.two-col .left,.sidebar,.left-col{width:30%;padding:16px 12px;background:#f2f2f2}
-  .twocol .main,.two-col .right,.main-col,.right-col{width:70%;padding:16px 14px}
-`
-
 export function TemplateGallery({ templates }: Props) {
   const [shown, setShown] = useState(PAGE_SIZE)
 
@@ -53,50 +36,54 @@ export function TemplateGallery({ templates }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {visible.map(t => {
           // Pick persona-matched sample for a more realistic thumbnail
           const sample = pickSampleForTemplate(t.name)
           return (
             <Link
               key={t.id}
-              href={`/builder/${t.id}`}
-              className="group rounded-2xl border-2 border-border hover:border-primary overflow-hidden transition-all duration-200 hover:shadow-xl bg-card"
+              href={`/builder/${t.id}/start`}
+              className="group overflow-hidden rounded-2xl border border-black/[0.02] bg-[var(--rm-panel)] transition-colors duration-200 hover:border-[var(--rm-green)]/45 focus:outline-none focus-visible:border-[var(--rm-green)]"
             >
               {/* Live preview thumbnail */}
-              <div className="h-64 bg-white relative overflow-hidden">
-                <TemplatePreviewClient template={{ ...t, css_content: GALLERY_BASE_CSS }} sample={sample} scale={0.23} />
+              <div className="relative h-72 overflow-hidden bg-white sm:h-64">
+                <TemplatePreviewClient template={t} sample={sample} scale={0.23} />
                 {isCompanyInspiredTemplate(t.name) && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-950 text-white z-10">
-                    FAANG-type
+                  <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-md bg-slate-950 px-2 py-1 text-[10px] font-bold text-white">
+                    Company style
                   </div>
                 )}
                 {t.tier === 'pro' && (
-                  <div className="absolute top-2 right-2 flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-amber-900 z-10">
+                  <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-md bg-amber-400 px-2 py-1 text-[9px] font-bold text-amber-900">
                     PRO
                   </div>
                 )}
-                <div className="absolute inset-0 bg-primary/8 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                  <span className="flex items-center gap-1 text-xs font-semibold text-primary bg-white px-3 py-1.5 rounded-full shadow-md">
-                    Use this →
+                <div className="absolute inset-x-0 bottom-0 z-10 flex justify-end bg-gradient-to-t from-black/35 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <span className="flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md">
+                    Use this template <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </div>
 
               {/* Card info */}
-              <div className="p-4 border-t border-border">
-                <h3 className="font-semibold text-sm text-foreground leading-tight">{t.name}</h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="inline-flex items-center rounded-full bg-[var(--color-surface-hover)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+              <div className="border-t border-[var(--rm-line)] p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-base font-semibold leading-tight text-[var(--rm-text)]">{t.name}</h3>
+                  <ArrowUpRight className="mt-1 h-4 w-4 flex-shrink-0 text-[var(--rm-soft)] transition-colors group-hover:text-[var(--rm-green)]" />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--rm-muted)]">
                     {getTemplateBadge(t.name)}
                   </span>
                   {t.is_ats_safe && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--rm-green)]">
+                      <CheckCircle2 className="h-3 w-3" />
                       ATS Safe
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground line-clamp-2 mt-2">
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--rm-muted)]">
                   {getTemplateDescription(t.name, t.description)}
                 </p>
               </div>
@@ -110,18 +97,18 @@ export function TemplateGallery({ templates }: Props) {
         <div className="flex flex-col items-center gap-2 mt-10">
           <button
             onClick={() => setShown(s => s + PAGE_SIZE)}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-accent/5 hover:border-primary/40 transition-all"
+            className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-[var(--rm-line)] bg-white px-6 text-sm font-semibold text-[var(--rm-black)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-[var(--rm-black)]"
           >
             Load {Math.min(PAGE_SIZE, remaining)} more templates
           </button>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs font-semibold text-[var(--rm-soft)]">
             Showing {shown} of {templates.length}
           </p>
         </div>
       )}
 
       {!hasMore && templates.length > PAGE_SIZE && (
-        <p className="text-center text-sm text-muted-foreground mt-10 pb-4">
+        <p className="mt-10 pb-4 text-center text-sm font-semibold text-[var(--rm-soft)]">
           All {templates.length} templates shown.
         </p>
       )}

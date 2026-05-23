@@ -17,6 +17,7 @@
 import { useState } from 'react'
 import { X, Loader2, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { GoogleOneTap } from '@/components/auth/GoogleOneTap'
 
 interface Props {
   onSuccess: () => void
@@ -80,6 +81,11 @@ export function AuthModal({ onSuccess, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <GoogleOneTap
+        context="signup"
+        onError={setError}
+        onSuccess={onSuccess}
+      />
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 

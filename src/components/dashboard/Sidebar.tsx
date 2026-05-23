@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',   href: '/dashboard' },
   { label: 'My Resumes',  href: '/dashboard/resumes' },
   { label: 'Find Jobs',   href: '/dashboard/jobs' },
+  { label: 'Applications', href: '/dashboard/applications' },
   { label: 'Templates',   href: '/dashboard/templates' },
   { label: 'Settings',    href: '/dashboard/settings' },
 ]
@@ -92,7 +93,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
       </div>
     </div>
 
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/96 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/96 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
       {NAV_ITEMS.map(({ label, href }) => {
         const active = isActivePath(pathname, href)
         return (

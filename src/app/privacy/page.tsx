@@ -74,21 +74,21 @@ function LegalPage({
   return (
     <main className="min-h-screen bg-[var(--color-marketing-bg)] text-[var(--color-marketing-text)]">
       <div className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-        <Link href="/" className="inline-flex text-sm font-semibold text-[var(--color-marketing-accent)]">
-          ResumeMatch
+        <Link href="/" className="inline-flex text-sm font-semibold text-[var(--color-marketing-text)]">
+          Resume<span className="text-[var(--color-marketing-accent)]">Match</span>
         </Link>
-        <div className="mt-10 rounded-[2rem] border border-[rgba(245,240,232,0.1)] bg-[rgba(245,240,232,0.035)] p-6 sm:p-10">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[rgba(245,240,232,0.36)]">
+        <div className="mt-10 rounded-[2rem] border border-[var(--color-marketing-line)] bg-[var(--color-marketing-surface)] p-6 sm:p-10">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--color-marketing-muted)]">
             Last updated: April 30, 2026
           </p>
           <h1 className="mt-4 text-4xl font-bold tracking-[-0.03em] sm:text-6xl">{title}</h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[rgba(245,240,232,0.56)]">{subtitle}</p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">{subtitle}</p>
 
           <div className="mt-10 space-y-8">
             {sections.map(section => (
               <section key={section.title}>
                 <h2 className="text-xl font-semibold">{section.title}</h2>
-                <ul className="mt-3 space-y-3 text-sm leading-7 text-[rgba(245,240,232,0.55)]">
+                <ul className="mt-3 space-y-3 text-sm leading-7 text-[var(--color-text-secondary)]">
                   {section.body.map(item => (
                     <li key={item}>{item}</li>
                   ))}
@@ -97,7 +97,7 @@ function LegalPage({
             ))}
           </div>
 
-          <div className="mt-10 rounded-2xl border border-[rgba(77,224,163,0.2)] bg-[rgba(77,224,163,0.06)] p-5 text-sm leading-7 text-[rgba(245,240,232,0.64)]">
+          <div className="mt-10 rounded-2xl border border-[var(--color-marketing-accent)]/20 bg-[var(--color-marketing-accent)]/10 p-5 text-sm leading-7 text-[var(--color-text-secondary)]">
             Questions or requests: contact <a className="font-semibold text-[var(--color-marketing-accent)]" href="mailto:hello@resumematch.live">hello@resumematch.live</a>.
           </div>
         </div>

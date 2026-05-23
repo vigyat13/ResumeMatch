@@ -13,7 +13,7 @@ import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
 import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
-import { pickSampleForTemplate } from '@/lib/builder/types'
+import { DEFAULT_RESUME_DATA, pickSampleForTemplate } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
 import { createClient } from '@/lib/supabase/client'
 import { parseLatex }    from '@/lib/builder/parseLatex'
@@ -31,11 +31,13 @@ interface Props {
   templateName: string
   templateHtml: string
   templateCss:  string
+  initialData?: ResumeData
+  startBlank?: boolean
 }
 
-export function BuilderEditor({ templateId, templateName, templateHtml, templateCss }: Props) {
+export function BuilderEditor({ templateId, templateName, templateHtml, templateCss, initialData, startBlank = false }: Props) {
   const sampleData                      = useMemo(() => pickSampleForTemplate(templateName), [templateName])
-  const [data, setData]                 = useState<ResumeData>(sampleData)
+  const [data, setData]                 = useState<ResumeData>(initialData ?? sampleData)
   const [tab, setTab]                   = useState<Tab>('form')
   const [showAuth, setShowAuth]         = useState(false)
   const [isLoggedIn, setIsLoggedIn]     = useState(false)
@@ -58,7 +60,26 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    const saved = localStorage.getItem(DRAFT_KEY)
+    let shouldLoadDraft = true
+    const imported = localStorage.getItem(importKey(templateId))
+    if (imported) {
+      try {
+        const parsed = JSON.parse(imported) as ResumeData
+        if (hasResumeContent(parsed)) {
+          setData(parsed)
+          localStorage.removeItem(importKey(templateId))
+          shouldLoadDraft = false
+        }
+      } catch {}
+    }
+
+    if (startBlank) {
+      localStorage.removeItem(DRAFT_KEY)
+      setData(DEFAULT_RESUME_DATA)
+      shouldLoadDraft = false
+    }
+
+    const saved = shouldLoadDraft ? localStorage.getItem(DRAFT_KEY) : null
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ResumeData
@@ -72,7 +93,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       setIsLoggedIn(!!session?.user)
     })
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [initialData, startBlank, supabase.auth, templateId])
 
   useEffect(() => {
     const t = setTimeout(() => localStorage.setItem(DRAFT_KEY, JSON.stringify(data)), 500)
@@ -233,7 +254,7 @@ ${previewSpacingCss(previewTuning, 'body')}
 
           {/* Logo */}
           <Link href="/builder" className="text-base sm:text-lg" style={{ fontFamily: 'var(--font-headline), sans-serif', fontWeight: 700, letterSpacing: '0.01em', flexShrink: 0 }}>
-            <span>Resume</span><span style={{ color: 'hsl(var(--primary))' }}>Match</span>
+            <span>Resume</span><span style={{ color: 'var(--color-accent)' }}>Match</span>
           </Link>
 
           {/* Breadcrumb */}
@@ -546,6 +567,10 @@ function spacingLabel(value: number): string {
 
 function safeFileName(value: string): string {
   return value.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'resume'
+}
+
+function importKey(templateId: string): string {
+  return `resumematch-builder-import-${templateId}`
 }
 
 function downloadButtonLabel(status: 'idle' | 'saving' | 'downloading' | 'ready'): string {

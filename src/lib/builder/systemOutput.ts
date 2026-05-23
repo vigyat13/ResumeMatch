@@ -63,6 +63,10 @@ function displayUrl(raw: string): string {
   return clean(raw).replace(/^https?:\/\//i, '').replace(/\/$/, '')
 }
 
+function contactLinkLabel(kind: 'github' | 'linkedin'): string {
+  return kind === 'github' ? 'GitHub' : 'LinkedIn'
+}
+
 function escHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -96,8 +100,8 @@ function contactParts(json: StructuredResumeJson): string[] {
     json.contact.email,
     json.contact.phone,
     json.contact.location,
-    json.contact.linkedin,
-    json.contact.github,
+    json.contact.linkedin ? contactLinkLabel('linkedin') : '',
+    json.contact.github ? contactLinkLabel('github') : '',
     json.contact.portfolio,
   ].filter(Boolean)
 }
@@ -229,8 +233,8 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
   if (json.contact.phone)     contactParts.push(escLatex(json.contact.phone))
   if (json.contact.email)     contactParts.push(`\\href{mailto:${escLatex(json.contact.email)}}{\\underline{${escLatex(json.contact.email)}}}`)
   if (json.contact.location)  contactParts.push(escLatex(json.contact.location))
-  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(displayUrl(json.contact.linkedin))}}}`)
-  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(displayUrl(json.contact.github))}}}`)
+  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(contactLinkLabel('linkedin'))}}}`)
+  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(contactLinkLabel('github'))}}}`)
   if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayUrl(json.contact.portfolio))}}}`)
   const contactLine = contactParts.join(' $|$ ')
 

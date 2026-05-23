@@ -9,8 +9,8 @@ export function renderTemplate(html: string, data: ResumeData): string {
     data.email     ? `<a href="mailto:${esc(data.email)}" style="color:inherit;text-decoration:none">${esc(data.email)}</a>` : null,
     data.phone     ? esc(data.phone) : null,
     data.location  ? esc(data.location) : null,
-    data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(data.linkedin)}</a>` : null,
-    data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(data.github)}</a>` : null,
+    data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(contactLinkLabel('linkedin'))}</a>` : null,
+    data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(contactLinkLabel('github'))}</a>` : null,
     data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(data.portfolio)}</a>` : null,
   ].filter(Boolean).join(' | ')
 
@@ -22,8 +22,8 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{email\}\}/g,     esc(data.email))
     .replace(/\{\{phone\}\}/g,     esc(data.phone))
     .replace(/\{\{location\}\}/g,  esc(data.location))
-    .replace(/\{\{github\}\}/g,    esc(data.github))
-    .replace(/\{\{linkedin\}\}/g,  esc(data.linkedin))
+    .replace(/\{\{github\}\}/g,    data.github ? esc(contactLinkLabel('github')) : '')
+    .replace(/\{\{linkedin\}\}/g,  data.linkedin ? esc(contactLinkLabel('linkedin')) : '')
     .replace(/\{\{portfolio\}\}/g, esc(data.portfolio))
     .replace(/\{\{summary\}\}/g,   esc(data.summary))
     .replace(/\{\{experience\}\}/g, renderExperience(data.experience))
@@ -216,4 +216,8 @@ function linkHref(url: string): string {
   const u = (url ?? '').trim()
   if (!u) return '#'
   return /^https?:\/\//i.test(u) ? esc(u) : `https://${esc(u)}`
+}
+
+function contactLinkLabel(kind: 'github' | 'linkedin'): string {
+  return kind === 'github' ? 'GitHub' : 'LinkedIn'
 }

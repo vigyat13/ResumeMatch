@@ -114,10 +114,10 @@ export function BuilderForm({ data, onChange }: Props) {
             <Input value={data.location} onChange={v => set('location', v)} placeholder="New York, NY" />
           </FieldGroup>
           <FieldGroup label="GitHub">
-            <Input value={data.github} onChange={v => set('github', v)} placeholder="github.com/handle" />
+            <Input value={data.github} onChange={v => set('github', v)} placeholder="https://github.com/handle" />
           </FieldGroup>
           <FieldGroup label="LinkedIn">
-            <Input value={data.linkedin} onChange={v => set('linkedin', v)} placeholder="linkedin.com/in/handle" />
+            <Input value={data.linkedin} onChange={v => set('linkedin', v)} placeholder="https://www.linkedin.com/in/handle" />
           </FieldGroup>
           <FieldGroup label="Portfolio / Website">
             <Input value={data.portfolio} onChange={v => set('portfolio', v)} placeholder="yoursite.dev" />

@@ -14,10 +14,16 @@
  */
 
 import mammoth from 'mammoth'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { DOMMatrix, DOMPoint, DOMRect } from '@napi-rs/canvas'
 import { extractSkills } from './skills'
 import type { ResumeData } from '@/lib/builder/types'
 import { parseResumeToBuilderData } from './structuredParser'
+
+const pdfWorkerSrc = pathToFileURL(
+  path.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
+).href
 
 const pdfGlobal = globalThis as Record<string, unknown>
 pdfGlobal.DOMMatrix ??= DOMMatrix
@@ -99,11 +105,16 @@ async function parsePdf(buffer: Buffer): Promise<string> {
   // Dynamic import keeps Next route collection stable and avoids bundling it
   // into a browser/edge-like execution path.
   const { PDFParse } = await import('pdf-parse') as {
-    PDFParse: new (options: { data: Buffer | Uint8Array }) => {
-      getText: () => Promise<{ text?: string }>
-      destroy: () => Promise<void>
+    PDFParse: {
+      setWorker: (workerSrc: string) => string
+      new (options: { data: Buffer | Uint8Array }): {
+        getText: () => Promise<{ text?: string }>
+        destroy: () => Promise<void>
+      }
     }
   }
+
+  PDFParse.setWorker(pdfWorkerSrc)
 
   const parser = new PDFParse({ data: buffer })
   try {

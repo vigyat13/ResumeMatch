@@ -13,7 +13,7 @@ import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
 import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
-import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
+import { DEFAULT_RESUME_DATA, pickSampleForTemplate } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
 import { createClient } from '@/lib/supabase/client'
 import { parseLatex }    from '@/lib/builder/parseLatex'
@@ -57,6 +57,11 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const imageInputRef                         = useRef<HTMLInputElement>(null)
 
   const supabase = useMemo(() => createClient(), [])
+  const sampleData = useMemo(() => pickSampleForTemplate(templateName), [templateName])
+  const previewData = useMemo(
+    () => hasResumeContent(data) ? data : sampleData,
+    [data, sampleData]
+  )
 
   useEffect(() => {
     let shouldLoadDraft = true
@@ -101,7 +106,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     return () => clearTimeout(t)
   }, [data])
 
-  const systemOutput = useMemo(() => buildResumeSystemOutput(data), [data])
+  const systemOutput = useMemo(() => buildResumeSystemOutput(previewData), [previewData])
   const latexCode    = systemOutput.latex
   const previewTuning = useMemo(
     () => ({ spacing, contentScale, cropBottomMm }),
@@ -359,7 +364,7 @@ ${previewSpacingCss(previewTuning, 'body')}
           {/* Right panel — live preview */}
           <div className={`${mobilePane === 'preview' ? 'flex' : 'hidden'} min-h-[calc(100dvh-157px)] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-8 print:bg-white print:p-0 sm:px-8 sm:py-8 lg:flex lg:min-h-0`}>
             <div className="print-target max-w-full">
-              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
+              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={previewData} tuning={previewTuning} />
             </div>
           </div>
           <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
@@ -552,7 +557,7 @@ ${previewSpacingCss(previewTuning, 'body')}
 
       {/* Print target */}
       <div className="hidden print:block print-target">
-        <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={data} tuning={previewTuning} />
+        <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={previewData} tuning={previewTuning} />
       </div>
     </>
   )

@@ -13,7 +13,7 @@ import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
 import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
-import { DEFAULT_RESUME_DATA, pickSampleForTemplate } from '@/lib/builder/types'
+import { DEFAULT_RESUME_DATA } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
 import { createClient } from '@/lib/supabase/client'
 import { parseLatex }    from '@/lib/builder/parseLatex'
@@ -36,8 +36,7 @@ interface Props {
 }
 
 export function BuilderEditor({ templateId, templateName, templateHtml, templateCss, initialData, startBlank = false }: Props) {
-  const sampleData                      = useMemo(() => pickSampleForTemplate(templateName), [templateName])
-  const [data, setData]                 = useState<ResumeData>(initialData ?? sampleData)
+  const [data, setData]                 = useState<ResumeData>(initialData ?? DEFAULT_RESUME_DATA)
   const [tab, setTab]                   = useState<Tab>('form')
   const [showAuth, setShowAuth]         = useState(false)
   const [isLoggedIn, setIsLoggedIn]     = useState(false)
@@ -83,8 +82,10 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ResumeData
-        if (hasResumeContent(parsed)) {
+        if (hasResumeContent(parsed) && !isDemoResumeData(parsed)) {
           setTimeout(() => setData(parsed), 0)
+        } else if (isDemoResumeData(parsed)) {
+          localStorage.removeItem(DRAFT_KEY)
         }
       } catch {}
     }
@@ -605,6 +606,37 @@ function hasResumeContent(data: ResumeData): boolean {
     ) ||
     data.skills?.some(skill => skill.name.trim())
   )
+}
+
+const DEMO_SAMPLE_NAMES = new Set([
+  'pratik singh',
+  'nishant yadav',
+  'suryansh',
+  'rishit',
+  'krishna',
+  'bruce wayne',
+  'alex morgan',
+  'jordan blake',
+  'riley chen',
+  'morgan lee',
+  'casey reed',
+  'taylor brooks',
+])
+
+const DEMO_HANDLE_PATTERN = /demo-(?:pratik|nishant|suryansh|rishit|krishna|bruce|alex|jordan|riley|morgan|casey|taylor)/i
+
+function isDemoResumeData(data: ResumeData): boolean {
+  const name = data.name?.trim().toLowerCase()
+  if (name && DEMO_SAMPLE_NAMES.has(name)) return true
+
+  const links = [
+    data.github,
+    data.linkedin,
+    data.portfolio,
+    ...(data.projects ?? []).map(project => project.link),
+  ].filter(Boolean).join(' ')
+
+  return DEMO_HANDLE_PATTERN.test(links)
 }
 
 function printA4Document(html: string, onPrintOpened: () => void) {

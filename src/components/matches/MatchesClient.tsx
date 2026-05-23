@@ -20,7 +20,7 @@ interface Props {
 
 const EXAMPLES = [
   'backend engineer remote fresher',
-  'frontend developer Bangalore React',
+  'frontend developer Austin React',
   'data analyst internship Python SQL',
 ]
 
@@ -36,18 +36,18 @@ const SOURCES = [
 ] as const
 
 const MOCK_JOBS = [
-  { title: 'Backend Engineer',         company: 'Northstar Labs',   location: 'Remote',    source: 'LinkedIn',   match: 86, salary: '₹18-26L' },
-  { title: 'Software Engineer Intern', company: 'Vector AI',        location: 'Bangalore', source: 'Indeed',     match: 78, salary: '₹40k/mo' },
-  { title: 'Full Stack Developer',     company: 'CircuitWorks',     location: 'Gurgaon',   source: 'Greenhouse', match: 74, salary: '₹14-22L' },
-  { title: 'Platform Engineer',        company: 'Orbit Systems',    location: 'Hybrid',    source: 'Lever',      match: 69, salary: '₹16-24L' },
-  { title: 'API Developer',            company: 'Currents Inc',     location: 'Mumbai',    source: 'Glassdoor',  match: 65, salary: '₹12-18L' },
+  { title: 'Backend Engineer',         company: 'Northstar Labs',   location: 'Remote',        source: 'LinkedIn',   match: 86, salary: '$115k-145k' },
+  { title: 'Software Engineer Intern', company: 'Vector AI',        location: 'Austin',        source: 'Indeed',     match: 78, salary: '$28/hr' },
+  { title: 'Full Stack Developer',     company: 'CircuitWorks',     location: 'Chicago',       source: 'Greenhouse', match: 74, salary: '$105k-132k' },
+  { title: 'Platform Engineer',        company: 'Orbit Systems',    location: 'Hybrid',        source: 'Lever',      match: 69, salary: '$118k-150k' },
+  { title: 'API Developer',            company: 'Currents Inc',     location: 'New York',      source: 'Glassdoor',  match: 65, salary: '$110k-138k' },
 ] as const
 
 // Naive parser to extract chips from query — visual only, real parsing happens server-side later
 function parsePrompt(q: string) {
   const lower = q.toLowerCase()
   const role = q.match(/(backend|frontend|fullstack|full[- ]stack|data|platform|software|ml|ai|devops|mobile|product|design)[\s-]*\w*/i)?.[0]
-  const cities = ['bangalore','mumbai','delhi','gurgaon','noida','hyderabad','pune','chennai','remote','hybrid','onsite']
+  const cities = ['austin','chicago','new york','san francisco','seattle','boston','denver','remote','hybrid','onsite']
   const location = cities.find(c => lower.includes(c))
   const level = ['fresher','intern','junior','mid','senior','staff','principal'].find(l => lower.includes(l))
   const stack = ['react','node','python','sql','java','go','rust','typescript','aws','gcp','docker','kubernetes']
@@ -170,7 +170,7 @@ export function MatchesClient({ initialMatches, resumes }: Props) {
                 <input
                   value={query}
                   onChange={event => setQuery(event.target.value)}
-                  placeholder="Search jobs: backend engineer in Gurgaon, remote, fresher..."
+                  placeholder="Search jobs: backend engineer in Austin, remote, fresher..."
                   className="min-h-14 flex-1 bg-transparent text-base font-medium text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] sm:text-lg"
                   autoFocus
                 />

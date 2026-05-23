@@ -19,7 +19,7 @@ export default function Image() {
           background: '#080808',
           color: '#f5f0e8',
           padding: 64,
-          fontFamily: 'Arial, sans-serif',
+          fontFamily: 'Inter, sans-serif',
           position: 'relative',
           overflow: 'hidden',
         }}

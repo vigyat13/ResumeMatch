@@ -14,14 +14,45 @@
  */
 
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+
+const DASHBOARD_LOCKED = true
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  if (DASHBOARD_LOCKED) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background px-5 py-12 text-foreground">
+        <section className="w-full max-w-xl rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Dashboard locked</p>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight">Dashboard access is paused for now.</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            We are keeping the dashboard private while this area is being finished. The resume builder is still available.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/builder"
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Open builder
+            </Link>
+            <Link
+              href="/"
+              className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
+            >
+              Back home
+            </Link>
+          </div>
+        </section>
+      </main>
+    )
+  }
+
   const supabase = await createClient()
 
   // Server-side auth check — middleware also does this, but belt-and-suspenders

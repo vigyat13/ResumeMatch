@@ -74,8 +74,8 @@ function CookieBanner() {
         width: "min(720px, calc(100vw - 28px))",
         border: "1px solid rgba(245,240,232,0.12)",
         borderRadius: 26,
-        background: "rgba(250,249,245,0.96)",
-        boxShadow: "0 28px 100px rgba(22,22,22,0.18)",
+        background: "rgba(14,14,14,0.94)",
+        boxShadow: "0 28px 100px rgba(0,0,0,0.45)",
         backdropFilter: "blur(22px)",
         padding: 24,
       }}
@@ -83,11 +83,11 @@ function CookieBanner() {
       <div style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "start" }}>
         <div>
           <h2 style={{ fontSize: 20, lineHeight: 1.15, marginBottom: 10 }}>Cookies improve your experience.</h2>
-          <p style={{ fontSize: 13, lineHeight: 1.65, color: "var(--rm-muted)", maxWidth: 580 }}>
+          <p style={{ fontSize: 13, lineHeight: 1.65, color: "rgba(245,240,232,0.52)", maxWidth: 580 }}>
             We use essential cookies for login and security. With your permission, we may also use analytics cookies to understand product usage and improve ResumeMatch.
           </p>
           {preferencesOpen && (
-            <div style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "var(--rm-panel)", color: "var(--rm-muted)", fontSize: 12, lineHeight: 1.6 }}>
+            <div style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgba(245,240,232,0.035)", color: "rgba(245,240,232,0.58)", fontSize: 12, lineHeight: 1.6 }}>
               Essential cookies are always on because authentication needs them. Analytics cookies are optional and can be disabled by choosing essential only.
             </div>
           )}
@@ -97,21 +97,21 @@ function CookieBanner() {
         <button
           type="button"
           onClick={() => saveChoice("accepted")}
-          style={{ border: 0, borderRadius: 12, padding: "12px 16px", background: "var(--rm-black)", color: "white", fontWeight: 900, cursor: "pointer" }}
+          style={{ border: 0, borderRadius: 12, padding: "12px 16px", background: "var(--color-marketing-accent)", color: "var(--color-marketing-bg)", fontWeight: 900, cursor: "pointer" }}
         >
           Accept all
         </button>
         <button
           type="button"
           onClick={() => saveChoice("essential")}
-          style={{ border: "1px solid var(--rm-line)", borderRadius: 12, padding: "12px 16px", background: "var(--rm-cream)", color: "var(--rm-text)", fontWeight: 800, cursor: "pointer" }}
+          style={{ border: "1px solid rgba(245,240,232,0.12)", borderRadius: 12, padding: "12px 16px", background: "rgba(245,240,232,0.04)", color: "var(--color-marketing-text)", fontWeight: 800, cursor: "pointer" }}
         >
           Essential only
         </button>
         <button
           type="button"
           onClick={() => setPreferencesOpen((value) => !value)}
-          style={{ border: "1px solid rgba(47,143,104,0.22)", borderRadius: 12, padding: "12px 16px", background: "rgba(47,143,104,0.08)", color: "var(--color-marketing-accent)", fontWeight: 800, cursor: "pointer" }}
+          style={{ border: "1px solid rgba(52,211,153,0.22)", borderRadius: 12, padding: "12px 16px", background: "rgba(52,211,153,0.06)", color: "var(--color-marketing-accent)", fontWeight: 800, cursor: "pointer" }}
         >
           Preferences
         </button>
@@ -228,29 +228,9 @@ export default function LandingPage() {
     <>
       <style>{`
         html { scroll-behavior: smooth; }
-        body { background: #faf9f5; }
+        body { background: #080808; }
         a { text-decoration: none; color: inherit; }
-        ::selection { background: rgba(47,143,104,0.16); color: #0f0e0e; }
-
-        .landing-shell {
-          --rm-bg: #faf9f5;
-          --rm-panel: #f2f0e8;
-          --rm-panel-strong: #e8e3d5;
-          --rm-text: #0f0e0e;
-          --rm-muted: #44413f;
-          --rm-soft: #77716b;
-          --rm-line: #e2ded4;
-          --rm-black: #161616;
-          --rm-green: #2f8f68;
-          --rm-cream: #fffaf0;
-          --color-marketing-bg: var(--rm-bg);
-          --color-marketing-surface: var(--rm-panel);
-          --color-marketing-text: var(--rm-text);
-          --color-marketing-accent: var(--rm-green);
-          --color-marketing-muted: var(--rm-soft);
-          --color-marketing-faint: rgba(15,14,14,0.18);
-          --color-marketing-line: var(--rm-line);
-        }
+        ::selection { background: rgba(52,211,153,0.2); color: #f5f0e8; }
 
         @keyframes template-float {
           0%, 100% { transform: translateY(0); }
@@ -264,9 +244,9 @@ export default function LandingPage() {
 
         .rm-flow-section {
           overflow: hidden;
-          border-top: 1px solid var(--rm-line);
-          border-bottom: 1px solid var(--rm-line);
-          background: linear-gradient(180deg, rgba(242,240,232,0.72), rgba(232,227,213,0.36), rgba(250,249,245,0.86));
+          border-top: 1px solid rgba(245,240,232,0.045);
+          border-bottom: 1px solid rgba(245,240,232,0.045);
+          background: linear-gradient(180deg, rgba(245,240,232,0.012), rgba(52,211,153,0.018), rgba(245,240,232,0.008));
           padding: 70px 0 62px;
         }
 
@@ -288,16 +268,16 @@ export default function LandingPage() {
           position: absolute;
           width: min(78vw, 360px);
           overflow: hidden;
-          border: 1px solid var(--rm-line);
+          border: 1px solid rgba(245,240,232,0.08);
           border-radius: 18px;
           background: var(--color-marketing-surface);
-          box-shadow: 0 26px 80px rgba(22, 22, 22, 0.12);
+          box-shadow: 0 28px 90px rgba(0,0,0,0.28);
           transition: transform 520ms ease, opacity 520ms ease, border-color 520ms ease;
         }
 
         .rm-flow-card.active {
-          border-color: rgba(47,143,104,0.42);
-          box-shadow: 0 34px 100px rgba(22,22,22,0.16), 0 0 0 1px rgba(47,143,104,0.16);
+          border-color: rgba(52,211,153,0.48);
+          box-shadow: 0 34px 100px rgba(0,0,0,0.34), 0 0 0 1px rgba(52,211,153,0.18);
         }
 
         .rm-flow-card.hidden-card {
@@ -307,8 +287,8 @@ export default function LandingPage() {
         .rm-flow-preview {
           height: 270px;
           overflow: hidden;
-          border-bottom: 1px solid var(--rm-line);
-          background: white;
+          border-bottom: 1px solid rgba(245,240,232,0.08);
+          background: #fff;
         }
 
         .rm-flow-card-body {
@@ -333,7 +313,7 @@ export default function LandingPage() {
         .rm-flow-card-head span {
           flex: none;
           border-radius: 999px;
-          background: rgba(47,143,104,0.10);
+          background: rgba(52,211,153,0.10);
           padding: 8px 12px;
           color: var(--color-marketing-accent);
           font-size: 13px;
@@ -352,9 +332,9 @@ export default function LandingPage() {
 
         .rm-flow-meta span {
           border-radius: 999px;
-          background: var(--rm-cream);
+          background: rgba(245,240,232,0.06);
           padding: 6px 9px;
-          color: var(--rm-muted);
+          color: rgba(245,240,232,0.62);
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }
@@ -365,7 +345,7 @@ export default function LandingPage() {
 
         .rm-flow-card p {
           margin-top: 14px;
-          color: var(--rm-muted);
+          color: rgba(245,240,232,0.48);
           font-size: 15px;
           line-height: 1.45;
         }
@@ -381,8 +361,8 @@ export default function LandingPage() {
           border: 0;
           border-radius: 50%;
           background: var(--color-marketing-accent);
-          color: white;
-          box-shadow: 0 12px 34px rgba(22,22,22,0.16);
+          color: var(--color-marketing-bg);
+          box-shadow: 0 12px 34px rgba(0,0,0,0.26);
           cursor: pointer;
           transition: transform 150ms ease, background 150ms ease;
         }
@@ -410,7 +390,7 @@ export default function LandingPage() {
           height: 10px;
           border: 0;
           border-radius: 999px;
-          background: rgba(15,14,14,0.14);
+          background: rgba(245,240,232,0.16);
           cursor: pointer;
         }
 
@@ -445,12 +425,12 @@ export default function LandingPage() {
           .landing-header { height: 58px !important; padding: 0 12px !important; }
           .landing-header > a:first-child { font-size: 19px !important; }
           .landing-header > div:last-child { gap: 8px !important; }
-          .landing-header a[href="/login"] { display: inline-flex !important; font-size: 12px !important; color: var(--rm-muted) !important; }
+          .landing-header a[href="/login"] { display: inline-flex !important; font-size: 12px !important; color: rgba(245,240,232,0.62) !important; }
           .landing-header a[href="/builder"] { height: 34px !important; padding: 0 12px !important; font-size: 12px !important; }
           .landing-section { padding-left: 16px !important; padding-right: 16px !important; }
           .landing-hero-title { font-size: clamp(44px, 17vw, 72px) !important; min-height: 156px !important; }
           .landing-proof-grid { gap: 10px !important; }
-          .landing-proof-grid > div { padding: 14px !important; border: 1px solid var(--rm-line); }
+          .landing-proof-grid > div { padding: 14px !important; border: 1px solid rgba(245,240,232,0.055); }
           .landing-flow-grid { gap: 14px !important; }
           .landing-flow-grid a { min-height: auto !important; padding: 22px !important; border-radius: 22px !important; }
           .landing-flow-grid h3 { font-size: 24px !important; }
@@ -472,8 +452,8 @@ export default function LandingPage() {
         className="landing-shell"
         style={{
           fontFamily: "var(--font-body), 'Helvetica Neue', sans-serif",
-          background: "var(--rm-bg)",
-          color: "var(--rm-text)",
+          background: "var(--color-marketing-bg)",
+          color: "var(--color-marketing-text)",
           minHeight: "100vh",
           overflowX: "hidden",
         }}
@@ -487,7 +467,7 @@ export default function LandingPage() {
               width: 700,
               height: 700,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(47,143,104,0.10) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(52,211,153,0.055) 0%, transparent 65%)",
             }}
           />
           <div
@@ -498,7 +478,7 @@ export default function LandingPage() {
               width: 600,
               height: 600,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(232,227,213,0.62) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(59,130,246,0.035) 0%, transparent 65%)",
             }}
           />
         </div>
@@ -508,9 +488,9 @@ export default function LandingPage() {
             position: "sticky",
             top: 0,
             zIndex: 100,
-            borderBottom: "1px solid var(--rm-line)",
-            backdropFilter: "blur(18px)",
-            background: "rgba(250,249,245,0.88)",
+            borderBottom: "1px solid rgba(245,240,232,0.055)",
+            backdropFilter: "blur(24px)",
+            background: "rgba(8,8,8,0.82)",
           }}
         >
           <div
@@ -541,14 +521,14 @@ export default function LandingPage() {
                     style={{
                       fontSize: 13,
                       fontWeight: 500,
-                      color: "var(--rm-soft)",
+                      color: "rgba(245,240,232,0.38)",
                       transition: "color 0.2s",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = "var(--color-marketing-text)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "var(--rm-soft)";
+                      e.currentTarget.style.color = "rgba(245,240,232,0.38)";
                     }}
                   >
                     {link.label}
@@ -560,14 +540,14 @@ export default function LandingPage() {
                     style={{
                       fontSize: 13,
                       fontWeight: 500,
-                      color: "var(--rm-soft)",
+                      color: "rgba(245,240,232,0.38)",
                       transition: "color 0.2s",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = "var(--color-marketing-text)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "var(--rm-soft)";
+                      e.currentTarget.style.color = "rgba(245,240,232,0.38)";
                     }}
                   >
                     {link.label}
@@ -581,14 +561,14 @@ export default function LandingPage() {
                 style={{
                   fontSize: 13,
                   fontWeight: 600,
-                  color: "var(--rm-muted)",
+                  color: "rgba(245,240,232,0.35)",
                   transition: "color 0.2s",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = "var(--color-marketing-text)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "var(--rm-muted)";
+                  e.currentTarget.style.color = "rgba(245,240,232,0.35)";
                 }}
               >
                 Log in
@@ -599,8 +579,8 @@ export default function LandingPage() {
                   height: 38,
                   padding: "0 20px",
                   borderRadius: 99,
-                  background: "var(--rm-black)",
-                  color: "white",
+                  background: "var(--color-marketing-accent)",
+                  color: "var(--color-marketing-bg)",
                   fontSize: 13,
                   fontWeight: 800,
                   display: "inline-flex",
@@ -628,7 +608,7 @@ export default function LandingPage() {
                     inset: "-6% -4% auto -4%",
                     height: 360,
                     borderRadius: 40,
-                    background: "linear-gradient(135deg, rgba(47,143,104,0.11), rgba(255,250,240,0.48) 48%, rgba(232,227,213,0.55))",
+                    background: "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(255,255,255,0.015) 48%, rgba(59,130,246,0.05))",
                     filter: "blur(28px)",
                     opacity: 0.9,
                     pointerEvents: "none",
@@ -647,8 +627,8 @@ export default function LandingPage() {
                       height: 52,
                       padding: "0 28px",
                       borderRadius: 99,
-                      background: "var(--rm-black)",
-                      color: "white",
+                      background: "var(--color-marketing-text)",
+                      color: "var(--color-marketing-bg)",
                       fontSize: 14,
                       fontWeight: 800,
                     }}
@@ -663,9 +643,8 @@ export default function LandingPage() {
                       height: 52,
                       padding: "0 28px",
                       borderRadius: 99,
-                      border: "1px solid var(--rm-line)",
-                      background: "var(--rm-cream)",
-                      color: "var(--rm-black)",
+                      border: "1px solid rgba(245,240,232,0.1)",
+                      color: "rgba(245,240,232,0.6)",
                       fontSize: 14,
                       fontWeight: 600,
                     }}
@@ -693,15 +672,14 @@ export default function LandingPage() {
                       style={{
                         padding: "18px 18px",
                         borderRadius: 22,
-                        border: "1px solid var(--rm-line)",
-                        background: "rgba(242,240,232,0.72)",
+                        background: "rgba(245,240,232,0.018)",
                         backdropFilter: "blur(14px)",
                       }}
                     >
                       <div style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: 40, lineHeight: 0.95, color: "var(--color-marketing-text)" }}>
                         {value}
                       </div>
-                      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.55, color: "var(--rm-soft)", letterSpacing: "0.04em" }}>
+                      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.55, color: "rgba(245,240,232,0.38)", letterSpacing: "0.04em" }}>
                         {label}
                       </div>
                     </div>
@@ -711,7 +689,7 @@ export default function LandingPage() {
             </div>
           </section>
 
-          <div style={{ borderTop: "1px solid var(--rm-line)", borderBottom: "1px solid var(--rm-line)", background: "rgba(242,240,232,0.54)" }}>
+          <div style={{ borderTop: "1px solid rgba(245,240,232,0.04)", borderBottom: "1px solid rgba(245,240,232,0.04)", background: "rgba(245,240,232,0.012)" }}>
             <div
               className="landing-section"
               style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 40px", display: "flex", gap: 40, overflowX: "auto", justifyContent: "center" }}
@@ -722,7 +700,7 @@ export default function LandingPage() {
                   style={{
                     fontSize: 12,
                     fontWeight: 800,
-                    color: "var(--rm-soft)",
+                    color: "rgba(245,240,232,0.26)",
                     whiteSpace: "nowrap",
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
@@ -748,7 +726,7 @@ export default function LandingPage() {
                   position: "absolute",
                   inset: "8% -4% 16% -4%",
                   borderRadius: 40,
-                  background: "linear-gradient(135deg, rgba(255,250,240,0.42), rgba(47,143,104,0.08), rgba(232,227,213,0.42))",
+                  background: "linear-gradient(135deg, rgba(245,240,232,0.02), rgba(52,211,153,0.05), rgba(255,255,255,0.012))",
                   filter: "blur(26px)",
                   pointerEvents: "none",
                 }}
@@ -762,7 +740,7 @@ export default function LandingPage() {
                       fontSize: 10,
                       fontWeight: 700,
                       letterSpacing: "0.22em",
-                      color: "var(--rm-soft)",
+                      color: "rgba(245,240,232,0.25)",
                       textTransform: "uppercase",
                     }}
                   >
@@ -772,7 +750,7 @@ export default function LandingPage() {
                 <h2 style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: "clamp(40px, 5vw, 60px)", lineHeight: 0.94, color: "var(--color-marketing-text)", marginBottom: 18 }}>
                   A clearer path from resume to application.
                 </h2>
-                <p style={{ fontSize: 16, lineHeight: 1.72, color: "var(--rm-muted)", maxWidth: 560 }}>
+                <p style={{ fontSize: 16, lineHeight: 1.72, color: "rgba(245,240,232,0.4)", maxWidth: 560 }}>
                   The workflow stays practical: write, improve, match, and apply. No extra noise, no unnecessary steps.
                 </p>
               </div>
@@ -794,9 +772,9 @@ export default function LandingPage() {
                         gridColumn: "span 1",
                         padding: 30,
                         minHeight: 260,
-                        border: "1px solid var(--rm-line)",
+                        border: "1px solid rgba(245,240,232,0.065)",
                         borderRadius: 24,
-                        background: "linear-gradient(180deg, rgba(255,250,240,0.78) 0%, rgba(242,240,232,0.62) 100%)",
+                        background: "linear-gradient(180deg, rgba(245,240,232,0.035) 0%, rgba(245,240,232,0.012) 100%)",
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "space-between",
@@ -804,13 +782,13 @@ export default function LandingPage() {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "translateY(-4px)";
-                        e.currentTarget.style.borderColor = "rgba(47,143,104,0.28)";
-                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(47,143,104,0.09) 0%, rgba(255,250,240,0.72) 100%)";
+                        e.currentTarget.style.borderColor = "rgba(52,211,153,0.28)";
+                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(52,211,153,0.09) 0%, rgba(245,240,232,0.02) 100%)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.borderColor = "var(--rm-line)";
-                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(255,250,240,0.78) 0%, rgba(242,240,232,0.62) 100%)";
+                        e.currentTarget.style.borderColor = "rgba(245,240,232,0.065)";
+                        e.currentTarget.style.background = "linear-gradient(180deg, rgba(245,240,232,0.035) 0%, rgba(245,240,232,0.012) 100%)";
                       }}
                       >
                       {scene.id !== "build" && (
@@ -822,9 +800,9 @@ export default function LandingPage() {
                             marginBottom: 14,
                             padding: "5px 10px",
                             borderRadius: 999,
-                            border: "1px solid var(--rm-line)",
-                            background: "var(--rm-cream)",
-                            color: "var(--rm-muted)",
+                            border: "1px solid rgba(245,240,232,0.1)",
+                            background: "rgba(245,240,232,0.02)",
+                            color: "rgba(245,240,232,0.68)",
                             fontSize: 9,
                             fontWeight: 800,
                             letterSpacing: "0.18em",
@@ -840,8 +818,8 @@ export default function LandingPage() {
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "rgba(47,143,104,0.08)",
-                            border: "1px solid rgba(47,143,104,0.2)",
+                            background: "rgba(52,211,153,0.08)",
+                            border: "1px solid rgba(52,211,153,0.2)",
                             color: "var(--color-marketing-accent)",
                             marginBottom: 22,
                             padding: "8px 12px",
@@ -857,7 +835,7 @@ export default function LandingPage() {
                         <h3 style={{ fontSize: 26, lineHeight: 1.05, color: "var(--color-marketing-text)", marginBottom: 16 }}>
                           {scene.headline}
                         </h3>
-                        <p style={{ fontSize: 14, lineHeight: 1.75, color: "var(--rm-muted)" }}>
+                        <p style={{ fontSize: 14, lineHeight: 1.75, color: "rgba(245,240,232,0.42)" }}>
                           {scene.body}
                         </p>
                       </div>
@@ -882,7 +860,7 @@ export default function LandingPage() {
                             width: "100%",
                             maxWidth: 120,
                             height: 1,
-                            background: "linear-gradient(90deg, rgba(47,143,104,0.12), rgba(47,143,104,0.55), rgba(47,143,104,0.12))",
+                            background: "linear-gradient(90deg, rgba(52,211,153,0.12), rgba(52,211,153,0.55), rgba(52,211,153,0.12))",
                             position: "relative",
                           }}
                         >
@@ -913,8 +891,7 @@ export default function LandingPage() {
                 style={{
                   borderRadius: 28,
                   padding: "56px 48px",
-                  border: "1px solid var(--rm-line)",
-                  background: "rgba(242,240,232,0.72)",
+                  background: "rgba(245,240,232,0.018)",
                   backdropFilter: "blur(18px)",
                   display: "flex",
                   alignItems: "center",
@@ -929,7 +906,7 @@ export default function LandingPage() {
                     <br />
                     into better applications?
                   </h2>
-                  <p style={{ fontSize: 15, color: "var(--rm-muted)", lineHeight: 1.72, maxWidth: 380 }}>
+                  <p style={{ fontSize: 15, color: "rgba(245,240,232,0.38)", lineHeight: 1.72, maxWidth: 380 }}>
                     Start in the builder, improve what matters, and move into matching roles without changing tools.
                   </p>
                 </div>
@@ -943,15 +920,15 @@ export default function LandingPage() {
                       height: 54,
                       padding: "0 32px",
                       borderRadius: 99,
-                      background: "var(--rm-black)",
-                      color: "white",
+                      background: "var(--color-marketing-text)",
+                      color: "var(--color-marketing-bg)",
                       fontSize: 15,
                       fontWeight: 800,
                     }}
                   >
                     Open the builder <ArrowRight size={15} strokeWidth={2.5} />
                   </Link>
-                  <span style={{ fontSize: 11, color: "var(--rm-soft)", paddingLeft: 4, fontWeight: 500 }}>
+                  <span style={{ fontSize: 11, color: "rgba(245,240,232,0.2)", paddingLeft: 4, fontWeight: 500 }}>
                     No credit card · Sign in only at PDF download
                   </span>
                 </div>
@@ -960,14 +937,14 @@ export default function LandingPage() {
           </section>
         </main>
 
-        <footer style={{ borderTop: "1px solid var(--rm-line)", padding: "60px 40px" }}>
+        <footer style={{ borderTop: "1px solid rgba(245,240,232,0.055)", padding: "60px 40px" }}>
           <div style={{ maxWidth: 1280, margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 48, marginBottom: 56 }}>
               <div>
                 <span style={{ fontFamily: "var(--font-headline), sans-serif", fontSize: 20, letterSpacing: "0.01em" }}>
                   Resume<span style={{ color: "var(--color-marketing-accent)" }}>Match</span>
                 </span>
-                <p style={{ marginTop: 10, fontSize: 13, color: "var(--rm-soft)", lineHeight: 1.65, maxWidth: 220 }}>
+                <p style={{ marginTop: 10, fontSize: 13, color: "rgba(245,240,232,0.22)", lineHeight: 1.65, maxWidth: 220 }}>
                   AI-powered resume optimization for modern job seekers.
                 </p>
               </div>
@@ -997,17 +974,17 @@ export default function LandingPage() {
                   },
                 ].map((col) => (
                   <div key={col.head}>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", color: "var(--rm-soft)", textTransform: "uppercase", marginBottom: 18 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", color: "rgba(245,240,232,0.18)", textTransform: "uppercase", marginBottom: 18 }}>
                       {col.head}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
                       {col.links.map((link) =>
                         link.href.startsWith("#") ? (
-                          <a key={link.label} href={link.href} style={{ fontSize: 13, color: "var(--rm-muted)", fontWeight: 500 }}>
+                          <a key={link.label} href={link.href} style={{ fontSize: 13, color: "rgba(245,240,232,0.32)", fontWeight: 500 }}>
                             {link.label}
                           </a>
                         ) : (
-                          <Link key={link.label} href={link.href} style={{ fontSize: 13, color: "var(--rm-muted)", fontWeight: 500 }}>
+                          <Link key={link.label} href={link.href} style={{ fontSize: 13, color: "rgba(245,240,232,0.32)", fontWeight: 500 }}>
                             {link.label}
                           </Link>
                         )
@@ -1017,11 +994,11 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div style={{ paddingTop: 28, borderTop: "1px solid var(--rm-line)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-              <span style={{ fontSize: 10, color: "var(--rm-soft)", fontWeight: 600, letterSpacing: "0.12em" }}>
+            <div style={{ paddingTop: 28, borderTop: "1px solid rgba(245,240,232,0.04)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <span style={{ fontSize: 10, color: "rgba(245,240,232,0.18)", fontWeight: 600, letterSpacing: "0.12em" }}>
                 © {new Date().getFullYear()} RESUMEMATCH
               </span>
-              <span style={{ fontSize: 10, color: "var(--rm-soft)", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              <span style={{ fontSize: 10, color: "rgba(245,240,232,0.18)", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
                 Built for job seekers.
               </span>
             </div>

@@ -102,7 +102,7 @@ function timeAgo(iso: string | null): string {
 
 function formatSalary(job: Job): string | null {
   if (!job.salary_min && !job.salary_max) return null
-  const cur = job.salary_currency ?? '₹'
+  const cur = job.salary_currency ?? '$'
   const fmt = (n: number) => n >= 100_000
     ? `${(n / 100_000).toFixed(0)}L`
     : n >= 1_000

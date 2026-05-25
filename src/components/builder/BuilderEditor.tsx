@@ -13,8 +13,10 @@ import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
 import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
+import { AiOptimizePanel } from './AiOptimizePanel'
 import { DEFAULT_RESUME_DATA, pickSampleForTemplate } from '@/lib/builder/types'
 import type { ResumeData } from '@/lib/builder/types'
+import type { OptimizeMode, OptimizeSummary } from '@/lib/resume/optimizer'
 import { createClient } from '@/lib/supabase/client'
 import { parseLatex }    from '@/lib/builder/parseLatex'
 import { buildResumeSystemOutput } from '@/lib/builder/systemOutput'
@@ -23,8 +25,17 @@ const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false 
 
 const DRAFT_KEY = 'resumematch-builder-draft'
 type Tab = 'form' | 'direct' | 'latex'
+type OptimizeStatus = 'idle' | 'requesting' | 'applying' | 'complete'
 
 interface UploadedImage { name: string; dataUrl: string }
+
+interface OptimizeApiResponse {
+  data?: {
+    optimizedResumeData: ResumeData
+    summary: OptimizeSummary
+  }
+  error?: string
+}
 
 interface Props {
   templateId:   string
@@ -39,12 +50,20 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [data, setData]                 = useState<ResumeData>(initialData ?? DEFAULT_RESUME_DATA)
   const [tab, setTab]                   = useState<Tab>('form')
   const [showAuth, setShowAuth]         = useState(false)
+  const [authIntent, setAuthIntent]     = useState<'download' | 'optimize'>('download')
   const [isLoggedIn, setIsLoggedIn]     = useState(false)
   const [copied, setCopied]             = useState(false)
   const [spacing, setSpacing]           = useState(0)
   const [contentScale, setContentScale] = useState(100)
   const [cropBottomMm, setCropBottomMm] = useState(0)
   const [layoutPanelOpen, setLayoutPanelOpen] = useState(false)
+  const [optimizePanelOpen, setOptimizePanelOpen] = useState(false)
+  const [optimizeStatus, setOptimizeStatus] = useState<OptimizeStatus>('idle')
+  const [optimizeSummary, setOptimizeSummary] = useState<OptimizeSummary | null>(null)
+  const [optimizeError, setOptimizeError] = useState<string | null>(null)
+  const [optimizeStage, setOptimizeStage] = useState<string | null>(null)
+  const [optimizePass, setOptimizePass] = useState(1)
+  const [undoOptimizeData, setUndoOptimizeData] = useState<ResumeData | null>(null)
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit')
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'saving' | 'downloading' | 'ready'>('idle')
 
@@ -70,7 +89,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
       try {
         const parsed = JSON.parse(imported) as ResumeData
         if (hasResumeContent(parsed)) {
-          setData(parsed)
+          setTimeout(() => setData(parsed), 0)
           localStorage.removeItem(importKey(templateId))
           shouldLoadDraft = false
         }
@@ -79,7 +98,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 
     if (startBlank) {
       localStorage.removeItem(DRAFT_KEY)
-      setData(DEFAULT_RESUME_DATA)
+      setTimeout(() => setData(DEFAULT_RESUME_DATA), 0)
       shouldLoadDraft = false
     }
 
@@ -166,7 +185,7 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   }
 
   async function handleDownload() {
-    if (!isLoggedIn) { setShowAuth(true); return }
+    if (!isLoggedIn) { setAuthIntent('download'); setShowAuth(true); return }
     await saveAndDownload()
   }
 
@@ -213,6 +232,11 @@ ${previewSpacingCss(previewTuning, 'body')}
   async function onAuthSuccess() {
     setShowAuth(false)
     setIsLoggedIn(true)
+    if (authIntent === 'optimize') {
+      setOptimizeError(null)
+      setOptimizePanelOpen(true)
+      return
+    }
     await saveAndDownload()
   }
 
@@ -220,6 +244,114 @@ ${previewSpacingCss(previewTuning, 'body')}
     await navigator.clipboard.writeText(activeLatex)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleAiOptimize(input: { mode: OptimizeMode; jobDescription: string }) {
+    if (!isLoggedIn) {
+      setAuthIntent('optimize')
+      setShowAuth(true)
+      setOptimizeError('Sign in to use AI Optimize.')
+      return
+    }
+
+    setTab('form')
+    setMobilePane('edit')
+    setOptimizeStatus('requesting')
+    setOptimizeError(null)
+    setOptimizeSummary(null)
+    setOptimizeStage('Reading resume')
+    setUndoOptimizeData(data)
+
+    try {
+      const response = await fetch('/api/v1/resumes/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeData: data,
+          mode: input.mode,
+          jobDescription: input.jobDescription,
+          pass: optimizePass,
+        }),
+      })
+      const payload = await response.json().catch(() => null) as OptimizeApiResponse | null
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Resume optimization failed.')
+      }
+      if (!payload?.data?.optimizedResumeData) {
+        throw new Error('AI Optimize returned an invalid response.')
+      }
+
+      setOptimizeSummary(payload.data.summary)
+      await applyOptimizedResume(payload.data.optimizedResumeData)
+      setOptimizePass(prev => Math.min(prev + 1, 8))
+      setOptimizeStatus('complete')
+      setOptimizeStage(null)
+    } catch (err) {
+      setOptimizeStatus('idle')
+      setOptimizeStage(null)
+      setUndoOptimizeData(null)
+      setOptimizeError(err instanceof Error ? err.message : 'Resume optimization failed.')
+    }
+  }
+
+  async function applyOptimizedResume(nextData: ResumeData) {
+    setOptimizeStatus('applying')
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+    setOptimizeStage('summary')
+    setData(prev => ({ ...prev, summary: nextData.summary }))
+    await wait(350)
+
+    setOptimizeStage('experience')
+    for (let i = 0; i < nextData.experience.length; i++) {
+      setData(prev => ({
+        ...prev,
+        experience: prev.experience.map((exp, idx) =>
+          idx === i ? nextData.experience[i] : exp
+        ),
+      }))
+      await wait(180)
+    }
+    await wait(200)
+
+    setOptimizeStage('projects')
+    for (let i = 0; i < nextData.projects.length; i++) {
+      setData(prev => ({
+        ...prev,
+        projects: prev.projects.map((proj, idx) =>
+          idx === i ? nextData.projects[i] : proj
+        ),
+      }))
+      await wait(150)
+    }
+    await wait(200)
+
+    setOptimizeStage('skills')
+    setData(prev => ({ ...prev, skills: nextData.skills }))
+    await wait(300)
+
+    setOptimizeStage('extras')
+    setData(prev => ({
+      ...prev,
+      publications: nextData.publications,
+      honors: nextData.honors,
+    }))
+    await wait(200)
+
+    setData(nextData)
+    setEditedLatex(null)
+  }
+
+  function handleUndoOptimize() {
+    if (!undoOptimizeData) return
+    setData(undoOptimizeData)
+    setEditedLatex(null)
+    setUndoOptimizeData(null)
+    setOptimizeStatus('idle')
+    setOptimizeSummary(null)
+    setOptimizeError(null)
+    setOptimizeStage(null)
+    setOptimizePass(1)
   }
 
   function handleDownloadTex() {
@@ -233,6 +365,17 @@ ${previewSpacingCss(previewTuning, 'body')}
   return (
     <>
       {showAuth && <AuthModal onSuccess={onAuthSuccess} onClose={() => setShowAuth(false)} />}
+      <AiOptimizePanel
+        open={optimizePanelOpen}
+        status={optimizeStatus}
+        summary={optimizeSummary}
+        error={optimizeError}
+        activeStage={optimizeStage}
+        canUndo={Boolean(undoOptimizeData)}
+        onClose={() => setOptimizePanelOpen(false)}
+        onOptimize={handleAiOptimize}
+        onUndo={handleUndoOptimize}
+      />
       {layoutPanelOpen && (
         <div className="print:hidden fixed inset-0 z-40 xl:hidden">
           <button
@@ -305,6 +448,14 @@ ${previewSpacingCss(previewTuning, 'body')}
               </button>
             </div>
           )}
+
+          <button
+            onClick={() => setOptimizePanelOpen(true)}
+            className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
+          >
+            <span className="hidden sm:inline">AI Optimize</span>
+            <span className="sm:hidden">AI</span>
+          </button>
 
           <button
             onClick={() => setLayoutPanelOpen(true)}

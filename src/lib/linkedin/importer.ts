@@ -107,6 +107,7 @@ export function linkedinProfileToResumeData(profile: LinkedinProfile): ResumeDat
     })),
     skills: profile.skills.map(s => ({ name: s, level: 80 })),
     projects: [],
+    certifications: profile.certifications.map(c => [c.name, c.issuer, c.date].filter(Boolean).join(' — ')),
     publications: profile.publications.map(p => p.title),
     honors: profile.honors ?? [],
   }

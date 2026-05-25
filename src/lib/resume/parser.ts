@@ -14,21 +14,9 @@
  */
 
 import mammoth from 'mammoth'
-import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { DOMMatrix, DOMPoint, DOMRect } from '@napi-rs/canvas'
 import { extractSkills } from './skills'
 import type { ResumeData } from '@/lib/builder/types'
 import { parseResumeToBuilderData } from './structuredParser'
-
-const pdfWorkerSrc = pathToFileURL(
-  path.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
-).href
-
-const pdfGlobal = globalThis as Record<string, unknown>
-pdfGlobal.DOMMatrix ??= DOMMatrix
-pdfGlobal.DOMPoint ??= DOMPoint
-pdfGlobal.DOMRect ??= DOMRect
 
 export type ParseResult = {
   text:   string
@@ -105,80 +93,19 @@ async function parsePdf(buffer: Buffer): Promise<string> {
   // Dynamic import keeps Next route collection stable and avoids bundling it
   // into a browser/edge-like execution path.
   const { PDFParse } = await import('pdf-parse') as {
-    PDFParse: {
-      setWorker: (workerSrc: string) => string
-      new (options: { data: Buffer | Uint8Array }): {
-        getText: () => Promise<{ text?: string }>
-        destroy: () => Promise<void>
-      }
+    PDFParse: new (options: { data: Buffer | Uint8Array }) => {
+      getText: () => Promise<{ text?: string }>
+      destroy: () => Promise<void>
     }
   }
-
-  PDFParse.setWorker(pdfWorkerSrc)
 
   const parser = new PDFParse({ data: buffer })
   try {
     const data = await parser.getText()
-    return appendPdfLinks(data.text ?? '', await extractPdfLinks(buffer))
+    return data.text ?? ''
   } finally {
     await parser.destroy()
   }
-}
-
-async function extractPdfLinks(buffer: Buffer): Promise<string[]> {
-  try {
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs') as {
-      getDocument: (options: { data: Uint8Array; disableWorker: boolean }) => {
-        promise: Promise<{
-          numPages: number
-          getPage: (pageNumber: number) => Promise<{
-            getAnnotations: (options: { intent: 'display' }) => Promise<Array<{
-              subtype?: string
-              url?: string
-              unsafeUrl?: string
-            }>>
-          }>
-          destroy: () => Promise<void>
-        }>
-      }
-    }
-    const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true }).promise
-    const urls: string[] = []
-
-    try {
-      for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
-        const page = await doc.getPage(pageNumber)
-        const annotations = await page.getAnnotations({ intent: 'display' })
-        for (const annotation of annotations) {
-          if (annotation.subtype !== 'Link') continue
-          const url = clean(annotation.url ?? annotation.unsafeUrl ?? '')
-          if (url) urls.push(url)
-        }
-      }
-    } finally {
-      await doc.destroy()
-    }
-
-    return unique(urls)
-  } catch (error) {
-    console.warn('[Parser] Could not extract PDF link annotations:', error)
-    return []
-  }
-}
-
-function appendPdfLinks(text: string, urls: string[]): string {
-  if (!urls.length) return text
-
-  const lines = urls.map(url => {
-    if (/linkedin\.com/i.test(url)) return `LinkedIn URL: ${url}`
-    if (/github\.com\/[^/]+$/i.test(url)) return `GitHub URL: ${url}`
-    if (/github\.com/i.test(url)) return `Project GitHub URL: ${url}`
-    if (/udemy\.com\/certificate/i.test(url)) return `Certification URL: ${url}`
-    if (/unstop\.com\/certificate/i.test(url)) return `Hackathon Certificate URL: ${url}`
-    return `Project Live URL: ${url}`
-  })
-
-  return `${text.trim()}\n\nEXTRACTED PDF LINKS\n${lines.join('\n')}`
 }
 
 async function parseDocx(buffer: Buffer): Promise<string> {
@@ -191,16 +118,11 @@ async function parseDocx(buffer: Buffer): Promise<string> {
 function normalizeResumeText(text: string): string {
   return text
     .replace(/\u00a0/g, ' ')
+    .replace(/\f/g, '\n')
+    .replace(/^\s*[-–—]{1,3}\s*\d+\s+of\s+\d+\s*[-–—]{1,3}\s*$/gim, '')
+    .replace(/^\s*page\s+\d+\s+of\s+\d+\s*$/gim, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\r/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-}
-
-function clean(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim()
-}
-
-function unique(values: string[]): string[] {
-  return [...new Map(values.map(value => [value.toLowerCase(), value])).values()]
 }

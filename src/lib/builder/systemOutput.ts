@@ -33,6 +33,7 @@ export interface StructuredResumeJson {
     year: string
   }>
   skills: string[]
+  certifications: string[]
   publications: string[]
   honors: string[]
 }
@@ -44,11 +45,28 @@ export interface ResumeSystemOutput {
   rendercvYaml: string
 }
 
-function clean(value: string | undefined | null): string {
-  return (value ?? '').trim()
+function clean(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (value == null) return ''
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (!Array.isArray(value) && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(clean).filter(Boolean).join(' — ')
+  }
+  return ''
 }
 
-function cleanLines(values: string[] | undefined | null): string[] {
+function cleanLines(values: unknown[] | undefined | null): string[] {
   return (values ?? []).map(clean).filter(Boolean)
 }
 
@@ -59,37 +77,8 @@ function normalizeUrl(raw: string): string {
   return `https://${value}`
 }
 
-function displayLinkLabel(raw: string): string {
-  const value = clean(raw)
-  if (!value) return ''
-
-  const parsed = parseLink(value)
-  const host = parsed?.hostname.replace(/^www\./i, '').toLowerCase() ?? value.replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i, '').toLowerCase()
-
-  if (host.includes('linkedin.com')) return 'LinkedIn'
-  if (host.includes('github.com')) return 'GitHub'
-  if (host.includes('gitlab.com')) return 'GitLab'
-  if (host.includes('bitbucket.org')) return 'Bitbucket'
-  if (host.includes('vercel.app')) return 'Vercel'
-  if (host.includes('netlify.app')) return 'Netlify'
-
-  return host || value
-}
-
 function displayUrl(raw: string): string {
   return clean(raw).replace(/^https?:\/\//i, '').replace(/\/$/, '')
-}
-
-function parseLink(raw: string): URL | null {
-  try {
-    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
-  } catch {
-    return null
-  }
-}
-
-function contactLinkLabel(kind: 'github' | 'linkedin'): string {
-  return kind === 'github' ? 'GitHub' : 'LinkedIn'
 }
 
 function escHtml(value: string): string {
@@ -125,9 +114,9 @@ function contactParts(json: StructuredResumeJson): string[] {
     json.contact.email,
     json.contact.phone,
     json.contact.location,
-    json.contact.linkedin ? contactLinkLabel('linkedin') : '',
-    json.contact.github ? contactLinkLabel('github') : '',
-    json.contact.portfolio ? displayLinkLabel(json.contact.portfolio) : '',
+    json.contact.linkedin,
+    json.contact.github,
+    json.contact.portfolio,
   ].filter(Boolean)
 }
 
@@ -170,6 +159,7 @@ export function toStructuredResumeJson(data: ResumeData): StructuredResumeJson {
       year: clean(entry.year),
     })).filter((entry) => entry.school || entry.degree || entry.cgpa || entry.year),
     skills: (data.skills ?? []).map((entry) => clean(entry.name)).filter(Boolean),
+    certifications: cleanLines(data.certifications),
     publications: cleanLines(data.publications),
     honors: cleanLines(data.honors),
   }
@@ -191,7 +181,7 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
     ]),
     json.projects.length ? '<h2>Projects</h2>' : '',
     ...json.projects.flatMap((entry) => [
-      `<p>${[entry.name, entry.tech, entry.link ? displayLinkLabel(entry.link) : ''].filter(Boolean).map(escHtml).join(' | ')}</p>`,
+      `<p>${[entry.name, entry.tech, entry.link].filter(Boolean).map(escHtml).join(' | ')}</p>`,
       entry.description ? `<p>${escHtml(entry.description)}</p>` : '',
       htmlList(entry.bullets),
     ]),
@@ -199,6 +189,8 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
     ...json.education.map((entry) => `<p>${[entry.school, entry.degree, entry.cgpa ? `CGPA: ${entry.cgpa}` : '', entry.year].filter(Boolean).map(escHtml).join(' | ')}</p>`),
     json.skills.length ? '<h2>Skills</h2>' : '',
     json.skills.length ? `<p>${json.skills.map(escHtml).join(', ')}</p>` : '',
+    json.certifications.length ? '<h2>Certifications & Training</h2>' : '',
+    json.certifications.length ? htmlList(json.certifications) : '',
     json.publications.length ? '<h2>Publications</h2>' : '',
     json.publications.length ? htmlList(json.publications) : '',
     json.honors.length ? '<h2>Honors</h2>' : '',
@@ -258,9 +250,9 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
   if (json.contact.phone)     contactParts.push(escLatex(json.contact.phone))
   if (json.contact.email)     contactParts.push(`\\href{mailto:${escLatex(json.contact.email)}}{\\underline{${escLatex(json.contact.email)}}}`)
   if (json.contact.location)  contactParts.push(escLatex(json.contact.location))
-  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(contactLinkLabel('linkedin'))}}}`)
-  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(contactLinkLabel('github'))}}}`)
-  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayLinkLabel(json.contact.portfolio))}}}`)
+  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(displayUrl(json.contact.linkedin))}}}`)
+  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(displayUrl(json.contact.github))}}}`)
+  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayUrl(json.contact.portfolio))}}}`)
   const contactLine = contactParts.join(' $|$ ')
 
   const lines: string[] = [
@@ -317,7 +309,7 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
     lines.push('    \\resumeSubHeadingListStart')
     for (const proj of json.projects) {
       const techStr = proj.tech ? ` $|$ \\emph{${escLatex(proj.tech)}}` : ''
-      const linkStr = proj.link ? ` $|$ \\href{${escLatex(normalizeUrl(proj.link))}}{\\underline{${escLatex(displayLinkLabel(proj.link))}}}` : ''
+      const linkStr = proj.link ? ` $|$ \\href{${escLatex(normalizeUrl(proj.link))}}{\\underline{${escLatex(displayUrl(proj.link))}}}` : ''
       lines.push(`      \\resumeProjectHeading{\\textbf{${escLatex(proj.name)}}${techStr}${linkStr}}{}`)
       if (proj.bullets.length) {
         lines.push('          \\resumeItemListStart')
@@ -337,6 +329,15 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
     lines.push(`     \\textbf{Skills}{: ${json.skills.map(escLatex).join(', ')}} \\\\`)
     lines.push('    }}')
     lines.push(' \\end{itemize}')
+    lines.push('')
+  }
+
+  if (json.certifications.length) {
+    lines.push('%-----------CERTIFICATIONS & TRAINING-----------')
+    lines.push('\\section{Certifications \\& Training}')
+    lines.push('  \\begin{itemize}[leftmargin=0.15in]')
+    for (const c of json.certifications) lines.push(`    \\item \\small{${escLatex(c)}}`)
+    lines.push('  \\end{itemize}')
     lines.push('')
   }
 
@@ -418,7 +419,7 @@ export function generateRenderCvYamlFromJson(json: StructuredResumeJson): string
     lines.push('    Projects:')
     for (const project of json.projects) {
       lines.push(`      - name: ${yamlString(project.name || 'Project')}`)
-      const summaryParts = [project.tech, project.link ? displayLinkLabel(project.link) : '', project.description].filter(Boolean)
+      const summaryParts = [project.tech, project.link ? displayUrl(project.link) : '', project.description].filter(Boolean)
       if (summaryParts.length) lines.push(`        summary: ${yamlString(summaryParts.join(' | '))}`)
       appendYamlList(lines, '        highlights:', project.bullets, 10)
     }
@@ -428,6 +429,11 @@ export function generateRenderCvYamlFromJson(json: StructuredResumeJson): string
     lines.push('    Skills:')
     lines.push('      - label: "Skills"')
     lines.push(`        details: ${yamlString(json.skills.join(', '))}`)
+  }
+
+  if (json.certifications.length) {
+    lines.push('    Certifications and Training:')
+    appendYamlBulletEntries(lines, json.certifications)
   }
 
   if (json.honors.length) {

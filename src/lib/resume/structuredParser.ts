@@ -127,6 +127,9 @@ export async function parseResumeToBuilderData(text: string, skills: string[]): 
             'Return only valid JSON with this shape:',
             '{"name":"","title":"","email":"","phone":"","location":"","github":"","linkedin":"","portfolio":"","summary":"","experience":[{"company":"","role":"","period":"","bullets":[""]}],"projects":[{"name":"","tech":"","link":"","description":"","bullets":[""]}],"education":[{"school":"","degree":"","cgpa":"","year":""}],"skills":[{"name":"","level":80}],"certifications":[],"honors":[],"publications":[]}',
             'Preserve facts from the resume. Do not invent employers, degrees, dates, metrics, links, or skills.',
+            'When an EXTRACTED PDF LINKS block is present, use those exact URLs instead of nearby visible link labels.',
+            'For github/linkedin/portfolio fields, use profile/contact URLs only. Do not put project, certificate, or email-domain URLs in contact fields.',
+            'For each project link, choose the exact extracted URL that matches that project name or repository slug.',
             'Keep original month-inclusive dates exactly when present, such as "Jun 2021 - Aug 2021".',
             'Only include skills, certifications, links, schools, companies, and projects visible in the source text.',
             'Keep Certifications & Training separate from Honors, Leadership, and Awards.',
@@ -252,11 +255,13 @@ function normalizeHeading(line: string): string {
 function extractContact(lines: string[]): Partial<ResumeData> {
   const joined = lines.slice(0, 18).join(' | ')
   const email = joined.match(EMAIL_PATTERN)?.[0] ?? ''
-  const phone = joined.match(PHONE_PATTERN)?.[0]?.trim() ?? ''
-  const urls = lines.flatMap(line => line.match(new RegExp(URL_PATTERN, 'ig')) ?? [])
-  const linkedin = urls.find(url => /linkedin\.com/i.test(url)) ?? ''
-  const github = urls.find(url => /github\.com/i.test(url)) ?? ''
-  const portfolio = urls.find(url => !/linkedin\.com|github\.com/i.test(url)) ?? ''
+  const phoneSource = lines.slice(0, 25).find(line => /\+|phone/i.test(line)) ?? joined
+  const phone = phoneSource.match(PHONE_PATTERN)?.[0]?.trim() ?? ''
+  const allUrls = extractUrls(lines.join('\n'))
+  const topUrls = extractUrls(joined)
+  const linkedin = allUrls.find(url => /linkedin\.com/i.test(url)) ?? ''
+  const github = allUrls.find(isGithubProfileUrl) ?? allUrls.find(url => /github\.com/i.test(url)) ?? ''
+  const portfolio = topUrls.find(isPortfolioUrl) ?? ''
   const location = inferLocation(lines)
 
   return { email, phone, linkedin, github, portfolio, location }
@@ -654,7 +659,7 @@ function sameLabel(left: string, right: string): boolean {
 }
 
 function restoreFactsFromSource(data: ResumeData, fallback: ResumeData, text: string): ResumeData {
-  return {
+  const restored = {
     ...data,
     email: fallback.email || data.email,
     phone: fallback.phone || data.phone,
@@ -664,6 +669,137 @@ function restoreFactsFromSource(data: ResumeData, fallback: ResumeData, text: st
     experience: restoreEntryDates(data.experience, text, 'period'),
     education: restoreEntryDates(data.education, text, 'year'),
   }
+
+  return restoreLinksFromSource(restored, text)
+}
+
+function restoreLinksFromSource(data: ResumeData, text: string): ResumeData {
+  const urls = extractUrls(text)
+  if (!urls.length) return data
+
+  const linkedin = urls.find(url => /linkedin\.com/i.test(url))
+  const github = urls.find(isGithubProfileUrl)
+  const projectUrls = urls.filter(url =>
+    /github\.com\/[^/]+\/[^/\s]+/i.test(url) ||
+    (!/linkedin\.com|udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?/i.test(url) && !isGithubProfileUrl(url))
+  )
+
+  return {
+    ...data,
+    phone: cleanPhone(data.phone),
+    title: looksLikeBadTitle(data.title) ? '' : data.title,
+    location: looksLikeBadLocation(data.location) ? '' : data.location,
+    linkedin: linkedin ?? data.linkedin,
+    github: github ?? data.github,
+    portfolio: isPortfolioUrl(data.portfolio) ? data.portfolio : '',
+    projects: data.projects.map(project => {
+      const best = bestProjectUrl(project.name, project.link ?? '', projectUrls)
+      return {
+        ...project,
+        link: best || project.link,
+        bullets: removeMismatchedProjectLinkBullets(project.name, project.bullets),
+      }
+    }),
+    honors: appendMissingCredentialUrls(data.honors ?? [], urls),
+  }
+}
+
+function removeMismatchedProjectLinkBullets(projectName: string, bullets: string[]): string[] {
+  return bullets.filter(bullet => {
+    const urls = extractUrls(bullet)
+    if (!urls.length) return true
+    return urls.some(url => projectUrlScore(projectName, url) > 0)
+  })
+}
+
+function cleanPhone(phone: string): string {
+  const plusNumber = phone.match(/\+\d[\d\s().-]{7,}\d/)
+  if (plusNumber) return plusNumber[0].trim()
+  if (/^(?:19|20)\d{2}\s*[-–—]\s*(?:19|20)\d{2}$/.test(phone.trim())) return ''
+  return phone
+}
+
+function looksLikeBadTitle(title: string): boolean {
+  return /percentage|cgpa|programming foundations|systems & reliability/i.test(title) || DATE_PATTERN.test(title)
+}
+
+function looksLikeBadLocation(location: string): boolean {
+  return /programming foundations|systems & reliability|cloud & infrastructure|:/.test(location.toLowerCase())
+}
+
+function bestProjectUrl(projectName: string, currentLink: string, urls: string[]): string {
+  const candidates = unique([
+    ...urls,
+    ...extractUrls(currentLink),
+  ]).filter(url => !/linkedin\.com|udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?/i.test(url))
+  if (!candidates.length) return currentLink
+
+  const scored = candidates
+    .map(url => ({ url, score: projectUrlScore(projectName, url) }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score || Number(/github\.com/i.test(b.url)) - Number(/github\.com/i.test(a.url)))
+
+  return scored[0]?.url ?? currentLink
+}
+
+function projectUrlScore(projectName: string, url: string): number {
+  const haystack = normalizeForMatch(url)
+  const tokens = projectName
+    .split(/[^a-z0-9]+/i)
+    .map(token => token.toLowerCase())
+    .filter(token => token.length >= 3 && !['based', 'full', 'stack', 'system', 'platform', 'website', 'clone'].includes(token))
+  const compactName = normalizeForMatch(projectName)
+
+  let score = 0
+  if (compactName && haystack.includes(compactName)) score += 8
+  for (const token of tokens) {
+    if (haystack.includes(token)) score += 2
+  }
+  if (/github\.com/i.test(url)) score += 1
+  return score
+}
+
+function appendMissingCredentialUrls(honors: string[], urls: string[]): string[] {
+  const credentialUrls = keepMostCompleteUrls(
+    urls.filter(url => /udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?/i.test(url))
+  )
+  const merged = honors.filter(item =>
+    !/https?:\/\/(?:www\.)?(?:udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?)/i.test(item)
+  )
+  for (const url of credentialUrls) {
+    if (!merged.some(item => item.includes(url))) merged.push(url)
+  }
+  return merged.slice(0, 10)
+}
+
+function keepMostCompleteUrls(urls: string[]): string[] {
+  const uniqueUrls = unique(urls)
+  return uniqueUrls.filter(url =>
+    !uniqueUrls.some(other => other.length > url.length && other.toLowerCase().startsWith(url.toLowerCase()))
+  )
+}
+
+function extractUrls(text: string): string[] {
+  return unique(text.match(new RegExp(URL_PATTERN, 'ig')) ?? [])
+    .map(url => url.replace(/[),.;]+$/g, ''))
+}
+
+function isGithubProfileUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`)
+    return /(^|\.)github\.com$/i.test(parsed.hostname) && parsed.pathname.split('/').filter(Boolean).length === 1
+  } catch {
+    return /^https?:\/\/github\.com\/[^/\s]+\/?$/i.test(url) || /^github\.com\/[^/\s]+\/?$/i.test(url)
+  }
+}
+
+function isPortfolioUrl(url: string): boolean {
+  if (!url) return false
+  return !/linkedin\.com|github\.com|udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?|gmail\.com|mailto:/i.test(url)
+}
+
+function normalizeForMatch(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
 function restoreEntryDates<T extends object>(entries: T[], text: string, field: keyof T): T[] {

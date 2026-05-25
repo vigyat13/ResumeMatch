@@ -1,4 +1,5 @@
-import { groq, GROQ_MODELS } from '@/lib/ai/groq'
+import { aiProvider } from '@/lib/ai/provider'
+import { getSystemPrompt } from '@/lib/ai/prompts'
 import type { ResumeData } from '@/lib/builder/types'
 import { SectionType, type ParsedSection, type AIParseResult } from './types'
 
@@ -51,19 +52,7 @@ interface AIResponse {
   warnings: string[]
 }
 
-const SYSTEM_PROMPT = `You are a world-class resume parser. Extract structured information from the given resume text.
-
-Rules:
-1. Extract ALL information accurately — do not invent or guess.
-2. If a field is not present, leave it empty string or empty array.
-3. For skills, assign a confidence level (0-100) based on how explicitly the skill is mentioned.
-4. Classify each text section into one of: header, summary, experience, education, skills, projects, certifications, publications, honors, languages, volunteer, references, unknown.
-5. Return ONLY valid JSON, no markdown, no explanation.
-6. Preserve original formatting of company names, degree names, and proper nouns.
-7. Phone numbers: preserve as-is.
-8. Dates: preserve the original date format.
-9. Bullets: extract each bullet point as a separate array item.
-10. If the text appears to be from a scanned document or has OCR errors, note this in warnings.`
+// System prompt is now centralized in src/lib/ai/prompts.ts
 
 function parseResumeDataFromJson(raw: string): Partial<AIResponse> {
   const cleaned = raw
@@ -135,18 +124,18 @@ JSON schema:
   "warnings": ["any issues detected"]
 }`
 
-  const completion = await groq.chat.completions.create({
-    model: GROQ_MODELS.default,
+  const systemPrompt = getSystemPrompt('resume_parse')
+
+  const raw = await aiProvider.generateText({
+    useCase: 'resume_parse',
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      systemPrompt,
       { role: 'user', content: prompt },
     ],
     temperature: 0.1,
-    max_tokens: 4000,
-    ...(options?.signal ? { signal: options.signal } : {}),
+    maxTokens: 4000,
+    signal: options?.signal,
   })
-
-  const raw = completion.choices[0]?.message?.content ?? ''
   if (!raw) {
     throw new Error('AI returned empty response')
   }
@@ -192,8 +181,9 @@ JSON schema:
       description: p.description || '',
       bullets: p.bullets ?? [],
     })),
-    publications: parsed.publications ?? [],
-    honors: parsed.honors ?? [],
+    certifications: cleanStringList(parsed.certifications),
+    publications: cleanStringList(parsed.publications),
+    honors: cleanStringList(parsed.honors),
   }
 
   const perSection: Record<string, number> = {}
@@ -214,6 +204,32 @@ JSON schema:
   }
 }
 
+function cleanStringList(values: unknown): string[] {
+  if (!Array.isArray(values)) return []
+  return values.map(listItemText).filter(Boolean)
+}
+
+function listItemText(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (value == null) return ''
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (!Array.isArray(value) && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(listItemText).filter(Boolean).join(' — ')
+  }
+  return ''
+}
+
 export async function aiParseFromRawWithFallback(
   text: string,
   options?: { signal?: AbortSignal }
@@ -227,7 +243,7 @@ export async function aiParseFromRawWithFallback(
         name: '', title: '', email: '', phone: '', location: '',
         github: '', linkedin: '', portfolio: '', summary: '',
         experience: [], education: [], skills: [], projects: [],
-        publications: [], honors: [],
+        certifications: [], publications: [], honors: [],
       },
       sections: [{ type: SectionType.Unknown, rawText: text, confidence: 0 }],
       confidence: { overall: 0, perSection: {} as Record<SectionType, number> },

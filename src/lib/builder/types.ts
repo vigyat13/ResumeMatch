@@ -51,6 +51,7 @@ export interface ResumeData {
   projects:   ProjectEntry[]
   education:  EducationEntry[]
   skills:     SkillEntry[]
+  certifications?: string[]
   publications?: string[]
   honors?:       string[]
 }
@@ -81,6 +82,7 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
     { name: '', level: 80 },
     { name: '', level: 80 },
   ],
+  certifications: [],
   publications: [],
   honors:       [],
 }

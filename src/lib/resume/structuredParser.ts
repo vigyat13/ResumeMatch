@@ -9,6 +9,7 @@ type SectionKey =
   | 'projects'
   | 'education'
   | 'skills'
+  | 'certifications'
   | 'honors'
   | 'publications'
 
@@ -58,18 +59,33 @@ const SECTION_ALIASES: Record<SectionKey, string[]> = {
     'technologies',
     'technical skills & interests',
   ],
+  certifications: [
+    'certifications',
+    'certification',
+    'certificates',
+    'certifications and training',
+    'certifications training',
+    'training',
+    'courses',
+    'licenses',
+    'professional certifications',
+  ],
   honors: [
     'honors',
     'honours',
     'achievements',
     'awards',
     'awards and honors',
-    'certifications',
-    'certifications and training',
-    'licenses',
+    'honors and leadership',
+    'honors leadership and extracurricular',
+    'honors leadership extracurricular',
+    'leadership and extracurricular',
+    'leadership extracurricular',
     'leadership',
     'activities',
     'accomplishments',
+    'recognition',
+    'extracurricular',
   ],
   publications: ['publications', 'research', 'papers', 'selected publications'],
 }
@@ -80,6 +96,7 @@ const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
 const PHONE_PATTERN = /(?:\+?\d[\d\s().-]{7,}\d)/
 const URL_PATTERN = /(?:https?:\/\/)?(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?/i
 const BULLET_PATTERN = /^[•*·\-–—]\s+/
+const PAGE_MARKER_PATTERN = /^\s*(?:[-–—]{1,3}\s*)?(?:page\s+)?\d+\s+of\s+\d+(?:\s*[-–—]{1,3})?\s*$/i
 
 export type StructuredParseResult = {
   data: ResumeData
@@ -108,10 +125,13 @@ export async function parseResumeToBuilderData(text: string, skills: string[]): 
           content: [
             'You convert raw resume text into strict JSON for a resume builder.',
             'Return only valid JSON with this shape:',
-            '{"name":"","title":"","email":"","phone":"","location":"","github":"","linkedin":"","portfolio":"","summary":"","experience":[{"company":"","role":"","period":"","bullets":[""]}],"projects":[{"name":"","tech":"","link":"","description":"","bullets":[""]}],"education":[{"school":"","degree":"","cgpa":"","year":""}],"skills":[{"name":"","level":80}],"honors":[],"publications":[]}',
+            '{"name":"","title":"","email":"","phone":"","location":"","github":"","linkedin":"","portfolio":"","summary":"","experience":[{"company":"","role":"","period":"","bullets":[""]}],"projects":[{"name":"","tech":"","link":"","description":"","bullets":[""]}],"education":[{"school":"","degree":"","cgpa":"","year":""}],"skills":[{"name":"","level":80}],"certifications":[],"honors":[],"publications":[]}',
             'Preserve facts from the resume. Do not invent employers, degrees, dates, metrics, links, or skills.',
             'Keep original month-inclusive dates exactly when present, such as "Jun 2021 - Aug 2021".',
             'Only include skills, certifications, links, schools, companies, and projects visible in the source text.',
+            'Keep Certifications & Training separate from Honors, Leadership, and Awards.',
+            'For categorized skill sections, preserve category labels exactly, such as "Programming: Python, C++" as skill names.',
+            'For honors, leadership, extracurricular, and certifications, preserve the complete source line including label, description, provider, and date. Do not summarize or shorten these lines.',
             'Use concise achievement bullets. If a field is unknown, use an empty string or empty array.',
           ].join('\n'),
         },
@@ -148,8 +168,9 @@ function parseWithRules(text: string, providedSkills: string[]): StructuredParse
   const sections = splitSections(lines)
   const contact = extractContact(lines)
   const header = inferHeader(lines, contact)
+  const parsedSkillLines = parseSkillLines(sections.skills ?? [])
   const skillNames = unique([
-    ...parseSkillLines(sections.skills ?? []),
+    ...parsedSkillLines,
     ...providedSkills,
     ...extractSkills(text),
   ]).slice(0, 18)
@@ -163,8 +184,9 @@ function parseWithRules(text: string, providedSkills: string[]): StructuredParse
     projects: parseProjects(sections.projects ?? []),
     education: parseEducation(sections.education ?? []),
     skills: skillNames.map(name => ({ name, level: 80 })),
-    honors: cleanBullets([...(sections.honors ?? [])]).slice(0, 8),
-    publications: cleanBullets([...(sections.publications ?? [])]).slice(0, 8),
+    certifications: parseDatedListItems(sections.certifications ?? []).slice(0, 12),
+    honors: cleanHonorLines(sections.honors ?? [], sections.publications ?? []).slice(0, 16),
+    publications: cleanBullets([...(sections.publications ?? [])]).slice(0, 12),
   })
 
   const warnings = buildWarnings(data)
@@ -181,10 +203,11 @@ function parseWithRules(text: string, providedSkills: string[]): StructuredParse
 
 function toLines(text: string): string[] {
   return text
+    .replace(/\f/g, '\n')
     .replace(/\u00a0/g, ' ')
     .split('\n')
     .map(line => line.replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
+    .filter(line => line && !PAGE_MARKER_PATTERN.test(line))
 }
 
 function splitSections(lines: string[]): Partial<Record<SectionKey, string[]>> {
@@ -205,19 +228,25 @@ function splitSections(lines: string[]): Partial<Record<SectionKey, string[]>> {
 }
 
 function detectHeading(line: string): SectionKey | null {
-  const normalized = line
-    .toLowerCase()
-    .replace(/[#:|]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (normalized.length > 38) return null
+  const normalized = normalizeHeading(line)
+  if (normalized.length > 64) return null
 
   for (const [key, aliases] of Object.entries(SECTION_ALIASES) as [SectionKey, string[]][]) {
-    if (aliases.includes(normalized)) return key
-    if (aliases.some(alias => normalized === `${alias}s`)) return key
+    const normalizedAliases = aliases.map(normalizeHeading)
+    if (normalizedAliases.includes(normalized)) return key
+    if (normalizedAliases.some(alias => normalized === `${alias}s`)) return key
   }
 
   return null
+}
+
+function normalizeHeading(line: string): string {
+  return line
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function extractContact(lines: string[]): Partial<ResumeData> {
@@ -299,11 +328,11 @@ function parseExperience(lines: string[]) {
 }
 
 function parseProjects(lines: string[]) {
-  const blocks = groupTimelineBlocks(lines, true)
+  const blocks = groupProjectBlocks(lines)
   return blocks.map(block => {
-    const heading = block.find(line => !isBullet(line)) ?? ''
+    const heading = block.find(line => !isBullet(line) && !DATE_PATTERN.test(line)) ?? ''
     const link = block.find(line => URL_PATTERN.test(line))?.match(URL_PATTERN)?.[0] ?? ''
-    const bullets = cleanBullets(block.filter(line => line !== heading && !URL_PATTERN.test(line))).slice(0, 4)
+    const bullets = cleanBullets(block.filter(line => line !== heading && !URL_PATTERN.test(line) && !isDateOnly(line))).slice(0, 5)
     const tech = inferTech(heading, block.join(' '))
     return {
       name: heading.replace(/\s+[|•-]\s*.*$/, '').trim(),
@@ -313,6 +342,27 @@ function parseProjects(lines: string[]) {
       bullets: bullets.slice(1),
     }
   }).filter(project => project.name || project.description)
+}
+
+function groupProjectBlocks(lines: string[]): string[][] {
+  const blocks: string[][] = []
+  let current: string[] = []
+
+  for (const line of lines) {
+    const startsProject = !isBullet(line) && !DATE_PATTERN.test(line) && current.length > 0 && current.some(item => isBullet(item)) && looksLikeProjectHeading(line)
+    if (startsProject) {
+      blocks.push(current)
+      current = []
+    }
+    current.push(line)
+  }
+
+  if (current.length) blocks.push(current)
+  return blocks
+}
+
+function looksLikeProjectHeading(line: string): boolean {
+  return /\s[|]\s/.test(line) || /^[A-Z][A-Za-z0-9 .'-]+:\s+\S/.test(line)
 }
 
 function parseEducation(lines: string[]) {
@@ -332,13 +382,38 @@ function parseEducation(lines: string[]) {
 }
 
 function parseSkillLines(lines: string[]): string[] {
-  return lines.flatMap(line =>
-    line
-      .replace(/^[A-Za-z /&]+:/, '')
+  return lines.flatMap(line => {
+    const normalizedLine = line.replace(/\s+/g, ' ').trim()
+    const categoryMatch = normalizedLine.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
+    if (categoryMatch) {
+      return [`${categoryMatch[1].trim()}: ${categoryMatch[2].trim()}`]
+    }
+
+    return normalizedLine
       .split(/[,|•;·]/)
       .map(skill => skill.trim())
-      .filter(skill => skill.length >= 2 && skill.length <= 34 && !DATE_PATTERN.test(skill))
-  )
+      .filter(skill => skill.length >= 2 && skill.length <= 50 && !DATE_PATTERN.test(skill))
+  }).filter(skill => skill.length <= 180)
+}
+
+function parseDatedListItems(lines: string[]): string[] {
+  const cleaned = cleanBullets(lines)
+  const dateOnly = cleaned.filter(line => isDateOnly(line))
+  const items = cleaned.filter(line => !isDateOnly(line))
+
+  if (!items.length) return []
+  if (!dateOnly.length) return items
+
+  return items.map((item, index) => {
+    if (DATE_PATTERN.test(item)) return item
+    const date = dateOnly[index]
+    return date ? `${item} — ${date}` : item
+  })
+}
+
+function isDateOnly(line: string): boolean {
+  const match = line.match(DATE_PATTERN)?.[0] ?? ''
+  return Boolean(match) && line.replace(match, '').replace(/[–—-]/g, '').trim().length === 0
 }
 
 function groupTimelineBlocks(lines: string[], allowShortBlocks = false): string[][] {
@@ -367,10 +442,22 @@ function cleanBullets(lines: string[]): string[] {
     .map(line => line.replace(BULLET_PATTERN, '').trim())
     .filter(line =>
       line.length > 6 &&
+      !PAGE_MARKER_PATTERN.test(line) &&
       !detectHeading(line) &&
       !EMAIL_PATTERN.test(line) &&
       !PHONE_PATTERN.test(line)
     ))
+}
+
+function cleanHonorLines(lines: string[], publicationLines: string[]): string[] {
+  const publicationKeys = new Set(cleanBullets(publicationLines).map(normalizeComparableItem))
+  return cleanBullets(lines).filter(line => {
+    const normalized = normalizeComparableItem(line)
+    if (publicationKeys.has(normalized)) return false
+    if (publicationKeys.size && [...publicationKeys].some(pub => pub.includes(normalized) || normalized.includes(pub))) return false
+    if (/\b(working paper|article on|ieee|medium technical blog|publication|conference|journal)\b/i.test(line)) return false
+    return true
+  })
 }
 
 function inferCompany(first: string, second: string): string {
@@ -396,6 +483,10 @@ function inferTech(heading: string, blockText: string): string {
 }
 
 function cleanResumeData(input: Partial<ResumeData>): ResumeData {
+  const normalizedSkills = normalizeCategorizedSkillEntries(
+    unique(asArray(input.skills).map(skill => clean(skill.name)).filter(Boolean))
+  )
+
   return {
     ...DEFAULT_RESUME_DATA,
     name: clean(input.name),
@@ -427,11 +518,12 @@ function cleanResumeData(input: Partial<ResumeData>): ResumeData {
       cgpa: clean(education.cgpa),
       year: clean(education.year),
     })).filter(education => education.school || education.degree),
-    skills: unique(asArray(input.skills).map(skill => clean(skill.name)).filter(Boolean))
+    skills: normalizedSkills
       .slice(0, 18)
       .map(name => ({ name, level: 80 })),
-    publications: cleanArray(input.publications),
-    honors: cleanArray(input.honors),
+    certifications: cleanArray(input.certifications, 12),
+    publications: cleanArray(input.publications, 12),
+    honors: cleanArray(input.honors, 16),
   }
 }
 
@@ -470,10 +562,95 @@ function mergeParsedWithFallback(parsed: Partial<ResumeData>, fallback: ResumeDa
     experience: nonEmptyArray(parsed.experience) ? parsed.experience : fallback.experience,
     projects: nonEmptyArray(parsed.projects) ? parsed.projects : fallback.projects,
     education: nonEmptyArray(parsed.education) ? parsed.education : fallback.education,
-    skills: nonEmptyArray(parsed.skills) ? parsed.skills : fallback.skills,
-    honors: nonEmptyArray(parsed.honors) ? parsed.honors : fallback.honors,
-    publications: nonEmptyArray(parsed.publications) ? parsed.publications : fallback.publications,
+    skills: mergeSkillEntries(parsed.skills, fallback.skills),
+    certifications: mergeTextItems(parsed.certifications, fallback.certifications),
+    honors: mergeTextItems(parsed.honors, fallback.honors),
+    publications: mergeTextItems(parsed.publications, fallback.publications),
   }
+}
+
+function mergeSkillEntries(parsed: ResumeData['skills'] | undefined, fallback: ResumeData['skills'] | undefined): ResumeData['skills'] {
+  const combined = [...(fallback ?? []), ...(parsed ?? [])]
+  const seen = new Set<string>()
+  const skills: ResumeData['skills'] = []
+  for (const skill of combined) {
+    const name = clean(skill?.name)
+    if (!name) continue
+    const key = name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    skills.push({ name, level: typeof skill.level === 'number' ? skill.level : 80 })
+  }
+  return normalizeCategorizedSkillEntries(skills.map(skill => skill.name)).map(name => ({ name, level: 80 }))
+}
+
+function normalizeCategorizedSkillEntries(values: string[]): string[] {
+  const order: string[] = []
+  const grouped = new Map<string, string[]>()
+  const plain: string[] = []
+  const categorizedValues = new Set<string>()
+
+  for (const value of values) {
+    const match = value.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
+    if (!match) {
+      plain.push(value)
+      continue
+    }
+
+    const label = match[1].trim()
+    const key = label.toLowerCase()
+    const items = match[2].split(/[,;|·]/).map(item => item.trim()).filter(Boolean)
+    if (!grouped.has(key)) {
+      grouped.set(key, [])
+      order.push(label)
+    }
+    const current = grouped.get(key) ?? []
+    for (const item of items) {
+      categorizedValues.add(normalizeSkillValue(item))
+      if (!current.some(existing => existing.toLowerCase() === item.toLowerCase())) {
+        current.push(item)
+      }
+    }
+  }
+
+  return [
+    ...order.map(label => `${label}: ${(grouped.get(label.toLowerCase()) ?? []).join(', ')}`),
+    ...plain.filter(value => !categorizedValues.has(normalizeSkillValue(value))),
+  ]
+}
+
+function normalizeSkillValue(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
+    .replace(/[^a-z0-9+#.]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function mergeTextItems(parsed: unknown[] | undefined, fallback: unknown[] | undefined): string[] {
+  const combined = [...(fallback ?? []), ...(parsed ?? [])].map(clean).filter(Boolean)
+  const result: string[] = []
+  for (const item of combined) {
+    const key = normalizeComparableItem(item)
+    const existingIndex = result.findIndex(existing => normalizeComparableItem(existing) === key || sameLabel(existing, item))
+    if (existingIndex >= 0) {
+      if (item.length > result[existingIndex].length) result[existingIndex] = item
+      continue
+    }
+    result.push(item)
+  }
+  return result
+}
+
+function normalizeComparableItem(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function sameLabel(left: string, right: string): boolean {
+  const leftLabel = left.split(':')[0]?.trim().toLowerCase()
+  const rightLabel = right.split(':')[0]?.trim().toLowerCase()
+  return Boolean(leftLabel && rightLabel && leftLabel === rightLabel && left.includes(':') && right.includes(':'))
 }
 
 function restoreFactsFromSource(data: ResumeData, fallback: ResumeData, text: string): ResumeData {
@@ -562,11 +739,25 @@ function hasMonth(value: string): boolean {
 }
 
 function clean(value: unknown): string {
+  if (!Array.isArray(value) && value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(clean).filter(Boolean).join(' — ')
+  }
   return String(value ?? '').replace(/\s+/g, ' ').trim()
 }
 
-function cleanArray(values: unknown): string[] {
-  return Array.isArray(values) ? unique(values.map(clean).filter(Boolean)).slice(0, 10) : []
+function cleanArray(values: unknown, limit = 10): string[] {
+  return Array.isArray(values) ? unique(values.map(clean).filter(Boolean)).slice(0, limit) : []
 }
 
 function unique(values: string[]): string[] {

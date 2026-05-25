@@ -118,6 +118,9 @@ async function parseDocx(buffer: Buffer): Promise<string> {
 function normalizeResumeText(text: string): string {
   return text
     .replace(/\u00a0/g, ' ')
+    .replace(/\f/g, '\n')
+    .replace(/^\s*[-–—]{1,3}\s*\d+\s+of\s+\d+\s*[-–—]{1,3}\s*$/gim, '')
+    .replace(/^\s*page\s+\d+\s+of\s+\d+\s*$/gim, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\r/g, '\n')
     .replace(/\n{3,}/g, '\n\n')

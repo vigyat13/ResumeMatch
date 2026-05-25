@@ -48,12 +48,18 @@ export function BuilderForm({ data, onChange }: Props) {
   const removeEdu = (i: number) =>
     set('education', data.education.filter((_, idx) => idx !== i))
 
-  // ── Publications / Honors helpers
+  // ── Publications / Certifications / Honors helpers
   const setPub = (i: number, val: string) =>
     set('publications', (data.publications ?? []).map((p, idx) => idx === i ? val : p))
   const addPub = () => set('publications', [...(data.publications ?? []), ''])
   const removePub = (i: number) =>
     set('publications', (data.publications ?? []).filter((_, idx) => idx !== i))
+
+  const setCertification = (i: number, val: string) =>
+    set('certifications', (data.certifications ?? []).map((c, idx) => idx === i ? val : c))
+  const addCertification = () => set('certifications', [...(data.certifications ?? []), ''])
+  const removeCertification = (i: number) =>
+    set('certifications', (data.certifications ?? []).filter((_, idx) => idx !== i))
 
   const setHonor = (i: number, val: string) =>
     set('honors', (data.honors ?? []).map((h, idx) => idx === i ? val : h))
@@ -280,6 +286,37 @@ export function BuilderForm({ data, onChange }: Props) {
         </div>
       </section>
 
+      {/* ── Certifications & Training ────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <SectionHeading className="mb-0">Certifications &amp; Training</SectionHeading>
+          <AddButton onClick={addCertification}>Add</AddButton>
+        </div>
+        <div className="space-y-2">
+          {(data.certifications ?? []).map((certification, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <textarea
+                value={listEditorValue(certification)}
+                onChange={e => setCertification(i, e.target.value)}
+                rows={2}
+                placeholder="Certification or training program — provider — date"
+                className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg
+                           bg-[var(--color-surface)] resize-none focus:outline-none
+                           focus:ring-2 focus:ring-[var(--color-accent)]/40 transition"
+              />
+              <button onClick={() => removeCertification(i)} className="mt-2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors flex-shrink-0">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+          {(data.certifications ?? []).length === 0 && (
+            <button onClick={addCertification} className="w-full py-3 border-2 border-dashed border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors">
+              + Add certification or training
+            </button>
+          )}
+        </div>
+      </section>
+
       {/* ── Publications ──────────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-3">
@@ -290,7 +327,7 @@ export function BuilderForm({ data, onChange }: Props) {
           {(data.publications ?? []).map((pub, i) => (
             <div key={i} className="flex items-start gap-2">
               <textarea
-                value={pub}
+                value={listEditorValue(pub)}
                 onChange={e => setPub(i, e.target.value)}
                 rows={2}
                 placeholder="Journal/conference — paper title — authors"
@@ -321,7 +358,7 @@ export function BuilderForm({ data, onChange }: Props) {
           {(data.honors ?? []).map((h, i) => (
             <div key={i} className="flex items-start gap-2">
               <textarea
-                value={h}
+                value={listEditorValue(h)}
                 onChange={e => setHonor(i, e.target.value)}
                 rows={2}
                 placeholder="Award or recognition (one item per line = one bullet)"
@@ -380,6 +417,27 @@ function Input({
                  focus:ring-[var(--color-accent)]/40 transition"
     />
   )
+}
+
+function listEditorValue(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value == null) return ''
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (!Array.isArray(value) && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(listEditorValue).filter(Boolean).join(' — ')
+  }
+  return ''
 }
 
 function AddButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {

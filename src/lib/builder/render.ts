@@ -25,12 +25,13 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{github\}\}/g,    esc(data.github))
     .replace(/\{\{linkedin\}\}/g,  esc(data.linkedin))
     .replace(/\{\{portfolio\}\}/g, esc(data.portfolio))
-    .replace(/\{\{summary\}\}/g,   esc(data.summary))
+    .replace(/\{\{summary\}\}/g,   formatInline(data.summary))
     .replace(/\{\{experience\}\}/g, renderExperience(data.experience))
     .replace(/\{\{projects\}\}/g,   renderProjects(data.projects))
     .replace(/\{\{education\}\}/g,  renderEducation(data.education))
     .replace(/\{\{skills\}\}/g,     renderSkillsText(data.skills))
     .replace(/\{\{skills_bars\}\}/g, renderSkillsBars(data.skills))
+    .replace(/\{\{certifications\}\}/g, renderList(data.certifications ?? []))
     .replace(/\{\{publications\}\}/g, renderList(data.publications ?? []))
     .replace(/\{\{honors\}\}/g,      renderList(data.honors ?? []))
 
@@ -53,13 +54,16 @@ export function renderTemplate(html: string, data: ResumeData): string {
   if (!html.includes('{{summary}}')     && data.summary.trim()) {
     const summarySection = `<div style="margin-top:12px">
       <div style="font-size:0.85em;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1.5px solid #111;padding-bottom:2px;margin-bottom:6px">Summary</div>
-      <p style="font-size:0.875em;line-height:1.32;margin:0">${esc(data.summary)}</p>
+      <p style="font-size:0.875em;line-height:1.32;margin:0">${formatInline(data.summary)}</p>
     </div>`
     output = insertBeforeFirstSection(output, summarySection)
   }
 
   if (!html.includes('{{honors}}')      && data.honors?.length)
     appendSection('Honors & Awards', renderList(data.honors))
+
+  if (!html.includes('{{certifications}}') && data.certifications?.length)
+    appendSection('Certifications & Training', renderList(data.certifications))
 
   if (!html.includes('{{publications}}') && data.publications?.length)
     appendSection('Publications', renderList(data.publications))
@@ -73,13 +77,13 @@ function renderExperience(entries: ExperienceEntry[]): string {
   return entries.filter(hasExperienceContent).map(e => `
     <div class="exp-entry" style="margin-bottom:10px;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-        <strong style="font-size:0.95em;min-width:0">${esc(e.role)}</strong>
+        <strong style="font-size:0.95em;min-width:0">${formatInline(e.role)}</strong>
         <span style="font-size:0.82em;color:#444;white-space:nowrap;text-align:right;flex-shrink:0">${esc(e.period)}</span>
       </div>
       ${e.company.trim() ? `<div style="font-size:0.875em;color:#444;margin-bottom:3px;font-style:italic">${esc(e.company)}</div>` : ''}
       <ul style="margin:3px 0 0 16px;padding:0">
         ${e.bullets.filter(b => b.trim()).map(b =>
-          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${esc(b)}</li>`
+          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${formatInline(b)}</li>`
         ).join('')}
       </ul>
     </div>
@@ -91,14 +95,14 @@ function renderProjects(entries: ProjectEntry[]): string {
   return entries.filter(hasProjectContent).map(p => `
     <div class="proj-entry" style="margin-bottom:10px;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-        <strong style="font-size:0.95em;min-width:0">${esc(p.name)}</strong>
+        <strong style="font-size:0.95em;min-width:0">${formatInline(p.name)}</strong>
         ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(p.link)}</a>` : ''}
       </div>
       ${p.tech.trim() ? `<div style="font-size:0.82em;color:#444;margin-bottom:3px;font-style:italic">${esc(p.tech)}</div>` : ''}
-      ${p.description.trim() ? `<div style="font-size:0.875em;color:#333;margin-bottom:2px">${esc(p.description)}</div>` : ''}
+      ${p.description.trim() ? `<div style="font-size:0.875em;color:#333;margin-bottom:2px">${formatInline(p.description)}</div>` : ''}
       <ul style="margin:3px 0 0 16px;padding:0">
         ${p.bullets.filter(b => b.trim()).map(b =>
-          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${esc(b)}</li>`
+          `<li style="margin-bottom:2px;font-size:0.875em;line-height:1.32">${formatInline(b)}</li>`
         ).join('')}
       </ul>
     </div>
@@ -118,10 +122,67 @@ function renderEducation(entries: EducationEntry[]): string {
 }
 
 function renderSkillsText(skills: ResumeData['skills']): string {
-  return skills
+  const names = skills
     .filter(s => s.name.trim())
-    .map(s => esc(s.name))
-    .join(', ')
+    .map(s => s.name.trim())
+  if (!names.length) return ''
+
+  const groupedNames = groupCategorizedSkills(names)
+  const hasCategories = groupedNames.some(name => /^[A-Za-z][A-Za-z /&+-]{1,40}:\s+\S/.test(name))
+  if (!hasCategories) return names.map(formatInline).join(', ')
+
+  return groupedNames.map(name => {
+    const match = name.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
+    if (!match) return `<span>${formatInline(name)}</span>`
+    return `<span><strong style="font-weight:700;color:#000">${formatInline(match[1])}:</strong> ${formatInline(match[2])}</span>`
+  }).join('<br/>')
+}
+
+function groupCategorizedSkills(names: string[]): string[] {
+  const order: string[] = []
+  const grouped = new Map<string, string[]>()
+  const plain: string[] = []
+  const categorizedValues = new Set<string>()
+
+  for (const name of names) {
+    const match = name.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
+    if (!match) {
+      plain.push(name)
+      continue
+    }
+
+    const label = match[1].trim()
+    const key = label.toLowerCase()
+    const values = match[2]
+      .split(/[,;|·]/)
+      .map(value => value.trim())
+      .filter(Boolean)
+    if (!grouped.has(key)) {
+      grouped.set(key, [])
+      order.push(label)
+    }
+    const current = grouped.get(key) ?? []
+    for (const value of values) {
+      categorizedValues.add(normalizeSkillValue(value))
+      if (!current.some(existing => existing.toLowerCase() === value.toLowerCase())) {
+        current.push(value)
+      }
+    }
+  }
+
+  return [
+    ...order.map(label => `${label}: ${(grouped.get(label.toLowerCase()) ?? []).join(', ')}`),
+    ...plain.filter(name => !categorizedValues.has(normalizeSkillValue(name))),
+  ]
+}
+
+function normalizeSkillValue(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
+    .replace(/[^a-z0-9+#.]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function renderSkillsBars(skills: ResumeData['skills']): string {
@@ -135,17 +196,45 @@ function renderSkillsBars(skills: ResumeData['skills']): string {
   `).join('')
 }
 
-function renderList(items: string[]): string {
+function renderList(items: unknown[]): string {
   if (!items.length) return ''
   // Split each entry on newlines so one textarea entry with multiple lines
   // becomes multiple bullets.
-  const bullets = items.flatMap(i => i.split('\n').map(l => l.trim())).filter(Boolean)
+  const bullets = items.flatMap(item => listItemText(item).split('\n').map(line => line.trim())).filter(Boolean)
   if (!bullets.length) return ''
   return `<ul style="margin:0 0 0 16px;padding:0">
     ${bullets.map(i =>
-      `<li style="font-size:0.875em;margin-bottom:2px;line-height:1.32">${esc(i)}</li>`
+      `<li style="font-size:0.875em;margin-bottom:2px;line-height:1.32">${formatLabeledLine(i)}</li>`
     ).join('')}
   </ul>`
+}
+
+function formatLabeledLine(value: string): string {
+  const match = value.match(/^([A-Za-z][A-Za-z /&+-]{1,48}):\s*(.+)$/)
+  if (!match) return formatInline(value)
+  return `<strong style="font-weight:700;color:#000">${formatInline(match[1])}:</strong> ${formatInline(match[2])}`
+}
+
+function listItemText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value == null) return ''
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (!Array.isArray(value) && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    const preferred = [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(listItemText).filter(Boolean)
+    if (preferred.length) return preferred.join(' — ')
+  }
+  return ''
 }
 
 function hasExperienceContent(entry: ExperienceEntry): boolean {
@@ -180,6 +269,7 @@ function educationDetails(entry: EducationEntry): string {
 
 function removeEmptySections(html: string): string {
   return html
+    .replace(/<section[^>]*>\s*<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<\/section>/gi, '')
     .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<div[^>]*>\s*<\/div>/gi, '')
     .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<p[^>]*>\s*<\/p>/gi, '')
     .replace(/<h2[^>]*>\s*[^<]*\s*<\/h2>\s*<ul[^>]*>\s*<\/ul>/gi, '')
@@ -209,6 +299,11 @@ export function esc(str: string): string {
     .replace(/"/g,  '&quot;')
     .replace(/'/g,  '&#039;')
     .replace(/\n/g, '<br/>')
+}
+
+function formatInline(value: string): string {
+  const escaped = esc(value)
+  return escaped.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:700;color:#000">$1</strong>')
 }
 
 /** Ensure a URL string has a protocol prefix for use in href attributes. */

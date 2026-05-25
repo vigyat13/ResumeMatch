@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     ...d.projects.flatMap(p  => [p.name, p.tech, ...p.bullets]),
     ...d.education.map(e => `${e.degree} ${e.school}`),
     ...d.skills.map(s => s.name),
+    ...(d.certifications ?? []),
     ...(d.publications ?? []),
     ...(d.honors ?? []),
   ].join('\n')

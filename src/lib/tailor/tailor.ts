@@ -1,4 +1,5 @@
-import { groq, GROQ_MODELS } from '@/lib/ai/groq'
+import { aiProvider } from '@/lib/ai/provider'
+import { getSystemPrompt } from '@/lib/ai/prompts'
 import type { ResumeData } from '@/lib/builder/types'
 import type { JobPosting, TailoredResume, TailorChange, TailorResult, CoverLetter } from './types'
 
@@ -50,21 +51,16 @@ Rules:
 7. Score 0-100 on how well the original resume matches the JD.
 8. Generate a professional cover letter.`
 
-  const completion = await groq.chat.completions.create({
-    model: GROQ_MODELS.default,
+  const raw = await aiProvider.generateText({
+    useCase: 'resume_tailor',
     messages: [
-      {
-        role: 'system',
-        content: 'You are an ATS optimization expert and professional resume writer. You tailor resumes to match specific job descriptions while maintaining truthfulness and ATS compatibility.',
-      },
+      getSystemPrompt('resume_tailor'),
       { role: 'user', content: prompt },
     ],
     temperature: 0.2,
-    max_tokens: 5000,
-    ...(options?.signal ? { signal: options.signal } : {}),
+    maxTokens: 5000,
+    signal: options?.signal,
   })
-
-  const raw = completion.choices[0]?.message?.content ?? ''
   if (!raw) {
     throw new Error('Tailor: AI returned empty response')
   }
@@ -115,8 +111,8 @@ URL: ${url}
   "source": "website name"
 }`
 
-  const completion = await groq.chat.completions.create({
-    model: GROQ_MODELS.default,
+  const raw = await aiProvider.generateText({
+    useCase: 'application_intelligence',
     messages: [
       {
         role: 'system',
@@ -125,10 +121,9 @@ URL: ${url}
       { role: 'user', content: prompt },
     ],
     temperature: 0.1,
-    max_tokens: 2000,
+    maxTokens: 2000,
   })
 
-  const raw = completion.choices[0]?.message?.content ?? ''
   const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
   return JSON.parse(cleaned) as JobPosting
 }

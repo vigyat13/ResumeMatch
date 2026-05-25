@@ -165,7 +165,7 @@ export const BUILT_IN_TEMPLATES: BuilderTemplate[] = [
   <section><h2>Controls / Tools / Skills</h2><p>{{skills}}</p></section>
   <section><h2>Incident & Security Experience</h2>{{experience}}</section>
   <section><h2>Security Projects</h2>{{projects}}</section>
-  <section><h2>Education & Certifications</h2>{{education}}{{honors}}</section>
+  <section><h2>Education & Certifications</h2>{{education}}{{certifications}}</section>
 </main>`,
     css_content: baseCss('#dc2626', 'Arial, Helvetica, sans-serif') + `
 .security .header{display:flex;align-items:center;gap:18px;border-bottom:4px solid #dc2626}
@@ -568,7 +568,7 @@ function leftSidebarHtml(className: string): string {
     <section><h2>Skills</h2><p>{{skills}}</p></section>
     <section><h2>Contact</h2><p>{{contact}}</p></section>
     <section><h2>Education</h2>{{education}}</section>
-    <section><h2>Certifications</h2>{{honors}}</section>
+    <section><h2>Certifications</h2>{{certifications}}</section>
   </aside>
   <div class="main">
     <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p></header>

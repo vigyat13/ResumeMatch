@@ -1,4 +1,8 @@
 /**
+ * @deprecated Use `import { aiProvider } from '@/lib/ai/provider'` instead.
+ * This file is kept for backward compatibility. New code should use the
+ * provider abstraction which handles model selection, retry, and fallback.
+ *
  * GROQ AI CLIENT
  *
  * Why Groq instead of OpenAI?

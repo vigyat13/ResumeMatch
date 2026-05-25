@@ -33,6 +33,7 @@ export interface StructuredResumeJson {
     year: string
   }>
   skills: string[]
+  certifications: string[]
   publications: string[]
   honors: string[]
 }
@@ -44,11 +45,28 @@ export interface ResumeSystemOutput {
   rendercvYaml: string
 }
 
-function clean(value: string | undefined | null): string {
-  return (value ?? '').trim()
+function clean(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (value == null) return ''
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (!Array.isArray(value) && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return [
+      record.name,
+      record.title,
+      record.certification,
+      record.issuer,
+      record.provider,
+      record.organization,
+      record.description,
+      record.date,
+      record.year,
+    ].map(clean).filter(Boolean).join(' — ')
+  }
+  return ''
 }
 
-function cleanLines(values: string[] | undefined | null): string[] {
+function cleanLines(values: unknown[] | undefined | null): string[] {
   return (values ?? []).map(clean).filter(Boolean)
 }
 
@@ -141,6 +159,7 @@ export function toStructuredResumeJson(data: ResumeData): StructuredResumeJson {
       year: clean(entry.year),
     })).filter((entry) => entry.school || entry.degree || entry.cgpa || entry.year),
     skills: (data.skills ?? []).map((entry) => clean(entry.name)).filter(Boolean),
+    certifications: cleanLines(data.certifications),
     publications: cleanLines(data.publications),
     honors: cleanLines(data.honors),
   }
@@ -170,6 +189,8 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
     ...json.education.map((entry) => `<p>${[entry.school, entry.degree, entry.cgpa ? `CGPA: ${entry.cgpa}` : '', entry.year].filter(Boolean).map(escHtml).join(' | ')}</p>`),
     json.skills.length ? '<h2>Skills</h2>' : '',
     json.skills.length ? `<p>${json.skills.map(escHtml).join(', ')}</p>` : '',
+    json.certifications.length ? '<h2>Certifications & Training</h2>' : '',
+    json.certifications.length ? htmlList(json.certifications) : '',
     json.publications.length ? '<h2>Publications</h2>' : '',
     json.publications.length ? htmlList(json.publications) : '',
     json.honors.length ? '<h2>Honors</h2>' : '',
@@ -311,6 +332,15 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
     lines.push('')
   }
 
+  if (json.certifications.length) {
+    lines.push('%-----------CERTIFICATIONS & TRAINING-----------')
+    lines.push('\\section{Certifications \\& Training}')
+    lines.push('  \\begin{itemize}[leftmargin=0.15in]')
+    for (const c of json.certifications) lines.push(`    \\item \\small{${escLatex(c)}}`)
+    lines.push('  \\end{itemize}')
+    lines.push('')
+  }
+
   if (json.honors.length) {
     lines.push('%-----------HONORS & AWARDS-----------')
     lines.push('\\section{Honors \\& Awards}')
@@ -399,6 +429,11 @@ export function generateRenderCvYamlFromJson(json: StructuredResumeJson): string
     lines.push('    Skills:')
     lines.push('      - label: "Skills"')
     lines.push(`        details: ${yamlString(json.skills.join(', '))}`)
+  }
+
+  if (json.certifications.length) {
+    lines.push('    Certifications and Training:')
+    appendYamlBulletEntries(lines, json.certifications)
   }
 
   if (json.honors.length) {

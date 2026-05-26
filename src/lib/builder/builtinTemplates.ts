@@ -36,7 +36,7 @@ export const BUILT_IN_TEMPLATES: BuilderTemplate[] = [
 </main>`,
     css_content: baseCss('#0f766e', 'Arial, Helvetica, sans-serif') + `
 .resume.commerce{display:grid;grid-template-columns:235px 1fr;padding:0}
-.commerce aside{min-height:1123px;background:#0f766e;color:#fff;padding:40px 28px}
+.commerce aside{min-height:1123px;background:#0f766e;color:#fff;padding:40px 26px;overflow:hidden}
 .commerce aside h1{color:#fff;font-size:30px}
 .commerce aside .title,.commerce aside .contact,.commerce aside h2,.commerce aside p,.commerce aside li,.commerce aside a{color:#fff!important}
 .commerce aside h2{border-bottom-color:rgba(255,255,255,.55)}
@@ -582,16 +582,26 @@ function leftSidebarHtml(className: string): string {
 
 function baseCss(accent: string, font: string): string {
   return `
-.resume{width:794px;min-height:1123px;background:#fff;color:#111;padding:46px 52px;font-family:${font};font-size:14px;line-height:1.34}
+.resume{width:794px;min-height:1123px;background:#fff;color:#111;padding:46px 52px;font-family:${font};font-size:13.25px;line-height:1.32;box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact;overflow-wrap:normal;word-break:normal}
+.resume *{box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 .header{border-bottom:3px solid ${accent};padding-bottom:12px;margin-bottom:16px}
 h1{margin:0;font-size:34px;line-height:1;letter-spacing:0}
 .title{margin:7px 0 0;color:${accent};font-weight:700;font-size:14px}
 .contact{margin:9px 0 0;color:#333;font-size:12px}
-section{margin-top:13px;break-inside:avoid}
+section{margin-top:12px;break-inside:avoid}
 h2{margin:0 0 7px;color:${accent};font-size:12px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d7d7d7;padding-bottom:3px}
-p{margin:0;font-size:.88em;line-height:1.38}
+p{margin:0;font-size:.9em;line-height:1.34}
 ul{margin-top:3px!important}
 li{line-height:1.32!important}
+.edu-entry,.exp-entry,.proj-entry{break-inside:avoid}
+.exp-entry>div:first-child,.proj-entry>div:first-child{gap:12px}
+.proj-entry a,.exp-entry span,.edu-entry span{white-space:nowrap}
+aside p,aside li,aside .contact,aside .title{font-size:11.5px;line-height:1.28}
+aside h1{font-size:28px;overflow-wrap:anywhere}
+aside h2{font-size:11px}
+aside .edu-entry,aside .exp-entry,aside .proj-entry{display:block!important}
+aside .edu-entry span,aside .exp-entry span{display:block!important;text-align:left!important;white-space:normal!important;margin-top:2px}
+aside .edu-entry strong,aside .exp-entry strong,aside .proj-entry strong{display:block}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
 `
 }

@@ -211,13 +211,13 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 <meta charset="UTF-8">
 <title>${fileName}</title>
 <style>
-*{box-sizing:border-box;-webkit-hyphens:none;hyphens:none}
-html,body{margin:0;padding:0;background:#fff;width:210mm;min-height:${pageHeightMm}mm;color:#111}
+*{box-sizing:border-box;-webkit-hyphens:none;hyphens:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#fff;width:210mm;min-height:${pageHeightMm}mm;color:#111;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 a{color:inherit;text-decoration:none}
 ${templateCss}
 ${previewSpacingCss(previewTuning, 'body')}
 @page{size:210mm ${pageHeightMm}mm;margin:0}
-@media print{body{margin:0;background-image:none!important}.cv{box-shadow:none!important;border-radius:0!important}}
+@media print{body{margin:0;background-image:none!important}.resume{box-shadow:none!important;border-radius:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 </style>
 </head>
 <body>${renderedHtml}</body>

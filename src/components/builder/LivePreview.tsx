@@ -34,9 +34,9 @@ interface Props {
   tuning:       PreviewTuning
 }
 
-// Same ATS override applied in TemplatePreview so the live builder view
-// matches the gallery thumbnails exactly.
-const ATS_OVERRIDE = `.preview-sheet a{color:#111!important;text-decoration:none!important}.preview-sheet *{color:inherit}.preview-sheet{color:#111}`
+// Keep links clean in resumes without flattening template colors. Flattening all
+// color to black made colored templates export like plain black-and-white CVs.
+const ATS_OVERRIDE = `.preview-sheet a{text-decoration:none!important}`
 
 const PAGE_WIDTH_MM = 210
 const PAGE_HEIGHT_MM = 297
@@ -69,14 +69,18 @@ export function previewSpacingCss(tuning: PreviewTuning, scope = '.preview-sheet
   const zoom       = normalized.contentScale / 100
 
   return `
-    ${scope}{width:${PAGE_WIDTH_MM}mm;min-height:${pageHeight}mm;background-color:#fff;background-image:repeating-linear-gradient(to bottom,#fff 0,#fff calc(${pageHeight}mm - 1px),#d7d7d7 calc(${pageHeight}mm - 1px),#d7d7d7 ${pageHeight}mm);background-size:100% ${pageHeight}mm;overflow:hidden}
-    ${scope} .cv{width:calc(100% / ${zoom})!important;min-height:${pageHeight}mm!important;height:auto!important;max-width:none!important;margin:0!important;overflow:visible!important;zoom:${zoom}}
+    ${scope}{width:${PAGE_WIDTH_MM}mm;min-height:${pageHeight}mm;background-color:#fff;background-image:repeating-linear-gradient(to bottom,#fff 0,#fff calc(${pageHeight}mm - 1px),#d7d7d7 calc(${pageHeight}mm - 1px),#d7d7d7 ${pageHeight}mm);background-size:100% ${pageHeight}mm;overflow:visible;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    ${scope} .resume{width:calc(100% / ${zoom})!important;min-height:${pageHeight}mm!important;height:auto!important;max-width:none!important;margin:0!important;overflow:visible!important;zoom:${zoom};print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    ${scope} .resume,${scope} .resume *{box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    ${scope} .resume{overflow-wrap:normal;word-break:normal}
     ${scope} h1{break-after:avoid}
     ${scope} h2{break-after:avoid;margin-top:${sectionGap}px!important;margin-bottom:${Math.max(4, sectionGap - 8)}px!important}
     ${scope} p{line-height:${lineHeight}!important;margin-bottom:${Math.max(3, bulletGap + 1)}px!important;overflow-wrap:anywhere}
     ${scope} ul{margin-top:3px!important;margin-bottom:${entryGap}px!important}
     ${scope} li{line-height:${lineHeight}!important;margin-bottom:${bulletGap}px!important;overflow-wrap:anywhere}
     ${scope} .exp-entry,${scope} .proj-entry,${scope} .edu-entry{break-inside:avoid;margin-bottom:${entryGap}px!important}
+    ${scope} aside .edu-entry,${scope} aside .exp-entry,${scope} aside .proj-entry{display:block!important}
+    ${scope} aside .edu-entry span,${scope} aside .exp-entry span{display:block!important;text-align:left!important;white-space:normal!important;margin-top:2px}
   `
 }
 

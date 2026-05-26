@@ -77,8 +77,46 @@ function normalizeUrl(raw: string): string {
   return `https://${value}`
 }
 
-function displayUrl(raw: string): string {
-  return clean(raw).replace(/^https?:\/\//i, '').replace(/\/$/, '')
+function displayUrl(raw: string, fallback = 'Website'): string {
+  const value = normalizeUrl(raw)
+  if (!value || /^(mailto:|tel:)/i.test(value)) return clean(raw)
+
+  try {
+    const url = new URL(value)
+    const host = url.hostname.replace(/^www\./i, '').toLowerCase()
+    const compactHost = host.replace(/^m\./i, '')
+
+    if (compactHost.includes('github.com')) return 'GitHub'
+    if (compactHost.includes('linkedin.com')) return 'LinkedIn'
+    if (compactHost.includes('gitlab.com')) return 'GitLab'
+    if (compactHost.includes('bitbucket.org')) return 'Bitbucket'
+    if (compactHost.includes('behance.net')) return 'Behance'
+    if (compactHost.includes('dribbble.com')) return 'Dribbble'
+    if (compactHost.includes('figma.com')) return 'Figma'
+    if (compactHost.includes('medium.com')) return 'Medium'
+    if (compactHost.includes('youtube.com') || compactHost.includes('youtu.be')) return 'YouTube'
+    if (compactHost.includes('vercel.app') || compactHost.includes('vercel.com')) return 'Vercel'
+    if (compactHost.includes('netlify.app') || compactHost.includes('netlify.com')) return 'Netlify'
+    if (compactHost.includes('onrender.com') || compactHost.includes('render.com')) return 'Render'
+
+    const parts = compactHost.split('.').filter(Boolean)
+    const domain = parts.length > 1 ? parts[parts.length - 2] : parts[0]
+    if (!domain) return fallback
+
+    return domain
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  } catch {
+    return fallback
+  }
+}
+
+function displayContactUrl(raw: string, label: 'GitHub' | 'LinkedIn' | 'Portfolio'): string {
+  const display = displayUrl(raw, label)
+  if (label === 'Portfolio' && display !== 'GitHub' && display !== 'LinkedIn') return 'Portfolio'
+  return display
 }
 
 function escHtml(value: string): string {
@@ -114,9 +152,9 @@ function contactParts(json: StructuredResumeJson): string[] {
     json.contact.email,
     json.contact.phone,
     json.contact.location,
-    json.contact.linkedin,
-    json.contact.github,
-    json.contact.portfolio,
+    json.contact.linkedin ? displayContactUrl(json.contact.linkedin, 'LinkedIn') : '',
+    json.contact.github ? displayContactUrl(json.contact.github, 'GitHub') : '',
+    json.contact.portfolio ? displayContactUrl(json.contact.portfolio, 'Portfolio') : '',
   ].filter(Boolean)
 }
 
@@ -181,7 +219,7 @@ export function renderResumeHtmlFromJson(json: StructuredResumeJson): string {
     ]),
     json.projects.length ? '<h2>Projects</h2>' : '',
     ...json.projects.flatMap((entry) => [
-      `<p>${[entry.name, entry.tech, entry.link].filter(Boolean).map(escHtml).join(' | ')}</p>`,
+      `<p>${[entry.name, entry.tech, entry.link ? displayUrl(entry.link) : ''].filter(Boolean).map(escHtml).join(' | ')}</p>`,
       entry.description ? `<p>${escHtml(entry.description)}</p>` : '',
       htmlList(entry.bullets),
     ]),
@@ -250,9 +288,9 @@ export function generateLatexFromJson(json: StructuredResumeJson): string {
   if (json.contact.phone)     contactParts.push(escLatex(json.contact.phone))
   if (json.contact.email)     contactParts.push(`\\href{mailto:${escLatex(json.contact.email)}}{\\underline{${escLatex(json.contact.email)}}}`)
   if (json.contact.location)  contactParts.push(escLatex(json.contact.location))
-  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(displayUrl(json.contact.linkedin))}}}`)
-  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(displayUrl(json.contact.github))}}}`)
-  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayUrl(json.contact.portfolio))}}}`)
+  if (json.contact.linkedin)  contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.linkedin))}}{\\underline{${escLatex(displayContactUrl(json.contact.linkedin, 'LinkedIn'))}}}`)
+  if (json.contact.github)    contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.github))}}{\\underline{${escLatex(displayContactUrl(json.contact.github, 'GitHub'))}}}`)
+  if (json.contact.portfolio) contactParts.push(`\\href{${escLatex(normalizeUrl(json.contact.portfolio))}}{\\underline{${escLatex(displayContactUrl(json.contact.portfolio, 'Portfolio'))}}}`)
   const contactLine = contactParts.join(' $|$ ')
 
   const lines: string[] = [

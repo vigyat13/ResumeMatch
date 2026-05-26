@@ -86,6 +86,7 @@ const SECTION_ALIASES: Record<SectionKey, string[]> = {
     'accomplishments',
     'recognition',
     'extracurricular',
+    'hackathons',
   ],
   publications: ['publications', 'research', 'papers', 'selected publications'],
 }
@@ -148,7 +149,10 @@ export async function parseResumeToBuilderData(text: string, skills: string[]): 
     const content = completion.choices[0]?.message?.content ?? ''
     const parsed = extractJsonObject(content) as Partial<ResumeData>
     const merged = mergeParsedWithFallback(parsed, fallback.data)
-    const data = validateResumeData(restoreFactsFromSource(cleanResumeData(merged), fallback.data, text), fallback.data)
+    const data = validateResumeData(
+      repairParsedSections(restoreFactsFromSource(cleanResumeData(merged), fallback.data, text), text),
+      fallback.data
+    )
     return {
       data,
       text,
@@ -218,6 +222,14 @@ function splitSections(lines: string[]): Partial<Record<SectionKey, string[]>> {
   let current: SectionKey | null = null
 
   for (const line of lines) {
+    if (/^EXTRACTED PDF LINKS$/i.test(line)) {
+      current = null
+      continue
+    }
+    if (/^(?:LinkedIn|GitHub|Project GitHub|Project Live|Certification|Hackathon Certificate) URL:/i.test(line)) {
+      continue
+    }
+
     const heading = detectHeading(line)
     if (heading) {
       current = heading
@@ -697,18 +709,115 @@ function restoreLinksFromSource(data: ResumeData, text: string): ResumeData {
       return {
         ...project,
         link: best || project.link,
-        bullets: removeMismatchedProjectLinkBullets(project.name, project.bullets),
+        bullets: removeProjectLinkBullets(project.bullets),
       }
     }),
-    honors: appendMissingCredentialUrls(data.honors ?? [], urls),
   }
 }
 
-function removeMismatchedProjectLinkBullets(projectName: string, bullets: string[]): string[] {
+function repairParsedSections(data: ResumeData, text: string): ResumeData {
+  const lines = toLines(text)
+  const sections = splitSections(lines)
+  const credentials = extractCredentialLines(lines)
+  const sourceCertifications = parseDatedListItems(sections.certifications ?? []).filter(isUsableCertificationLine)
+  const sourceHonors = cleanHonorLines(sections.honors ?? [], sections.publications ?? []).filter(isUsableHonorLine)
+
+  return {
+    ...data,
+    certifications: mergeTextItems(
+      (data.certifications ?? []).filter(isUsableCertificationLine),
+      [...sourceCertifications, ...credentials.certifications]
+    ).slice(0, 12),
+    honors: mergeTextItems(
+      (data.honors ?? []).filter(isUsableHonorLine),
+      [...sourceHonors, ...credentials.honors]
+    ).slice(0, 16),
+  }
+}
+
+function extractCredentialLines(lines: string[]): { certifications: string[]; honors: string[] } {
+  const certifications: string[] = []
+  const honors: string[] = []
+
+  for (const line of lines) {
+    if (/udemy/i.test(line)) {
+      const course = line.match(/\b(?:the\s+)?(?:complete|ai engineer|[a-z0-9 +#.-]{2,80}\s+(?:course|bootcamp))[^|]*?udemy\b/i)?.[0]
+      if (course) certifications.push(formatCredentialName(course))
+    }
+
+    if (/hackathon/i.test(line) && /certificate|participation/i.test(line) && !URL_PATTERN.test(line)) {
+      honors.push(formatCredentialName(line))
+    }
+  }
+
+  return {
+    certifications: unique(certifications).filter(isUsableCertificationLine),
+    honors: unique(honors).filter(isUsableHonorLine),
+  }
+}
+
+function formatCredentialName(line: string): string {
+  const normalized = line
+    .replace(/\s*[-–—]\s*/g, ' - ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^.*?\b(The\s+Complete)/i, '$1')
+    .replace(/^.*?\b(The\s+AI\s+Engineer)/i, '$1')
+    .replace(/\bthe\b/gi, 'The')
+    .replace(/\budemy\b/gi, 'Udemy')
+
+  return normalized
+}
+
+function isUsableCertificationLine(line: string): boolean {
+  const value = line.trim()
+  if (!value || isCredentialUrlLine(value) || looksLikeProjectContamination(value)) return false
+  if (/hackathon/i.test(value)) return false
+  return hasCertificationSignal(value)
+}
+
+function isUsableHonorLine(line: string): boolean {
+  const value = line.trim()
+  return Boolean(value) &&
+    !/^(?:project|projects|education|skills|certifications?|certificates?|summary|experience)$/i.test(value) &&
+    !isCredentialUrlLine(value) &&
+    !looksLikeProjectContamination(value)
+}
+
+function isCredentialUrlLine(line: string): boolean {
+  return /(?:https?:\s*\/\/|https?:\/\/)?(?:www\.)?(?:udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?)/i.test(line)
+}
+
+function looksLikeProjectContamination(line: string): boolean {
+  const value = line.trim()
+  if (!value) return false
+  if (/^(?:github|live demo)\s*:/i.test(value)) return true
+  if (/github\.com\/[^/\s]+\/[^/\s]+|onrender\.com|vercel\.app|netlify\.app/i.test(value)) return true
+
+  const hasCertificationSignal = /\b(certification|certificate|certified|course|bootcamp|training|udemy|coursera|forage|aws|google|microsoft|ibm|meta|oracle)\b/i.test(value)
+  if (hasCertificationSignal) return false
+
+  if (/\b(full[-\s]?stack|expense management|food donation|gesture|in-flight|assistance system|website|platform|clone)\b/i.test(value)) {
+    return true
+  }
+
+  if (/\b(engineered|developed|designed|built|optimized|implemented|architected|integrating|applying|enhancing|ensuring)\b/i.test(value)) {
+    return true
+  }
+
+  return false
+}
+
+function hasCertificationSignal(line: string): boolean {
+  return /\b(certification|certificate|certified|course|bootcamp|training|udemy|coursera|forage|aws|azure|google|microsoft|ibm|meta|oracle|salesforce|pmp|scrum|comptia)\b/i.test(line)
+}
+
+function removeProjectLinkBullets(bullets: string[]): string[] {
   return bullets.filter(bullet => {
     const urls = extractUrls(bullet)
-    if (!urls.length) return true
-    return urls.some(url => projectUrlScore(projectName, url) > 0)
+    if (/^(?:github|live demo)\s*:/i.test(bullet.trim())) return false
+    if (urls.length) return false
+    return true
   })
 }
 
@@ -757,26 +866,6 @@ function projectUrlScore(projectName: string, url: string): number {
   }
   if (/github\.com/i.test(url)) score += 1
   return score
-}
-
-function appendMissingCredentialUrls(honors: string[], urls: string[]): string[] {
-  const credentialUrls = keepMostCompleteUrls(
-    urls.filter(url => /udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?/i.test(url))
-  )
-  const merged = honors.filter(item =>
-    !/https?:\/\/(?:www\.)?(?:udemy\.com\/certificate|unstop\.com\/certificate(?:-preview)?)/i.test(item)
-  )
-  for (const url of credentialUrls) {
-    if (!merged.some(item => item.includes(url))) merged.push(url)
-  }
-  return merged.slice(0, 10)
-}
-
-function keepMostCompleteUrls(urls: string[]): string[] {
-  const uniqueUrls = unique(urls)
-  return uniqueUrls.filter(url =>
-    !uniqueUrls.some(other => other.length > url.length && other.toLowerCase().startsWith(url.toLowerCase()))
-  )
 }
 
 function extractUrls(text: string): string[] {

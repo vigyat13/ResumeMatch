@@ -16,6 +16,7 @@ vi.mock('../../ai/groq', () => ({
 import { parseResumeToBuilderData } from '../structuredParser'
 import { renderTemplate } from '../../builder/render'
 import type { ResumeData } from '../../builder/types'
+import { groq } from '../../ai/groq'
 
 const INA_STYLE_TEXT = `
 INA SINGH
@@ -198,5 +199,131 @@ IEEE IC-ICNS 2026 — A Hybrid and Adaptive Deep Learning Framework — Working 
     ])
     expect((result.data.honors ?? []).join(' ')).not.toContain('1 of 1')
     expect((result.data.honors ?? []).join(' ')).not.toContain('IEEE IC-ICNS')
+  })
+
+  it('repairs AI section contamination from project lines and credential URLs', async () => {
+    const originalKey = process.env.GROQ_API_KEY
+    process.env.GROQ_API_KEY = 'test-key'
+    vi.mocked(groq.chat.completions.create).mockResolvedValueOnce({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            name: 'MUSKAN GROVER',
+            title: '',
+            email: 'muskangrover54@gmail.com',
+            phone: '+91-7015404328',
+            location: '',
+            github: 'https://github.com/MuskanGrover',
+            linkedin: 'https://www.linkedin.com/in/muskan-grover-346496271',
+            portfolio: '',
+            summary: 'Software Engineer with a strong foundation in Python development.',
+            experience: [],
+            projects: [
+              {
+                name: 'ASL-GestureBased In-Flight Assistance System',
+                tech: 'Python, TensorFlow, OpenCV',
+                link: '',
+                description: 'Engineered a real-time AI-powered assistance system using Python, TensorFlow, and OpenCV.',
+                bullets: ['Designed scalable, production-ready architecture.'],
+              },
+              {
+                name: 'Splitwise Clone',
+                tech: 'Next.js, React.js, Convex DB',
+                link: '',
+                description: 'Developed a full-stack expense management app using Next.js.',
+                bullets: ['Optimized system design and backend efficiency.'],
+              },
+              {
+                name: 'SHAREBITE-FOOD DONATION WEBSITE',
+                tech: 'HTML, CSS, JS, Node.js, MongoDB',
+                link: '',
+                description: 'Built a responsive full-stack web platform.',
+                bullets: ['Applied scalable backend design principles.'],
+              },
+            ],
+            education: [],
+            skills: [],
+            certifications: [
+              'Splitwise Clone – Full-Stack Expense Management Platform',
+              'Sign-LanguageRecognition | ComputerVision | DeepLearning | Human-Computer Interaction',
+              'GITHUB: ASL Gesture In-Flight Assistance System– GitHub',
+              'Engineered a real-time AI-powered assistance system using Python, TensorFlow, and OpenCV.',
+              'Live Demo: https://share-bite-fullstackwebsite.onrender.com/',
+              'Built a responsive full-stack web platform using HTML, CSS, JavaScript, Node.js, and MongoDB.',
+            ],
+            honors: [
+              'Volunteer, National Service Scheme (NSS)',
+              'https://www.udemy.com/certificate/UC-d779c662-b47a-42ff-bf5d-c35f6e27a4a7/',
+              'https://unstop.com/certificate-preview/4e99aa66-cef9-4c59-80a8-e4ed0183be0a',
+            ],
+            publications: [],
+          }),
+        },
+      }],
+    } as never)
+
+    const result = await parseResumeToBuilderData(`
+MUSKAN GROVER
+muskangrover54@gmail.com | Phone +91-7015404328
+LinkedIn: https://www.linkedin.com/in/muskan-grover-346496271
+GitHub: https://github.com/MuskanGrover
+
+PROJECT
+ASL-GestureBased In-Flight Assistance System
+Python, TensorFlow, OpenCV
+Engineered a real-time AI-powered assistance system using Python, TensorFlow, and OpenCV.
+Designed scalable, production-ready architecture with low-latency communication.
+
+Splitwise Clone
+Next.js, React.js, Convex DB
+Developed a full-stack expense management app using Next.js.
+Optimized system design and backend efficiency.
+
+SHAREBITE-FOOD DONATION WEBSITE
+HTML, CSS, JS, Node.js, MongoDB
+Built a responsive full-stack web platform using HTML, CSS, JavaScript, Node.js, and MongoDB.
+Applied scalable backend design principles.
+
+CERTIFICATIONS
+The Complete 2024 Web Development Bootcamp — Udemy
+The AI Engineer Course — Udemy
+
+HACKATHONS
+FLIPKARTGRID 6.0 Hackathon Participation Certificate
+HACK-WARS Hackathon Participation Certificate
+
+HONORS
+Volunteer, National Service Scheme (NSS)
+Volunteer, KIIT Film Society 2022-2026
+
+EXTRACTED PDF LINKS
+Project GitHub URL: https://github.com/MuskanGrover/ASL_GESTURE_IN_FLIGHT_SYSTEM
+Project GitHub URL: https://github.com/MuskanGrover/SPLITWISE_CLONE
+Project GitHub URL: https://github.com/MuskanGrover/SHAREBITE_FULLSTACKWEBSITE
+Certification URL: https://www.udemy.com/certificate/UC-d779c662-b47a-42ff-bf5d-c35f6e27a4a7/
+Hackathon Certificate URL: https://unstop.com/certificate-preview/4e99aa66-cef9-4c59-80a8-e4ed0183be0a
+`, [])
+
+    if (originalKey === undefined) delete process.env.GROQ_API_KEY
+    else process.env.GROQ_API_KEY = originalKey
+
+    expect(result.data.certifications.join(' ')).not.toContain('Splitwise Clone')
+    expect(result.data.certifications.join(' ')).not.toContain('Engineered a real-time')
+    expect(result.data.certifications.join(' ')).not.toContain('Live Demo')
+    expect(result.data.certifications).toEqual([
+      'The Complete 2024 Web Development Bootcamp — Udemy',
+      'The AI Engineer Course — Udemy',
+    ])
+    expect(result.data.honors).toEqual([
+      'Volunteer, National Service Scheme (NSS)',
+      'HACK-WARS Hackathon Participation Certificate',
+      'FLIPKARTGRID 6.0 Hackathon Participation Certificate',
+      'Volunteer, KIIT Film Society 2022-2026',
+    ])
+    expect(result.data.projects.map(project => project.link)).toEqual([
+      'https://github.com/MuskanGrover/ASL_GESTURE_IN_FLIGHT_SYSTEM',
+      'https://github.com/MuskanGrover/SPLITWISE_CLONE',
+      'https://github.com/MuskanGrover/SHAREBITE_FULLSTACKWEBSITE',
+    ])
   })
 })

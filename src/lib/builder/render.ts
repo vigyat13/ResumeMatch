@@ -9,9 +9,9 @@ export function renderTemplate(html: string, data: ResumeData): string {
     data.email     ? `<a href="mailto:${esc(data.email)}" style="color:inherit;text-decoration:none">${esc(data.email)}</a>` : null,
     data.phone     ? esc(data.phone) : null,
     data.location  ? esc(data.location) : null,
-    data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(data.linkedin)}</a>` : null,
-    data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(data.github)}</a>` : null,
-    data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(data.portfolio)}</a>` : null,
+    data.linkedin  ? `<a href="${linkHref(data.linkedin)}" style="color:inherit;text-decoration:none">${esc(displayContactUrl(data.linkedin, 'LinkedIn'))}</a>` : null,
+    data.github    ? `<a href="${linkHref(data.github)}" style="color:inherit;text-decoration:none">${esc(displayContactUrl(data.github, 'GitHub'))}</a>` : null,
+    data.portfolio ? `<a href="${linkHref(data.portfolio)}" style="color:inherit;text-decoration:none">${esc(displayContactUrl(data.portfolio, 'Portfolio'))}</a>` : null,
   ].filter(Boolean).join(' | ')
 
   let output = html
@@ -22,9 +22,9 @@ export function renderTemplate(html: string, data: ResumeData): string {
     .replace(/\{\{email\}\}/g,     esc(data.email))
     .replace(/\{\{phone\}\}/g,     esc(data.phone))
     .replace(/\{\{location\}\}/g,  esc(data.location))
-    .replace(/\{\{github\}\}/g,    esc(data.github))
-    .replace(/\{\{linkedin\}\}/g,  esc(data.linkedin))
-    .replace(/\{\{portfolio\}\}/g, esc(data.portfolio))
+    .replace(/\{\{github\}\}/g,    esc(data.github ? displayContactUrl(data.github, 'GitHub') : ''))
+    .replace(/\{\{linkedin\}\}/g,  esc(data.linkedin ? displayContactUrl(data.linkedin, 'LinkedIn') : ''))
+    .replace(/\{\{portfolio\}\}/g, esc(data.portfolio ? displayContactUrl(data.portfolio, 'Portfolio') : ''))
     .replace(/\{\{summary\}\}/g,   formatInline(data.summary))
     .replace(/\{\{experience\}\}/g, renderExperience(data.experience))
     .replace(/\{\{projects\}\}/g,   renderProjects(data.projects))
@@ -96,7 +96,7 @@ function renderProjects(entries: ProjectEntry[]): string {
     <div class="proj-entry" style="margin-bottom:10px;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
         <strong style="font-size:0.95em;min-width:0">${formatInline(p.name)}</strong>
-        ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(p.link)}</a>` : ''}
+        ${p.link ? `<a href="${linkHref(p.link)}" style="font-size:0.82em;color:#111;text-decoration:none;text-align:right;overflow-wrap:anywhere">${esc(displayUrl(p.link))}</a>` : ''}
       </div>
       ${p.tech.trim() ? `<div style="font-size:0.82em;color:#444;margin-bottom:3px;font-style:italic">${esc(p.tech)}</div>` : ''}
       ${p.description.trim() ? `<div style="font-size:0.875em;color:#333;margin-bottom:2px">${formatInline(p.description)}</div>` : ''}
@@ -304,6 +304,49 @@ export function esc(str: string): string {
 function formatInline(value: string): string {
   const escaped = esc(value)
   return escaped.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:700;color:#000">$1</strong>')
+}
+
+function displayUrl(raw: string, fallback = 'Website'): string {
+  const value = (raw ?? '').trim()
+  if (!value) return ''
+  if (/^(mailto:|tel:)/i.test(value)) return value
+
+  const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`
+  try {
+    const url = new URL(normalized)
+    const host = url.hostname.replace(/^www\./i, '').replace(/^m\./i, '').toLowerCase()
+
+    if (host.includes('github.com')) return 'GitHub'
+    if (host.includes('linkedin.com')) return 'LinkedIn'
+    if (host.includes('gitlab.com')) return 'GitLab'
+    if (host.includes('bitbucket.org')) return 'Bitbucket'
+    if (host.includes('behance.net')) return 'Behance'
+    if (host.includes('dribbble.com')) return 'Dribbble'
+    if (host.includes('figma.com')) return 'Figma'
+    if (host.includes('medium.com')) return 'Medium'
+    if (host.includes('youtube.com') || host.includes('youtu.be')) return 'YouTube'
+    if (host.includes('vercel.app') || host.includes('vercel.com')) return 'Vercel'
+    if (host.includes('netlify.app') || host.includes('netlify.com')) return 'Netlify'
+    if (host.includes('onrender.com') || host.includes('render.com')) return 'Render'
+
+    const parts = host.split('.').filter(Boolean)
+    const domain = parts.length > 1 ? parts[parts.length - 2] : parts[0]
+    if (!domain) return fallback
+
+    return domain
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  } catch {
+    return fallback
+  }
+}
+
+function displayContactUrl(raw: string, label: 'GitHub' | 'LinkedIn' | 'Portfolio'): string {
+  const display = displayUrl(raw, label)
+  if (label === 'Portfolio' && display !== 'GitHub' && display !== 'LinkedIn') return 'Portfolio'
+  return display
 }
 
 /** Ensure a URL string has a protocol prefix for use in href attributes. */

@@ -88,20 +88,20 @@ export const DEFAULT_RESUME_DATA: ResumeData = {
 }
 
 /* ─────────────────────────────────────────────────────────────────
- * SAMPLE PROFILES  (6 India-market profiles, one per template persona)
+ * SAMPLE PROFILES  (6 demo profiles, one per template persona)
  * ───────────────────────────────────────────────────────────────── */
 
 /** Demo engineer profile. Default hero sample. */
 export const SAMPLE_ENGINEER: ResumeData = {
-  name:      'Pratik Singh',
+  name:      'Alex Morgan',
   title:     'Senior Software Engineer',
   profileImage: '',
-  email:     'pratik.singh@example.com',
+  email:     'alex.morgan@example.com',
   phone:     '+1 (555) 010-2048',
   location:  'Metro City, Remote',
-  github:    'github.com/demo-pratik',
-  linkedin:  'linkedin.com/in/demo-pratik',
-  portfolio: 'pratik-demo.example.com',
+  github:    'github.com/demo-alex',
+  linkedin:  'linkedin.com/in/demo-alex',
+  portfolio: 'alex-demo.example.com',
   summary:   'Backend-leaning full-stack engineer with 5+ years building high-throughput platform and infrastructure systems. Owned services processing 10M+ daily requests at fictional SaaS companies. Comfortable from Postgres internals to React performance budgets.',
   experience: [
     {
@@ -138,7 +138,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'pgmon',
       tech:        'Go, PostgreSQL, Prometheus',
-      link:        'github.com/demo-pratik/pgmon',
+      link:        'github.com/demo-alex/pgmon',
       description: 'Lightweight Postgres lock and query-stat exporter used by 600+ teams.',
       bullets:     [
         '1.4k GitHub stars in 4 months; 22 external contributors merged',
@@ -148,7 +148,7 @@ export const SAMPLE_ENGINEER: ResumeData = {
     {
       name:        'tldraw-collab',
       tech:        'TypeScript, Yjs, Cloudflare Durable Objects',
-      link:        'github.com/demo-pratik/tldraw-collab',
+      link:        'github.com/demo-alex/tldraw-collab',
       description: 'Real-time multiplayer whiteboard on tldraw, conflict-free up to 50 concurrent cursors.',
       bullets:     ['Featured in the Cloudflare Workers showcase, July 2024'],
     },
@@ -178,14 +178,14 @@ export const SAMPLE_ENGINEER: ResumeData = {
 
 /** Demo ML engineer profile. */
 export const SAMPLE_ML: ResumeData = {
-  name:      'Nishant Yadav',
+  name:      'Jordan Blake',
   title:     'Machine Learning Engineer',
   profileImage: '',
-  email:     'nishant.yadav@example.com',
+  email:     'jordan.blake@example.com',
   phone:     '+1 (555) 010-3186',
   location:  'Data City, Remote',
-  github:    'github.com/demo-nishant',
-  linkedin:  'linkedin.com/in/demo-nishant',
+  github:    'github.com/demo-jordan',
+  linkedin:  'linkedin.com/in/demo-jordan',
   portfolio: '',
   summary:   'ML engineer with 4 years building recommendation and NLP systems at scale. Led model infrastructure for a demo commerce platform serving 300M+ daily inferences. Strong in Python, PyTorch, and end-to-end MLOps on cloud infrastructure.',
   experience: [
@@ -213,15 +213,15 @@ export const SAMPLE_ML: ResumeData = {
     {
       name:        'LightRec',
       tech:        'Python, PyTorch, FAISS',
-      link:        'github.com/demo-nishant/lightrec',
+      link:        'github.com/demo-jordan/lightrec',
       description: 'Lightweight two-tower retrieval library optimised for low-latency inference.',
-      bullets:     ['600+ GitHub stars; used in 3 production systems at mid-size Indian e-commerce firms'],
+      bullets:     ['600+ GitHub stars; used in 3 production systems at mid-size commerce firms'],
     },
     {
-      name:        'Hindi Sentiment Corpus',
+      name:        'Sentiment Corpus',
       tech:        'Python, HuggingFace Datasets',
       link:        'example.com/datasets/demo-sentiment',
-      description: '50k annotated Hindi social-media sentences for sentiment classification.',
+      description: '50k annotated social-media sentences for sentiment classification.',
       bullets:     ['10k+ downloads on HuggingFace Hub; cited in 4 academic papers'],
     },
   ],
@@ -255,15 +255,15 @@ export const SAMPLE_ML: ResumeData = {
 
 /** Demo frontend engineer profile. */
 export const SAMPLE_FRONTEND: ResumeData = {
-  name:      'Bruce Wayne',
+  name:      'Riley Chen',
   title:     'Frontend Engineer',
   profileImage: '',
-  email:     'bruce.wayne@example.com',
+  email:     'riley.chen@example.com',
   phone:     '+1 (555) 010-4421',
   location:  'Design City, Remote',
-  github:    'github.com/demo-bruce',
-  linkedin:  'linkedin.com/in/demo-bruce',
-  portfolio: 'bruce-wayne.example.com',
+  github:    'github.com/demo-riley',
+  linkedin:  'linkedin.com/in/demo-riley',
+  portfolio: 'riley-demo.example.com',
   summary:   'Frontend engineer with 3 years shipping design-system-driven UIs at early-stage startups. Expert in React, Next.js, and Tailwind. Care deeply about perceived performance — every project ships <100ms INP.',
   experience: [
     {
@@ -290,7 +290,7 @@ export const SAMPLE_FRONTEND: ResumeData = {
     {
       name:        'react-skeleton-kit',
       tech:        'TypeScript, React, CSS Houdini',
-      link:        'github.com/demo-bruce/react-skeleton-kit',
+      link:        'github.com/demo-riley/react-skeleton-kit',
       description: 'Zero-dependency skeleton loader library with layout-shift-free animations.',
       bullets:     ['420+ GitHub stars; 8k weekly npm downloads'],
     },
@@ -326,15 +326,15 @@ export const SAMPLE_FRONTEND: ResumeData = {
 
 /** Demo product manager profile. */
 export const SAMPLE_PM: ResumeData = {
-  name:      'Suryansh',
+  name:      'Morgan Lee',
   title:     'Senior Product Manager',
   profileImage: '',
-  email:     'suryansh@example.com',
+  email:     'morgan.lee@example.com',
   phone:     '+1 (555) 010-7732',
   location:  'Product City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/demo-suryansh',
-  portfolio: 'suryansh-demo.example.com',
+  linkedin:  'linkedin.com/in/demo-morgan',
+  portfolio: 'morgan-demo.example.com',
   summary:   'Product leader with 6 years across B2B SaaS and fintech-style products. Shipped 0→1 products driving $8M+ ARR. Consulting-style background; trained as engineer — comfortable in SQL, experiment design, and stakeholder alignment.',
   experience: [
     {
@@ -352,7 +352,7 @@ export const SAMPLE_PM: ResumeData = {
       role:    'Associate · Digital Ventures',
       period:  'Jul 2019 – Feb 2022',
       bullets: [
-        'Led digital-transformation engagement for a ₹2,000Cr retail chain; built the MVP roadmap that secured ₹120Cr Series B',
+        'Led digital-transformation engagement for a multi-region retail chain; built the MVP roadmap that secured a major Series B',
         'Modelled unit economics for 3 fintech startups in a venture studio portfolio',
       ],
     },
@@ -362,7 +362,7 @@ export const SAMPLE_PM: ResumeData = {
       name:        'PMCraft Newsletter',
       tech:        'Substack, Notion',
       link:        'product-notes.example.com',
-      description: 'Weekly teardowns of Indian SaaS product decisions.',
+      description: 'Weekly teardowns of SaaS product decisions.',
       bullets:     [
         '8,200+ subscribers; open rate 41% vs. industry avg 22%',
         'Cited by demo product communities as a top PM resource in 2024',
@@ -399,14 +399,14 @@ export const SAMPLE_PM: ResumeData = {
 
 /** Demo backend developer profile. */
 export const SAMPLE_BACKEND: ResumeData = {
-  name:      'Rishit',
+  name:      'Casey Reed',
   title:     'Backend Developer',
   profileImage: '',
-  email:     'rishit@example.com',
+  email:     'casey.reed@example.com',
   phone:     '+1 (555) 010-9094',
   location:  'Cloud City, Remote',
-  github:    'github.com/demo-rishit',
-  linkedin:  'linkedin.com/in/demo-rishit',
+  github:    'github.com/demo-casey',
+  linkedin:  'linkedin.com/in/demo-casey',
   portfolio: '',
   summary:   'Backend developer with 2+ years building REST and gRPC APIs in Node.js and Python. Comfortable with cloud infra, message queues, and writing code that\'s easy for the next person to read.',
   experience: [
@@ -434,7 +434,7 @@ export const SAMPLE_BACKEND: ResumeData = {
     {
       name:        'jobq',
       tech:        'Node.js, BullMQ, Redis',
-      link:        'github.com/demo-rishit/jobq',
+      link:        'github.com/demo-casey/jobq',
       description: 'Simple opinionated job queue with retry, dead-letter, and Prometheus metrics built in.',
       bullets:     ['Used internally at 2 early-stage startups; 180+ GitHub stars'],
     },
@@ -460,15 +460,15 @@ export const SAMPLE_BACKEND: ResumeData = {
 
 /** Demo engineering leader profile. */
 export const SAMPLE_EXECUTIVE: ResumeData = {
-  name:      'Krishna',
+  name:      'Taylor Brooks',
   title:     'Engineering Director',
   profileImage: '',
-  email:     'krishna@example.com',
+  email:     'taylor.brooks@example.com',
   phone:     '+1 (555) 010-1267',
   location:  'Platform City, Remote',
   github:    '',
-  linkedin:  'linkedin.com/in/demo-krishna',
-  portfolio: 'krishna-demo.example.com',
+  linkedin:  'linkedin.com/in/demo-taylor',
+  portfolio: 'taylor-demo.example.com',
   summary:   'Engineering Director with 12 years building and scaling platform teams at fictional product companies. Led organisations of 40+ engineers across 3 time zones. Deep expertise in distributed systems, org design, and engineering culture.',
   experience: [
     {
@@ -487,7 +487,7 @@ export const SAMPLE_EXECUTIVE: ResumeData = {
       role:    'Senior Engineering Manager · Maps & Navigation',
       period:  'Jan 2017 – Mar 2020',
       bullets: [
-        'Scaled the maps platform to handle peak 800k concurrent ride requests during IPL season',
+        'Scaled the maps platform to handle peak 800k concurrent ride requests during a national event',
         'Hired and grew a 20-person team; 4 direct reports promoted to senior engineering roles',
       ],
     },
@@ -502,7 +502,7 @@ export const SAMPLE_EXECUTIVE: ResumeData = {
   ],
   projects: [
     {
-      name:        'OpenSLO India Working Group',
+      name:        'OpenSLO Working Group',
       tech:        'SLO standards, community',
       link:        'slo-working-group.example.com',
       description: 'Contributing member of the OpenSLO specification working group.',

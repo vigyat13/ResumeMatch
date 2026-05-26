@@ -256,7 +256,7 @@ export const BUILT_IN_TEMPLATES: BuilderTemplate[] = [
 .rendercv-engineering .title{margin:7px 0 0;color:#111;font-size:13px;font-style:italic;font-weight:400;line-height:1.2}
 .rendercv-engineering .contact{margin:18px 0 0;color:#111;font-size:14px;line-height:1.25}
 .rendercv-engineering .contact a{color:#111!important;text-decoration:none!important}
-.rendercv-engineering section{margin-top:13px;break-inside:avoid}
+.rendercv-engineering section{margin-top:13px;break-inside:auto}
 .rendercv-engineering h2{margin:0 0 8px;color:#111;border-bottom:1px solid #111;padding-bottom:2px;font-size:18px;font-weight:700;line-height:1.05;letter-spacing:0;text-transform:none}
 .rendercv-engineering p{margin:0;color:#111;font-size:14px;line-height:1.34}
 .rendercv-engineering .edu-entry,.rendercv-engineering .exp-entry,.rendercv-engineering .proj-entry{margin-bottom:13px!important;break-inside:avoid}
@@ -588,7 +588,7 @@ function baseCss(accent: string, font: string): string {
 h1{margin:0;font-size:34px;line-height:1;letter-spacing:0}
 .title{margin:7px 0 0;color:${accent};font-weight:700;font-size:14px}
 .contact{margin:9px 0 0;color:#333;font-size:12px}
-section{margin-top:12px;break-inside:avoid}
+section{margin-top:12px;break-inside:auto}
 h2{margin:0 0 7px;color:${accent};font-size:12px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #d7d7d7;padding-bottom:3px}
 p{margin:0;font-size:.9em;line-height:1.34}
 ul{margin-top:3px!important}

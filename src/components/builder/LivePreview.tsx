@@ -73,6 +73,7 @@ export function previewSpacingCss(tuning: PreviewTuning, scope = '.preview-sheet
     ${scope} .resume{width:calc(100% / ${zoom})!important;min-height:${pageHeight}mm!important;height:auto!important;max-width:none!important;margin:0!important;overflow:visible!important;zoom:${zoom};print-color-adjust:exact;-webkit-print-color-adjust:exact}
     ${scope} .resume,${scope} .resume *{box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact}
     ${scope} .resume{overflow-wrap:normal;word-break:normal}
+    ${scope} section{break-inside:auto!important;page-break-inside:auto!important}
     ${scope} h1{break-after:avoid}
     ${scope} h2{break-after:avoid;margin-top:${sectionGap}px!important;margin-bottom:${Math.max(4, sectionGap - 8)}px!important}
     ${scope} p{line-height:${lineHeight}!important;margin-bottom:${Math.max(3, bulletGap + 1)}px!important;overflow-wrap:anywhere}

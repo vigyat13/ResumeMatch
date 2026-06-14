@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ApplicationIntelligenceClient } from '@/components/applications/ApplicationIntelligenceClient'
+import { ApplicationsBoard } from '@/components/applications/ApplicationsBoard'
 
 export const metadata = { title: 'Applications — ResumeMatch' }
 
@@ -9,12 +9,16 @@ export default async function ApplicationsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: resumes } = await supabase
-    .from('resumes')
-    .select('id, file_name')
-    .eq('user_id', user.id)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
+  return (
+    <div className="flex flex-col gap-5">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">Applications</h1>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+          Everything you saved or applied to, tracked through your pipeline.
+        </p>
+      </header>
 
-  return <ApplicationIntelligenceClient resumes={resumes ?? []} />
+      <ApplicationsBoard />
+    </div>
+  )
 }

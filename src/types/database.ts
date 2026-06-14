@@ -478,6 +478,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tracked_applications: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_title: string | null
+          company: string | null
+          job_url: string | null
+          session_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_title?: string | null
+          company?: string | null
+          job_url?: string | null
+          session_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_title?: string | null
+          company?: string | null
+          job_url?: string | null
+          session_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           created_at: string | null

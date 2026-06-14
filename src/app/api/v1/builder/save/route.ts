@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       file_type:        'application/pdf',
       file_url:         '',
       file_size:        0,
-      parsing_status:   'processed',
+      parsing_status:   'completed',
       parsed_text:      parsedText,
       extracted_skills: extractedSkills,
       template_id:      storedTemplateId,

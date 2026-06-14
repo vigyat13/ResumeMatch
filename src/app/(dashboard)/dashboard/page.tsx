@@ -1,424 +1,495 @@
-/**
- * DASHBOARD HOME PAGE
- *
- * Server Component — fetches real data at request time.
- * No 'use client' needed because there's no interactivity here.
- * The stat cards and recent items are just rendered HTML.
- *
- * Architecture pattern — Page = data fetching, Component = rendering:
- * Pages are responsible for fetching data and passing it to components.
- * Components just render what they receive — they don't know about Supabase.
- */
-
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  ClipboardCheck,
+  FilePlus2,
+  FileText,
+  Gauge,
+  Search,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+
+type Activity = {
+  at: string | null
+  text: string
+  href: string
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Parallel fetches — Promise.all runs both queries simultaneously
-  // instead of waterfall (resume fetch → then match fetch)
-  const [resumesResult, auditsResult] = await Promise.all([
+  const [
+    resumesResult,
+    auditsResult,
+    resumeCountResult,
+    matchesCountResult,
+    latestMatchesResult,
+    applicationsCountResult,
+    interviewCountResult,
+    latestApplicationsResult,
+    profileResult,
+  ] = await Promise.all([
     supabase
       .from('resumes')
       .select('id, file_name, parsing_status, created_at')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(5),
 
     supabase
       .from('audit_reports')
-      .select('id, overall_score, created_at')
+      .select('id, resume_id, overall_score, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(1),
+      .limit(2),
+
+    supabase
+      .from('resumes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .is('deleted_at', null),
+
+    supabase
+      .from('job_matches')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .is('deleted_at', null),
+
+    supabase
+      .from('job_matches')
+      .select('id, job_title, company, match_percentage, created_at')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(3),
+
+    supabase
+      .from('tracked_applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id),
+
+    supabase
+      .from('tracked_applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'interview'),
+
+    supabase
+      .from('tracked_applications')
+      .select('id, job_title, company, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(3),
+
+    supabase
+      .from('profiles')
+      .select('first_name, subscription_tier')
+      .eq('id', user.id)
+      .single(),
   ])
 
   const resumes = resumesResult.data ?? []
-  const latestAudit = auditsResult.data?.[0] ?? null
-
-  // Aggregate stats for the stat cards
-  const { count: resumeCount }  = await supabase.from('resumes').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('first_name')
-    .eq('id', user.id)
-    .single()
-
-  const totalResumes = resumeCount ?? 0
+  const audits = auditsResult.data ?? []
+  const latestAudit = audits[0] ?? null
+  const previousAudit = audits[1] ?? null
+  const latestResume = resumes[0] ?? null
   const latestScore = latestAudit?.overall_score ?? null
-  const firstName = profile?.first_name?.trim()
+  const healthScore = latestScore ?? 0
+  const healthDelta = latestScore !== null && previousAudit?.overall_score !== null
+    ? latestScore - previousAudit.overall_score
+    : null
+  const firstName = profileResult.data?.first_name?.trim() || user.email?.split('@')[0] || 'there'
+  const tier = profileResult.data?.subscription_tier ?? 'free'
+  const planLabel = tier === 'enterprise' ? 'Enterprise' : tier === 'pro' ? 'Pro' : 'Free'
+  const resumeCount = resumeCountResult.count ?? resumes.length
+  const matchCount = matchesCountResult.count ?? 0
+  const applicationCount = applicationsCountResult.count ?? 0
+  const interviewCount = interviewCountResult.count ?? 0
+  const atsScore = latestScore !== null ? `${latestScore}%` : '-'
+  const completeness = resumeCount > 0 ? (latestScore !== null ? 95 : 65) : 0
+  const freshness = latestResume?.created_at ? timeAgo(latestResume.created_at) : '-'
   const nextAction = getNextAction({
-    resumeCount: totalResumes,
-    hasAudit: Boolean(latestAudit),
+    resumeCount,
+    latestResume,
+    latestScore,
+  })
+  const pipeline = [
+    { label: 'Create', done: resumeCount > 0 },
+    { label: 'Audit', done: latestScore !== null },
+    { label: 'Match', done: matchCount > 0 },
+    { label: 'Apply', done: applicationCount > 0 },
+  ]
+  const completedSteps = pipeline.filter(step => step.done).length
+  const activities = buildActivities({
+    resumes,
+    audits,
+    matches: latestMatchesResult.data ?? [],
+    applications: latestApplicationsResult.data ?? [],
   })
 
-  const stats = [
-    {
-      label: 'Resumes',
-      value: totalResumes,
-      helper: totalResumes > 0 ? `${resumes.length} shown here` : 'Start with builder or upload',
-      marker: '01',
-    },
-    {
-      label: 'Find Jobs',
-      value: 'Live',
-      helper: 'Search listings by prompt',
-      marker: '02',
-    },
-    {
-      label: 'Latest ATS Score',
-      value: latestScore !== null ? `${latestScore}%` : '—',
-      helper: latestScore !== null ? scoreCopy(latestScore) : 'Run an audit after upload',
-      marker: '03',
-    },
-  ]
-
   return (
-    <div className="space-y-7 pb-8">
-      <section className="relative overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-[linear-gradient(135deg,rgba(219,242,199,0.72),rgba(246,232,182,0.46)_44%,var(--color-surface-raised))] p-6 shadow-[0_24px_80px_rgba(22,22,22,0.12)] sm:p-8">
-        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[var(--color-accent)]/12 blur-3xl" />
-        <div className="absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-[var(--color-primary)]/5 blur-3xl" />
-        <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-          <div>
-            <div className="mb-5 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                Workspace
-              </span>
-              <span className="rounded-full border border-[var(--color-border)] bg-white/40 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
-                Builder live
-              </span>
-              <span className="rounded-full border border-[var(--color-border)] bg-white/40 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
-                ATS checks
-              </span>
-            </div>
-            <p className="mb-3 text-sm font-medium text-[var(--color-text-muted)]">
-              ResumeMatch dashboard
-            </p>
-            <h1
-              className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)] sm:text-5xl"
-              style={{ fontFamily: 'var(--font-headline), sans-serif' }}
-            >
-              Welcome back{firstName ? `, ${firstName}` : ''}. Build the next version of your CV.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-text-muted)]">
-              Keep resumes, audits, and job search in one place. Start with a clean template, upload an existing CV, then use the dashboard to track what needs work.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/builder"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-primary-foreground)] transition-transform hover:-translate-y-0.5"
-              >
-                Open builder
-              </Link>
-              <Link
-                href="/dashboard/resumes"
-                className="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-white/40 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-white/70"
-              >
-                Upload resume
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/45 p-4 backdrop-blur">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">
-              Next best action
-            </p>
-            <h2 className="mt-4 text-2xl font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
-              {nextAction.title}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              {nextAction.description}
-            </p>
-            <Link
-              href={nextAction.href}
-              className="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-[var(--color-accent)]/35 bg-[var(--color-accent)]/10 px-4 py-3 text-sm font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/15"
-            >
-              {nextAction.cta}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {stats.map(({ label, value, helper, marker }) => (
-          <div
-            key={label}
-            className="group relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 transition-colors hover:border-[var(--color-accent)]/35"
-          >
-            <div className="absolute right-0 top-0 h-20 w-20 rounded-bl-full bg-[var(--color-accent)]/[0.06] transition-colors group-hover:bg-[var(--color-accent)]/[0.1]" />
-            <p className="text-xs font-semibold tracking-[0.18em] text-[var(--color-accent)]">{marker}</p>
-            <p className="mt-8 text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">{value}</p>
-            <p className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">{label}</p>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{helper}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-            Quick launch
+    <div className="space-y-5 pb-8">
+      <header className="flex flex-col gap-3 border-b border-[var(--color-border)] pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Dashboard
           </p>
-          <div className="mt-5 grid gap-3">
-            <QuickAction
-              href="/builder"
-              title="Create a resume"
-              description="Use a production-ready template and export a clean PDF."
-              marker="Build"
-            />
-            <QuickAction
-              href="/dashboard/resumes"
-              title="Upload for audit"
-              description="Keep uploaded resumes organized and run checks from one place."
-              marker="Audit"
-            />
-            <QuickAction
-              href="/dashboard/templates"
-              title="Browse templates"
-              description="Pick layouts built for readable, ATS-friendly resumes."
-              marker="Pick"
-            />
-          </div>
+          <h1 className="mt-2 truncate text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">
+            Welcome, {firstName}
+          </h1>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <HeaderPill
+            label="Resume Health"
+            value={latestScore !== null ? `${healthScore}` : '-'}
+            delta={healthDelta}
+          />
+          <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm font-semibold text-[var(--color-text-primary)]">
+            <BadgeCheck className="h-4 w-4 text-[var(--color-accent)]" />
+            {planLabel}
+          </span>
+        </div>
+      </header>
 
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[radial-gradient(circle_at_top_left,rgba(101,211,158,0.12),transparent_30%),var(--color-surface-raised)] p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Panel>
+          <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                Progress
-              </p>
-              <h2 className="mt-3 text-xl font-semibold text-[var(--color-text-primary)]">
-                Your resume pipeline
-              </h2>
-              <p className="mt-1 max-w-xl text-sm leading-6 text-[var(--color-text-muted)]">
-                The dashboard should tell you what to do next without hunting through pages. Use this flow to move from resume to audit to live job search.
+              <PanelEyebrow>Resume Health</PanelEyebrow>
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                Latest resume signal from your audit and library state.
               </p>
             </div>
-            <Link
-              href="/dashboard/resumes"
-              className="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/40"
-            >
-              Manage resumes
-            </Link>
+            <Gauge className="h-5 w-5 text-[var(--color-accent)]" />
           </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <PipelineStep done={totalResumes > 0} label="Resume added" value={totalResumes > 0 ? `${totalResumes} total` : 'Not yet'} />
-            <PipelineStep done={Boolean(latestAudit)} label="Audit ready" value={latestScore !== null ? `${latestScore}% score` : 'Pending'} />
-            <PipelineStep done={Boolean(latestAudit)} label="Find jobs" value={latestAudit ? 'Ready' : 'After audit'} />
+
+          <div className="flex items-center gap-5">
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <span className="text-4xl font-semibold tabular-nums text-[var(--color-text-primary)]">
+                {latestScore !== null ? healthScore : '-'}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                {healthDelta === null ? 'No previous audit yet' : `${formatDelta(healthDelta)} from last audit`}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">
+                {latestResume ? latestResume.file_name : 'Add a resume to start measuring health.'}
+              </p>
+            </div>
           </div>
-        </div>
+
+          <div className="mt-6 space-y-3">
+            <MetricRow label="ATS Score" value={atsScore} />
+            <MetricRow label="Completn." value={`${completeness}%`} />
+            <MetricRow label="Freshness" value={freshness} />
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <PanelEyebrow>Next Best Action</PanelEyebrow>
+              <h2 className="mt-3 text-xl font-semibold tracking-normal text-[var(--color-text-primary)]">
+                {nextAction.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                {nextAction.description}
+              </p>
+            </div>
+            <Sparkles className="h-5 w-5 text-[var(--color-accent)]" />
+          </div>
+
+          <Link
+            href={nextAction.href}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+          >
+            {nextAction.cta}
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+
+          <div className="mt-6 border-t border-[var(--color-border)] pt-5">
+            <div className="mb-3 h-2 overflow-hidden rounded-full bg-[var(--color-surface)]">
+              <div
+                className="h-full rounded-full bg-[var(--color-accent)]"
+                style={{ width: `${(completedSteps / pipeline.length) * 100}%` }}
+              />
+            </div>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {completedSteps} of {pipeline.length} steps done
+            </p>
+          </div>
+        </Panel>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
-            <div>
-              <h2 className="font-semibold text-[var(--color-text-primary)]">Recent resumes</h2>
-              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">Latest files and parsing state</p>
-            </div>
-            <Link
-              href="/dashboard/resumes"
-              className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] transition-colors hover:border-[var(--color-accent)]/40"
-            >
-              View all
-            </Link>
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard value={resumeCount} label="Resumes" icon={<FileText className="h-4 w-4" />} />
+        <StatCard value={atsScore} label="ATS Score" icon={<ShieldCheck className="h-4 w-4" />} />
+        <StatCard value={applicationCount} label="Applications" icon={<BriefcaseBusiness className="h-4 w-4" />} />
+        <StatCard value={interviewCount} label="Interviews" icon={<ClipboardCheck className="h-4 w-4" />} />
+      </section>
+
+      <Panel>
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <PanelEyebrow>Recent Activity</PanelEyebrow>
+          <Link
+            href="/dashboard/applications"
+            className="text-xs font-semibold text-[var(--color-accent)] hover:underline"
+          >
+            View all
+          </Link>
+        </div>
+        {activities.length ? (
+          <ul className="space-y-3">
+            {activities.map((activity, index) => (
+              <li key={`${activity.text}-${index}`}>
+                <Link
+                  href={activity.href}
+                  className="flex gap-3 rounded-lg px-1 py-1 text-sm transition-colors hover:bg-[var(--color-surface-hover)]"
+                >
+                  <span className="w-16 shrink-0 text-[var(--color-text-muted)]">
+                    {timeAgo(activity.at)}
+                  </span>
+                  <span className="min-w-0 truncate text-[var(--color-text-secondary)]">
+                    {activity.text}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Activity will appear after you upload, audit, match, or track applications.
+          </p>
+        )}
+      </Panel>
+
+      <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <Panel>
+          <PanelEyebrow>Resume Pipeline</PanelEyebrow>
+          <div className="mt-6 flex items-center">
+            {pipeline.map((step, index) => (
+              <div key={step.label} className="flex flex-1 items-center last:flex-none">
+                <div>
+                  <span className={`block h-4 w-4 rounded-full border ${step.done ? 'border-[var(--color-accent)] bg-[var(--color-accent)]' : 'border-[var(--color-border)] bg-[var(--color-surface)]'}`} />
+                  <p className="mt-3 text-xs font-medium text-[var(--color-text-muted)]">
+                    {step.label}
+                  </p>
+                </div>
+                {index < pipeline.length - 1 && (
+                  <span className={`mx-3 h-px flex-1 ${pipeline[index + 1].done ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
+                )}
+              </div>
+            ))}
           </div>
+        </Panel>
 
-          {resumes.length === 0 ? (
-            <EmptyState
-              title="No resumes yet"
-              description="Create one in the builder or upload an existing PDF to begin tracking audits."
-              href="/builder"
-              cta="Create resume"
-            />
-          ) : (
-            <ul className="divide-y divide-[var(--color-border)]">
-              {resumes.map((resume) => (
-                <li key={resume.id} className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-[var(--color-surface-hover)]/45">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-white/55 text-xs font-semibold text-[var(--color-accent)]">
-                    CV
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                      {resume.file_name}
-                    </p>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      {formatDate(resume.created_at)}
-                    </p>
-                  </div>
-                  <StatusBadge status={resume.parsing_status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
-            <div>
-              <h2 className="font-semibold text-[var(--color-text-primary)]">Find jobs</h2>
-              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">Search live listings by role and location</p>
-            </div>
-            <Link
-              href="/dashboard/jobs"
-              className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] transition-colors hover:border-[var(--color-accent)]/40"
-            >
-              Open
-            </Link>
+        <Panel>
+          <PanelEyebrow>Quick Actions</PanelEyebrow>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <QuickAction href="/builder" icon={<FilePlus2 className="h-4 w-4" />} label="New Resume" />
+            <QuickAction href={latestResume ? `/dashboard/resumes/${latestResume.id}/audit` : '/dashboard/resumes'} icon={<ShieldCheck className="h-4 w-4" />} label="Run Audit" />
+            <QuickAction href="/dashboard/jobs" icon={<Search className="h-4 w-4" />} label="Find Jobs" />
           </div>
+        </Panel>
+      </section>
+    </div>
+  )
+}
 
-          <EmptyState
-            title="Search live job boards"
-            description="Use the jobs page to search real listings, preview the browser run, and open relevant roles."
-            href="/dashboard/jobs"
-            cta="Find jobs"
-          />
-        </section>
+function HeaderPill({
+  label,
+  value,
+  delta,
+}: {
+  label: string
+  value: string
+  delta: number | null
+}) {
+  return (
+    <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 text-sm text-[var(--color-text-secondary)]">
+      <span>{label}: <strong className="text-[var(--color-text-primary)]">{value}</strong></span>
+      {delta !== null && (
+        <span className={delta >= 0 ? 'text-[var(--color-accent)]' : 'text-red-300'}>
+          {delta >= 0 ? '+' : ''}{delta}%
+        </span>
+      )}
+    </span>
+  )
+}
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+      {children}
+    </section>
+  )
+}
+
+function PanelEyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+      {children}
+    </p>
+  )
+}
+
+function MetricRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="text-[var(--color-text-muted)]">{label}</span>
+      <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">{value}</span>
+    </div>
+  )
+}
+
+function StatCard({
+  value,
+  label,
+  icon,
+}: {
+  value: number | string
+  label: string
+  icon: React.ReactNode
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
+      <div className="mb-4 flex items-center justify-between text-[var(--color-text-muted)]">
+        {icon}
       </div>
+      <p className="text-2xl font-semibold tabular-nums text-[var(--color-text-primary)]">
+        {value}
+      </p>
+      <p className="mt-1 text-xs font-medium text-[var(--color-text-muted)]">{label}</p>
     </div>
   )
 }
 
 function QuickAction({
   href,
-  title,
-  description,
-  marker,
+  icon,
+  label,
 }: {
   href: string
-  title: string
-  description: string
-  marker: string
+  icon: React.ReactNode
+  label: string
 }) {
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-[var(--color-border)] bg-white/35 p-4 transition-colors hover:border-[var(--color-accent)]/40 hover:bg-white/60"
+      className="inline-flex h-11 items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-surface-hover)]"
     >
-      <div className="flex items-start gap-3">
-        <span className="rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-          {marker}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">{description}</p>
-        </div>
-        <span className="text-[var(--color-text-muted)] transition-transform group-hover:translate-x-1">→</span>
-      </div>
+      <span className="text-[var(--color-accent)]">{icon}</span>
+      {label}
     </Link>
   )
 }
 
-function PipelineStep({ done, label, value }: { done: boolean; label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-white/35 p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <span className={`h-2.5 w-2.5 rounded-full ${done ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          {done ? 'Done' : 'Open'}
-        </span>
-      </div>
-      <p className="text-sm font-semibold text-[var(--color-text-primary)]">{label}</p>
-      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{value}</p>
-    </div>
-  )
-}
-
-function EmptyState({
-  title,
-  description,
-  href,
-  cta,
-}: {
-  title: string
-  description: string
-  href: string
-  cta: string
-}) {
-  return (
-    <div className="px-5 py-10 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-white/55 text-xs font-bold text-[var(--color-accent)]">
-        RM
-      </div>
-      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</h3>
-      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--color-text-muted)]">{description}</p>
-      <Link
-        href={href}
-        className="mt-5 inline-flex items-center justify-center rounded-full border border-[var(--color-accent)]/35 px-4 py-2 text-xs font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/10"
-      >
-        {cta}
-      </Link>
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; className: string }> = {
-    processed: { label: 'Ready', className: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' },
-    completed: { label: 'Ready', className: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' },
-    pending: { label: 'Queued', className: 'border-amber-400/20 bg-amber-400/10 text-amber-300' },
-    processing: { label: 'Parsing', className: 'border-sky-400/20 bg-sky-400/10 text-sky-300' },
-    error: { label: 'Error', className: 'border-red-400/20 bg-red-400/10 text-red-300' },
-    failed: { label: 'Failed', className: 'border-red-400/20 bg-red-400/10 text-red-300' },
-  }
-  const s = map[status] ?? map['pending']
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${s.className}`}>
-      {s.label}
-    </span>
-  )
-}
-
-function formatDate(date: string | null) {
-  if (!date) return 'Recently'
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(date))
-}
-
-function scoreCopy(score: number) {
-  if (score >= 85) return 'Strong resume signal'
-  if (score >= 70) return 'Good, still improvable'
-  if (score >= 50) return 'Needs focused cleanup'
-  return 'Needs a stronger rewrite'
-}
-
 function getNextAction({
   resumeCount,
-  hasAudit,
+  latestResume,
+  latestScore,
 }: {
   resumeCount: number
-  hasAudit: boolean
+  latestResume: { id: string; file_name: string } | null
+  latestScore: number | null
 }) {
   if (resumeCount === 0) {
     return {
       title: 'Create your first resume',
-      description: 'Start with the builder if you want a clean A4 CV, or upload an existing resume from the resumes page.',
+      description: 'Start with a clean template, then return here for audits and matching.',
       href: '/builder',
-      cta: 'Start building',
+      cta: 'New resume',
     }
   }
 
-  if (!hasAudit) {
+  if (latestScore === null && latestResume) {
     return {
-      title: 'Run your first audit',
-      description: 'You have a resume uploaded. The next step is checking structure, keywords, and ATS readability.',
-      href: '/dashboard/resumes',
-      cta: 'Open resumes',
+      title: `Run ATS Audit on "${latestResume.file_name}"`,
+      description: 'You have a resume ready. Audit it before matching or applying.',
+      href: `/dashboard/resumes/${latestResume.id}/audit`,
+      cta: 'Run audit',
     }
   }
 
   return {
-    title: 'Find jobs',
-    description: 'Search live listings by prompt and location, then open roles that fit your resume direction.',
+    title: 'Find roles for your strongest resume',
+    description: latestResume
+      ? `Use "${latestResume.file_name}" to search and track relevant jobs.`
+      : 'Search live roles and track applications from the jobs workspace.',
     href: '/dashboard/jobs',
-    cta: 'Search jobs',
+    cta: 'Find jobs',
   }
+}
+
+function buildActivities({
+  resumes,
+  audits,
+  matches,
+  applications,
+}: {
+  resumes: Array<{ file_name: string; created_at: string | null }>
+  audits: Array<{ overall_score: number | null; created_at: string | null }>
+  matches: Array<{ job_title: string | null; company: string | null; created_at: string | null }>
+  applications: Array<{ job_title: string | null; company: string | null; status: string; created_at: string | null }>
+}): Activity[] {
+  const items: Activity[] = [
+    ...resumes.slice(0, 2).map(resume => ({
+      at: resume.created_at,
+      text: `Uploaded resume "${resume.file_name}"`,
+      href: '/dashboard/resumes',
+    })),
+    ...audits.slice(0, 2).map(audit => ({
+      at: audit.created_at,
+      text: `ATS audit scored ${audit.overall_score ?? '-'}%`,
+      href: '/dashboard/resumes',
+    })),
+    ...matches.slice(0, 2).map(match => ({
+      at: match.created_at,
+      text: `Matched with "${match.job_title ?? 'Untitled role'}${match.company ? ` at ${match.company}` : ''}"`,
+      href: '/dashboard/jobs',
+    })),
+    ...applications.slice(0, 2).map(application => ({
+      at: application.created_at,
+      text: `${titleCase(application.status)} "${application.job_title ?? 'Untitled role'}${application.company ? ` at ${application.company}` : ''}"`,
+      href: '/dashboard/applications',
+    })),
+  ]
+
+  return items
+    .sort((a, b) => new Date(b.at ?? 0).getTime() - new Date(a.at ?? 0).getTime())
+    .slice(0, 4)
+}
+
+function formatDelta(delta: number) {
+  if (delta === 0) return 'No change'
+  return `${delta > 0 ? '+' : ''}${delta}%`
+}
+
+function timeAgo(date: string | null) {
+  if (!date) return 'recent'
+  const diff = Date.now() - new Date(date).getTime()
+  if (!Number.isFinite(diff) || diff < 0) return 'recent'
+  const minutes = Math.floor(diff / 60_000)
+  if (minutes < 60) return minutes <= 1 ? 'now' : `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  const weeks = Math.floor(days / 7)
+  return `${weeks}w ago`
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/[_-]+/g, ' ')
+    .replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 }

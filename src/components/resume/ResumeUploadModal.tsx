@@ -109,7 +109,7 @@ export function ResumeUploadModal({ isOpen, onClose, onUploadSuccess }: Props) {
         const body = JSON.parse(xhr.responseText)
         setUploadedId(body.data.resume_id)
         setProgress(100)
-        setPhase(body.data.parsing_status === 'processed' ? 'Skills extracted' : 'Extraction needs retry')
+        setPhase(body.data.parsing_status === 'completed' || body.data.parsing_status === 'processed' ? 'Skills extracted' : 'Extraction needs retry')
         setState('success')
         onUploadSuccess(body.data.resume_id)
       } else {

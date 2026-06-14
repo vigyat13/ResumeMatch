@@ -22,7 +22,7 @@
  * The builder form and controls vanish — only the resume prints.
  */
 
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { renderTemplate } from '@/lib/builder/render'
 import type { ResumeData } from '@/lib/builder/types'
 import { scopeTemplateCss } from '@/lib/builder/scopeCss'
@@ -32,7 +32,6 @@ interface Props {
   templateCss:  string
   data:         ResumeData
   tuning:       PreviewTuning
-  onFitChange?: (info: PreviewFitInfo) => void
 }
 
 // Keep links clean in resumes without flattening template colors. Flattening all
@@ -46,15 +45,6 @@ export interface PreviewTuning {
   spacing:       number
   contentScale:  number
   cropBottomMm:  number
-}
-
-export interface PreviewFitInfo {
-  pageCount: number
-  contentHeightPx: number
-  pageHeightPx: number
-  currentScale: number
-  recommendedScale: number
-  overfull: boolean
 }
 
 function normalizeTuning(tuning: PreviewTuning): PreviewTuning {
@@ -95,8 +85,7 @@ export function previewSpacingCss(tuning: PreviewTuning, scope = '.preview-sheet
   `
 }
 
-export function LivePreview({ templateHtml, templateCss, data, tuning, onFitChange }: Props) {
-  const sheetRef = useRef<HTMLDivElement>(null)
+export function LivePreview({ templateHtml, templateCss, data, tuning }: Props) {
   const renderedHtml = useMemo(
     () => renderTemplate(templateHtml, data),
     [templateHtml, data]
@@ -112,48 +101,6 @@ export function LivePreview({ templateHtml, templateCss, data, tuning, onFitChan
       previewSpacingCss(tuning),
     [templateCss, tuning]
   )
-
-  useLayoutEffect(() => {
-    if (!onFitChange) return
-    const sheet = sheetRef.current
-    const resume = sheet?.querySelector<HTMLElement>('.resume')
-    if (!sheet || !resume) return
-
-    let frame = 0
-    const measure = () => {
-      const pageHeightPx = sheet.getBoundingClientRect().height || 1
-      const contentHeightPx = resume.getBoundingClientRect().height || pageHeightPx
-      const pageCount = Math.max(1, Math.ceil(contentHeightPx / pageHeightPx - 0.01))
-      const recommendedScale = Math.max(
-        58,
-        Math.min(100, Math.floor(tuning.contentScale * (pageHeightPx / Math.max(contentHeightPx, 1))))
-      )
-
-      onFitChange({
-        pageCount,
-        contentHeightPx,
-        pageHeightPx,
-        currentScale: tuning.contentScale,
-        recommendedScale,
-        overfull: pageCount > 1 || recommendedScale <= 58,
-      })
-    }
-
-    const scheduleMeasure = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(measure)
-    }
-
-    const observer = new ResizeObserver(scheduleMeasure)
-    observer.observe(sheet)
-    observer.observe(resume)
-    scheduleMeasure()
-
-    return () => {
-      cancelAnimationFrame(frame)
-      observer.disconnect()
-    }
-  }, [onFitChange, renderedHtml, scopedCss, tuning.contentScale])
 
   return (
     <>
@@ -172,7 +119,6 @@ export function LivePreview({ templateHtml, templateCss, data, tuning, onFitChan
       {/* The resume preview */}
       <div className="relative">
         <div
-          ref={sheetRef}
           className="preview-sheet bg-white shadow-xl rounded-sm overflow-visible"
           style={{ width: '21cm', maxWidth: '100%' }}
           dangerouslySetInnerHTML={{ __html: renderedHtml }}

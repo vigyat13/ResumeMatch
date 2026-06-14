@@ -561,9 +561,9 @@ export function pickSampleForTemplate(name: string): ResumeData {
   const n = name.toLowerCase()
 
   if (['ml engineer', 'data science', 'modern tech'].some(h => n.includes(h)))       return SAMPLE_ML
-  if (['frontend engineer', 'startup', 'creative', 'minimal'].some(h => n.includes(h))) return SAMPLE_FRONTEND
+  if (['frontend engineer', 'startup', 'creative', 'minimal', 'online resume'].some(h => n.includes(h))) return SAMPLE_FRONTEND
   if (['product manager', 'consulting', 'two column'].some(h => n.includes(h)))       return SAMPLE_PM
-  if (['backend engineer', 'mono clean'].some(h => n.includes(h)))                    return SAMPLE_BACKEND
-  if (['executive', 'uk cv', 'europass', 'academic', 'intern'].some(h => n.includes(h))) return SAMPLE_EXECUTIVE
+  if (['backend engineer', 'mono clean', 'mono slate', 'timeline dots'].some(h => n.includes(h)))  return SAMPLE_BACKEND
+  if (['executive', 'uk cv', 'europass', 'academic', 'intern', 'awesome cv classic', 'elegant banner'].some(h => n.includes(h))) return SAMPLE_EXECUTIVE
   return SAMPLE_ENGINEER
 }

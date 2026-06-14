@@ -63,7 +63,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const { text, skills, error } = await parseResume(buffer, resume.file_type)
-  const parsingStatus = error ? 'failed' : 'processed'
+  const parsingStatus = error ? 'failed' : 'completed'
 
   const { data: updated, error: updateError } = await supabase
     .from('resumes')

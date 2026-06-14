@@ -16,7 +16,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FileText, Trash2, Eye, Clock, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
+import { BriefcaseBusiness, FileText, Trash2, Eye, Clock, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
 import { formatFileSize, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
@@ -170,6 +170,18 @@ export function ResumeCard({ resume, onDelete }: Props) {
           >
             <TrendingUp className="w-3.5 h-3.5" />
             ATS Audit
+          </Link>
+
+          <Link
+            href={`/dashboard/jobs?resume_id=${resume.id}&resume_name=${encodeURIComponent(resume.file_name)}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs font-medium transition-colors ${
+              isParsed
+                ? 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                : 'pointer-events-none opacity-45 text-[var(--color-text-muted)]'
+            }`}
+          >
+            <BriefcaseBusiness className="w-3.5 h-3.5" />
+            Apply Jobs
           </Link>
 
           <button

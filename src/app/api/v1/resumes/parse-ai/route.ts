@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       : null
 
     if (resumeId) {
-      const parsingStatus = error ? 'failed' : 'processed'
+      const parsingStatus = error ? 'failed' : 'completed'
       await supabase
         .from('resumes')
         .update({

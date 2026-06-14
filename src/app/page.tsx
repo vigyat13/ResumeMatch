@@ -29,8 +29,8 @@ const scenes = [
     id: "apply",
     tag: "Apply",
     headline: "Apply to jobs posted across the internet",
-    body: "Type the role you want, compare your resume against relevant job requirements, and apply with more confidence. Let the agent apply for you.",
-    href: "/dashboard/matches",
+    body: "Type the role you want, compare your resume against relevant job requirements, and apply with more confidence.",
+    href: "/dashboard/jobs",
     cta: "Find matching jobs",
   },
 ] as const;
@@ -955,7 +955,7 @@ export default function LandingPage() {
                     links: [
                       { label: "Resume Builder", href: "/builder" },
                       { label: "ATS Checker",    href: "/dashboard/resumes" },
-                      { label: "JD Matcher",     href: "/dashboard/matches" },
+                      { label: "Find Jobs",      href: "/dashboard/jobs" },
                     ],
                   },
                   {

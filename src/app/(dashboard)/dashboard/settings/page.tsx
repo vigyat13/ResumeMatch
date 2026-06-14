@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ComingSoon } from '@/components/ComingSoon'
+import { SettingsClient } from '@/components/settings/SettingsClient'
 
 export const metadata = { title: 'Settings — ResumeMatch' }
 
@@ -9,17 +9,30 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const [{ data: profile }, { data: prefs }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('first_name, last_name, avatar_url, timezone, subscription_tier')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('email_preferences')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+
   return (
-    <ComingSoon
-      feature="Account Settings"
-      description="Manage your profile, notification preferences, billing, and connected accounts — all in one place."
-      eta="Coming soon"
-      bullets={[
-        'Edit your name, email, and profile picture',
-        'Notification and email preferences',
-        'Subscription and billing management',
-        'Connected OAuth accounts (Google, GitHub)',
-      ]}
+    <SettingsClient
+      profile={{
+        first_name:        profile?.first_name ?? '',
+        last_name:         profile?.last_name ?? '',
+        email:             user.email ?? '',
+        avatar_url:        profile?.avatar_url ?? null,
+        timezone:          profile?.timezone ?? null,
+        subscription_tier: profile?.subscription_tier ?? 'free',
+      }}
+      prefs={prefs ?? null}
     />
   )
 }

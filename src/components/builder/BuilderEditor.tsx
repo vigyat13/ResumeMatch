@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Download, Loader2, ChevronLeft, FileText, Code2,
   Edit3, Copy, Check, RefreshCw, ImagePlus, X, AlertCircle,
@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { BuilderForm }  from './BuilderForm'
 import { SkillsEditor } from './SkillsEditor'
-import { LivePreview, previewPageHeightMm, previewSpacingCss, type PreviewFitInfo } from './LivePreview'
+import { LivePreview, previewPageHeightMm, previewSpacingCss } from './LivePreview'
 import { AuthModal }    from './AuthModal'
 import { AiOptimizePanel } from './AiOptimizePanel'
 import { DEFAULT_RESUME_DATA, pickSampleForTemplate } from '@/lib/builder/types'
@@ -56,8 +56,6 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
   const [spacing, setSpacing]           = useState(0)
   const [contentScale, setContentScale] = useState(100)
   const [cropBottomMm, setCropBottomMm] = useState(0)
-  const [onePageMode, setOnePageMode]   = useState(true)
-  const [fitInfo, setFitInfo]           = useState<PreviewFitInfo | null>(null)
   const [layoutPanelOpen, setLayoutPanelOpen] = useState(false)
   const [optimizePanelOpen, setOptimizePanelOpen] = useState(false)
   const [optimizeStatus, setOptimizeStatus] = useState<OptimizeStatus>('idle')
@@ -133,30 +131,6 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
     () => ({ spacing, contentScale, cropBottomMm }),
     [contentScale, cropBottomMm, spacing]
   )
-  const fitSuggestions = useMemo(() => buildFitSuggestions(previewData), [previewData])
-
-  const handleFitChange = useCallback((info: PreviewFitInfo) => {
-    setFitInfo(prev => {
-      if (
-        prev &&
-        prev.pageCount === info.pageCount &&
-        Math.abs(prev.recommendedScale - info.recommendedScale) < 1 &&
-        Math.abs(prev.contentHeightPx - info.contentHeightPx) < 4
-      ) {
-        return prev
-      }
-      return info
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!onePageMode || !fitInfo) return
-    if (spacing !== -2) setSpacing(-2)
-    if (fitInfo.pageCount > 1 && fitInfo.recommendedScale < contentScale - 1) {
-      setContentScale(Math.max(58, fitInfo.recommendedScale))
-    }
-  }, [contentScale, fitInfo, onePageMode, spacing])
-
   // Active LaTeX shown in Monaco: edited version or freshly generated
   const activeLatex = editedLatex ?? latexCode
 
@@ -229,10 +203,12 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 
     const renderedHtml = renderTemplate(templateHtml, data)
     const fileName = `${safeFileName(data.name || 'resume')}.pdf`
-    const exportTuning = onePageMode && fitInfo?.pageCount && fitInfo.pageCount > 1
-      ? { ...previewTuning, spacing: -2, contentScale: Math.max(58, fitInfo.recommendedScale) }
-      : previewTuning
+    const exportTuning = previewTuning
     const pageHeightMm = previewPageHeightMm(exportTuning)
+    // Print the FULL resume. Content flows naturally across as many A4 pages as
+    // needed — never clipped. `body .resume{min-height:0}` stops the preview's
+    // full-page min-height from forcing a near-empty trailing page when the
+    // content is short, while `overflow:visible` lets longer CVs paginate.
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -240,18 +216,20 @@ export function BuilderEditor({ templateId, templateName, templateHtml, template
 <title>${fileName}</title>
 <style>
 *{box-sizing:border-box;-webkit-hyphens:none;hyphens:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-html,body{margin:0;padding:0;background:#fff;width:210mm;min-height:${pageHeightMm}mm;color:#111;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#fff;width:210mm;height:auto;min-height:0;overflow:visible;color:#111;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 a{color:inherit;text-decoration:none}
 ${templateCss}
 ${previewSpacingCss(exportTuning, 'body')}
+html,body{min-height:0!important;height:auto!important;overflow:visible!important}
+body .resume{min-height:0!important;height:auto!important;overflow:visible!important}
 @page{size:210mm ${pageHeightMm}mm;margin:0}
-@media print{body{margin:0;background-image:none!important}.resume{box-shadow:none!important;border-radius:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+@media print{html,body{margin:0;min-height:0!important;height:auto!important;overflow:visible!important;background-image:none!important}body .resume{min-height:0!important;height:auto!important;overflow:visible!important;box-shadow:none!important;border-radius:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 </style>
 </head>
 <body>${renderedHtml}</body>
 </html>`
 
-    printA4Document(html, () => {
+    printA4Document(html, { pageHeightMm, baseZoom: exportTuning.contentScale / 100 }, () => {
       setDownloadStatus('ready')
       setTimeout(() => setDownloadStatus('idle'), 3500)
     })
@@ -419,10 +397,6 @@ ${previewSpacingCss(exportTuning, 'body')}
               setContentScale={setContentScale}
               cropBottomMm={cropBottomMm}
               setCropBottomMm={setCropBottomMm}
-              onePageMode={onePageMode}
-              setOnePageMode={setOnePageMode}
-              fitInfo={fitInfo}
-              fitSuggestions={fitSuggestions}
               onClose={() => setLayoutPanelOpen(false)}
             />
           </div>
@@ -547,7 +521,7 @@ ${previewSpacingCss(exportTuning, 'body')}
           {/* Right panel — live preview */}
           <div className={`${mobilePane === 'preview' ? 'flex' : 'hidden'} min-h-[calc(100dvh-157px)] flex-1 justify-center overflow-auto bg-muted/40 px-3 py-8 print:bg-white print:p-0 sm:px-8 sm:py-8 lg:flex lg:min-h-0`}>
             <div className="print-target max-w-full">
-              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={previewData} tuning={previewTuning} onFitChange={handleFitChange} />
+              <LivePreview templateHtml={templateHtml} templateCss={templateCss} data={previewData} tuning={previewTuning} />
             </div>
           </div>
           <aside className="hidden w-[280px] flex-shrink-0 overflow-y-auto border-l border-border bg-background xl:block">
@@ -558,10 +532,6 @@ ${previewSpacingCss(exportTuning, 'body')}
               setContentScale={setContentScale}
               cropBottomMm={cropBottomMm}
               setCropBottomMm={setCropBottomMm}
-              onePageMode={onePageMode}
-              setOnePageMode={setOnePageMode}
-              fitInfo={fitInfo}
-              fitSuggestions={fitSuggestions}
             />
           </aside>
         </div>
@@ -586,10 +556,6 @@ ${previewSpacingCss(exportTuning, 'body')}
               setContentScale={setContentScale}
               cropBottomMm={cropBottomMm}
               setCropBottomMm={setCropBottomMm}
-              onePageMode={onePageMode}
-              setOnePageMode={setOnePageMode}
-              fitInfo={fitInfo}
-              fitSuggestions={fitSuggestions}
             />
           </aside>
         </div>
@@ -741,10 +707,6 @@ ${previewSpacingCss(exportTuning, 'body')}
               setContentScale={setContentScale}
               cropBottomMm={cropBottomMm}
               setCropBottomMm={setCropBottomMm}
-              onePageMode={onePageMode}
-              setOnePageMode={setOnePageMode}
-              fitInfo={fitInfo}
-              fitSuggestions={fitSuggestions}
             />
           </aside>
         </div>
@@ -808,32 +770,6 @@ function hasResumeContent(data: ResumeData): boolean {
   )
 }
 
-function buildFitSuggestions(data: ResumeData): string[] {
-  const suggestions: string[] = []
-  const projectCount = data.projects?.filter(project =>
-    project.name.trim() || project.description.trim() || project.bullets.some(bullet => bullet.trim())
-  ).length ?? 0
-  const projectBullets = data.projects?.reduce((count, project) =>
-    count + project.bullets.filter(bullet => bullet.trim()).length, 0
-  ) ?? 0
-  const experienceBullets = data.experience?.reduce((count, entry) =>
-    count + entry.bullets.filter(bullet => bullet.trim()).length, 0
-  ) ?? 0
-  const skillsCount = data.skills?.filter(skill => skill.name.trim()).length ?? 0
-  const publicationsCount = data.publications?.filter(Boolean).length ?? 0
-  const honorsCount = data.honors?.filter(Boolean).length ?? 0
-  const certificationsCount = data.certifications?.filter(Boolean).length ?? 0
-
-  if (projectCount > 3) suggestions.push('Keep only the strongest 2-3 projects for one-page resumes.')
-  if (projectBullets > projectCount) suggestions.push('Use one bullet per project; move details into the description.')
-  if (experienceBullets > 6) suggestions.push('Keep 2 bullets per recent role and remove repeated implementation details.')
-  if (skillsCount > 12) suggestions.push('Group skills into 4-6 categories instead of listing every tool separately.')
-  if (publicationsCount > 1) suggestions.push('Keep only the most relevant publication, or remove publications for industry roles.')
-  if (honorsCount + certificationsCount > 4) suggestions.push('Keep 2-3 honors/certifications that match the target job.')
-
-  return suggestions.length ? suggestions : ['Remove optional sections like publications, extra honors, or older projects.']
-}
-
 const DEMO_SAMPLE_NAMES = new Set([
   'pratik singh',
   'nishant yadav',
@@ -865,15 +801,21 @@ function isDemoResumeData(data: ResumeData): boolean {
   return DEMO_HANDLE_PATTERN.test(links)
 }
 
-function printA4Document(html: string, onPrintOpened: () => void) {
+function printA4Document(
+  html: string,
+  opts: { pageHeightMm: number; baseZoom: number },
+  onPrintOpened: () => void,
+) {
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
+  // Render at true A4 width (not 0) so layout/height measurement is accurate.
   iframe.style.right = '0'
   iframe.style.bottom = '0'
-  iframe.style.width = '0'
-  iframe.style.height = '0'
+  iframe.style.width = '210mm'
+  iframe.style.height = '297mm'
   iframe.style.border = '0'
   iframe.style.opacity = '0'
+  iframe.style.pointerEvents = 'none'
   iframe.setAttribute('aria-hidden', 'true')
   document.body.appendChild(iframe)
 
@@ -883,18 +825,61 @@ function printA4Document(html: string, onPrintOpened: () => void) {
 
   iframe.onload = () => {
     const win = iframe.contentWindow
-    if (!win) {
+    const doc = iframe.contentDocument
+    if (!win || !doc) {
       cleanup()
       return
     }
-    win.focus()
-    win.onafterprint = cleanup
-    win.print()
-    onPrintOpened()
-    setTimeout(cleanup, 60_000)
+
+    const printNow = () => {
+      win.focus()
+      win.onafterprint = cleanup
+      win.print()
+      onPrintOpened()
+      setTimeout(cleanup, 60_000)
+    }
+
+    const measureAndFit = () => {
+      try {
+        fitResumeToWholePages(doc, opts)
+      } catch { /* fall back to natural flow */ }
+      printNow()
+    }
+
+    // Wait for fonts + a layout frame so the measured height is final.
+    const ready = (doc as Document & { fonts?: FontFaceSet }).fonts?.ready
+    if (ready) ready.then(() => requestAnimationFrame(measureAndFit)).catch(measureAndFit)
+    else requestAnimationFrame(measureAndFit)
   }
 
   iframe.srcdoc = html
+}
+
+/**
+ * Snap the printed resume to the same page count the user sees on screen.
+ *
+ * Templates often render ~1.05 pages of content, so a sliver spills onto a
+ * near-empty second page in print even though the preview pads it to look like
+ * one page. We measure the real rendered height and, when the overflow past a
+ * page boundary is small (< 20% of a page), nudge-scale the resume down so it
+ * fits that many whole pages. Genuinely long CVs (e.g. 1.7 pages) keep flowing.
+ */
+function fitResumeToWholePages(doc: Document, opts: { pageHeightMm: number; baseZoom: number }) {
+  const resume = doc.querySelector<HTMLElement>('.resume')
+  if (!resume) return
+
+  const pagePx = (opts.pageHeightMm * 96) / 25.4
+  const contentPx = resume.getBoundingClientRect().height
+  if (!contentPx || !pagePx) return
+
+  const rawPages = contentPx / pagePx
+  const frac = rawPages - Math.floor(rawPages)
+  const targetPages = Math.max(1, frac > 0 && frac < 0.2 ? Math.floor(rawPages) : Math.ceil(rawPages))
+
+  if (contentPx > targetPages * pagePx) {
+    const factor = ((targetPages * pagePx) / contentPx) * 0.995
+    resume.style.zoom = String(opts.baseZoom * factor)
+  }
 }
 
 type NumberSetter = React.Dispatch<React.SetStateAction<number>>
@@ -906,10 +891,6 @@ function LayoutControls({
   setContentScale,
   cropBottomMm,
   setCropBottomMm,
-  onePageMode,
-  setOnePageMode,
-  fitInfo,
-  fitSuggestions,
   onClose,
 }: {
   spacing: number
@@ -918,14 +899,8 @@ function LayoutControls({
   setContentScale: NumberSetter
   cropBottomMm: number
   setCropBottomMm: NumberSetter
-  onePageMode: boolean
-  setOnePageMode: React.Dispatch<React.SetStateAction<boolean>>
-  fitInfo: PreviewFitInfo | null
-  fitSuggestions: string[]
   onClose?: () => void
 }) {
-  const scaleTooSmall = onePageMode && Boolean(fitInfo && fitInfo.recommendedScale <= 65)
-
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between border-b border-border px-5 py-5">
@@ -948,46 +923,6 @@ function LayoutControls({
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">One-page ATS fit</h3>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Keeps preview and downloaded PDF on one A4 page when possible.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOnePageMode(v => !v)}
-              className={`relative h-7 w-12 flex-shrink-0 rounded-full border transition-colors ${
-                onePageMode ? 'border-primary bg-primary' : 'border-border bg-muted'
-              }`}
-              aria-pressed={onePageMode}
-            >
-              <span
-                className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                  onePageMode ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-          <div className="mt-3 rounded-xl border border-border bg-background px-3 py-2 text-xs leading-5 text-muted-foreground">
-            {fitInfo
-              ? fitInfo.pageCount <= 1
-                ? 'Fits on one page.'
-                : `Currently ${fitInfo.pageCount} pages. Auto-fit target: ${fitInfo.recommendedScale}%.`
-              : 'Measuring preview...'}
-          </div>
-          {scaleTooSmall && fitSuggestions.length > 0 && (
-            <div className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">Too much content for a clean one-page CV</p>
-              <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-muted-foreground">
-                {fitSuggestions.slice(0, 4).map(suggestion => <li key={suggestion}>{suggestion}</li>)}
-              </ul>
-            </div>
-          )}
-        </section>
-
         <LayoutStepper
           label="Whitespace"
           value={spacingLabel(spacing)}
@@ -1026,7 +961,6 @@ function LayoutControls({
       <div className="border-t border-border px-5 py-4">
         <button
           onClick={() => {
-            setOnePageMode(true)
             setSpacing(0)
             setContentScale(100)
             setCropBottomMm(0)

@@ -67,6 +67,17 @@ export const SKILL_LIST: readonly string[] = [
   // Security / Reliability
   'OAuth', 'JWT', 'RBAC', 'RLS', 'SAML', 'Sentry', 'Observability',
   'Prometheus', 'Grafana', 'Load Testing', 'Caching',
+
+  // Extended modern stack
+  'Remix', 'SvelteKit', 'Solid.js', 'Astro', 'Deno', 'Bun', 'Three.js',
+  'Electron', 'Solidity', 'Web3', 'Ethereum', 'Kafka', 'RabbitMQ', 'Spark',
+  'Snowflake', 'BigQuery', 'Databricks', 'Pinecone', 'Selenium', 'Appium',
+  'Vitest', 'Puppeteer', 'OpenTelemetry', 'Helm', 'ArgoCD', 'Pulumi',
+
+  // Office / Business / Domain tools
+  'Excel', 'PowerPoint', 'Word', 'Google Sheets', 'SPSS', 'SAS', 'Stata',
+  'Salesforce', 'HubSpot', 'SAP', 'QuickBooks', 'Notion', 'Slack', 'Asana',
+  'Trello', 'AutoCAD', 'SolidWorks', 'MATLAB', 'Simulink', 'LaTeX',
 ] as const
 
 const SKILL_ALIASES: Record<string, readonly string[]> = {
@@ -89,6 +100,83 @@ const SKILL_ALIASES: Record<string, readonly string[]> = {
   'Power BI': ['PowerBI'],
   'CI/CD': ['CI CD', 'CICD'],
   'A/B Testing': ['AB Testing', 'A B Testing'],
+  React: ['ReactJS', 'React.js'],
+  Vue: ['VueJS', 'Vue.js'],
+  Angular: ['AngularJS'],
+  Express: ['Express.js', 'ExpressJS'],
+  Kubernetes: ['K8s'],
+  AWS: ['Amazon Web Services'],
+  Azure: ['Microsoft Azure'],
+  Kotlin: ['Kotlin'],
+  GraphQL: ['Graph QL'],
+  'Spring Boot': ['Spring'],
+}
+
+/**
+ * Flatten arbitrary skill strings into individual, deduped skill names.
+ *
+ * Handles every common resume shape:
+ *  - Categorized lines: "Programming: Python, C++"      → Python, C++
+ *  - Delimited lists:   "React | Node.js | Docker"      → React, Node.js, Docker
+ *  - Single skills:     "C++"                           → C++
+ *
+ * Unlike extractSkills(), this does NOT require a skill to be in SKILL_LIST —
+ * it captures any tool/technology the candidate listed. Known skills are
+ * normalized to their canonical casing; unknown skills are kept verbatim.
+ */
+export function flattenSkillNames(values: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const raw of values) {
+    const value = String(raw ?? '').replace(/\s+/g, ' ').trim()
+    if (!value) continue
+
+    // Drop a leading "Category:" label, then split the remainder into items.
+    const body = value.replace(SKILL_LABEL_RE, '')
+    for (const piece of body.split(SKILL_SPLIT_RE)) {
+      const part = piece
+        .replace(SKILL_LABEL_RE, '')               // nested "Label:" inside a piece
+        .replace(/^[•·\-–—\s]+/, '')
+        .replace(/[.;,]+$/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (!isLikelySkill(part)) continue
+
+      const canon = SKILL_CANON.get(part.toLowerCase()) ?? part
+      const key = canon.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(canon)
+    }
+  }
+
+  return out
+}
+
+// Canonical-casing lookup built once from the list + aliases.
+const SKILL_CANON: Map<string, string> = (() => {
+  const map = new Map<string, string>()
+  for (const skill of SKILL_LIST) map.set(skill.toLowerCase(), skill)
+  for (const [canon, aliases] of Object.entries(SKILL_ALIASES)) {
+    for (const alias of aliases) map.set(alias.toLowerCase(), canon)
+  }
+  return map
+})()
+
+const SKILL_LABEL_RE = /^[A-Za-z][A-Za-z /&+#.-]{1,40}:\s*/
+// Split on real list delimiters and slashes/ampersands that have surrounding
+// spaces — keeps tight tokens like "CI/CD", "TCP/IP", "Node.js" intact.
+const SKILL_SPLIT_RE = /\s*[,;|·•]\s*|\s+\/\s+|\s+&\s+|\s+–\s+/
+
+function isLikelySkill(value: string): boolean {
+  if (value.length < 1 || value.length > 40) return false
+  if (value.split(/\s+/).length > 5) return false      // prose, not a skill
+  if (/\d{4}/.test(value)) return false                // stray year
+  if (/[.!?]$/.test(value)) return false               // sentence
+  if (!/[a-z]/i.test(value)) return false              // must have a letter
+  if (/\b(developed|designed|built|managed|led|implemented|created|responsible|worked|using|including|various|etc|proficient|familiar|knowledge)\b/i.test(value)) return false
+  return true
 }
 
 /**

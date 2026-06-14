@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { text, skills, error } = await parseResume(buffer, fileType as 'pdf' | 'docx')
-    const parsingStatus = error ? 'failed' : 'processed'
+    const parsingStatus = error ? 'failed' : 'completed'
 
     const { error: parseUpdateError } = await supabase
       .from('resumes')

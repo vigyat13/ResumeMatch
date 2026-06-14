@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { JobSearchAgent } from '@/components/dashboard/jobs/JobSearchAgent'
+import { JobSearch } from '@/components/dashboard/jobs/JobSearch'
 
 export const metadata = { title: 'Find Jobs — ResumeMatch' }
 
@@ -9,9 +9,11 @@ export default async function JobsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <JobSearchAgent />
-    </div>
-  )
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('first_name')
+    .eq('id', user.id)
+    .single()
+
+  return <JobSearch firstName={profile?.first_name || undefined} />
 }

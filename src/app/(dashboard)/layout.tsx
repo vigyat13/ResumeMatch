@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 
-const DASHBOARD_LOCKED = true
+const DASHBOARD_LOCKED = process.env.NEXT_PUBLIC_DASHBOARD_LOCKED === 'true'
 
 export default async function DashboardLayout({
   children,

@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 
-const LIVE_BROWSER_API_URL = process.env.LIVE_BROWSER_API_URL
-  ?? process.env.NEXT_PUBLIC_LIVE_BROWSER_API_URL
-  ?? 'http://localhost:8000'
-
-const Schema = z.object({ session_id: z.string().min(1) })
+const Schema = z.object({
+  sessionId: z.string().min(1),
+  job: z.object({
+    title: z.string().min(1),
+    company: z.string().min(1),
+    url: z.string().url(),
+  }),
+})
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -17,12 +20,20 @@ export async function POST(req: NextRequest) {
   const parsed = Schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 422 })
 
-  const res = await fetch(`${LIVE_BROWSER_API_URL}/apply-agent/confirm`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(parsed.data),
+  const { sessionId, job } = parsed.data
+
+  const { error } = await supabase.from('tracked_applications').insert({
+    user_id: user.id,
+    session_id: sessionId,
+    job_title: job.title,
+    company: job.company,
+    job_url: job.url,
+    status: 'submitted',
   })
 
-  const json = await res.json().catch(() => ({}))
-  return NextResponse.json(json, { status: res.ok ? 200 : res.status })
+  if (error) {
+    return NextResponse.json({ error: 'Failed to record application.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }

@@ -1,5 +1,5 @@
 import { groq, GROQ_MODELS } from '../ai/groq'
-import { extractSkills } from './skills'
+import { extractSkills, flattenSkillNames } from './skills'
 import { DEFAULT_RESUME_DATA, type ResumeData } from '../builder/types'
 import { ResumeDataSchema } from '../builder/schema'
 
@@ -19,18 +19,26 @@ const SECTION_ALIASES: Record<SectionKey, string[]> = {
     'profile',
     'profile summary',
     'professional summary',
+    'professional profile',
+    'executive summary',
     'career profile',
+    'career summary',
     'objective',
     'career objective',
     'about',
+    'about me',
   ],
   experience: [
     'experience',
     'work experience',
+    'working experience',
     'professional experience',
     'relevant experience',
+    'work history',
     'employment history',
+    'employment',
     'career history',
+    'professional background',
     'internship experience',
     'internships',
   ],
@@ -53,10 +61,19 @@ const SECTION_ALIASES: Record<SectionKey, string[]> = {
     'technical skills',
     'core skills',
     'key skills',
+    'core competencies',
     'competencies',
+    'proficiencies',
+    'technical proficiencies',
+    'areas of expertise',
+    'technical expertise',
+    'expertise',
     'tools',
     'tools and technologies',
     'technologies',
+    'tech stack',
+    'languages and frameworks',
+    'skills summary',
     'technical skills & interests',
   ],
   certifications: [
@@ -134,7 +151,7 @@ export async function parseResumeToBuilderData(text: string, skills: string[]): 
             'Keep original month-inclusive dates exactly when present, such as "Jun 2021 - Aug 2021".',
             'Only include skills, certifications, links, schools, companies, and projects visible in the source text.',
             'Keep Certifications & Training separate from Honors, Leadership, and Awards.',
-            'For categorized skill sections, preserve category labels exactly, such as "Programming: Python, C++" as skill names.',
+            'For skills, output a FLAT list of individual skills, one per entry. Split any categorized or delimited skill lines into separate skills: "Programming: Python, C++" becomes "Python" and "C++". Never keep the category label ("Programming") as a skill. Include every distinct language, framework, library, tool, platform, and technology mentioned anywhere in the resume.',
             'For honors, leadership, extracurricular, and certifications, preserve the complete source line including label, description, provider, and date. Do not summarize or shorten these lines.',
             'Use concise achievement bullets. If a field is unknown, use an empty string or empty array.',
           ].join('\n'),
@@ -175,12 +192,13 @@ function parseWithRules(text: string, providedSkills: string[]): StructuredParse
   const sections = splitSections(lines)
   const contact = extractContact(lines)
   const header = inferHeader(lines, contact)
-  const parsedSkillLines = parseSkillLines(sections.skills ?? [])
-  const skillNames = unique([
-    ...parsedSkillLines,
+  // Skills from the resume's own Skills section come first (captures arbitrary
+  // tools the candidate listed), then keyword hits and any pre-extracted skills.
+  const skillNames = flattenSkillNames([
+    ...(sections.skills ?? []),
     ...providedSkills,
     ...extractSkills(text),
-  ]).slice(0, 18)
+  ]).slice(0, 24)
 
   const data = cleanResumeData({
     ...DEFAULT_RESUME_DATA,
@@ -190,7 +208,7 @@ function parseWithRules(text: string, providedSkills: string[]): StructuredParse
     experience: parseExperience(sections.experience ?? []),
     projects: parseProjects(sections.projects ?? []),
     education: parseEducation(sections.education ?? []),
-    skills: skillNames.map(name => ({ name, level: 80 })),
+    skills: skillNames.map((name: string) => ({ name, level: 80 })),
     certifications: parseDatedListItems(sections.certifications ?? []).slice(0, 12),
     honors: cleanHonorLines(sections.honors ?? [], sections.publications ?? []).slice(0, 16),
     publications: cleanBullets([...(sections.publications ?? [])]).slice(0, 12),
@@ -398,21 +416,6 @@ function parseEducation(lines: string[]) {
   }).filter(education => education.school || education.degree)
 }
 
-function parseSkillLines(lines: string[]): string[] {
-  return lines.flatMap(line => {
-    const normalizedLine = line.replace(/\s+/g, ' ').trim()
-    const categoryMatch = normalizedLine.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
-    if (categoryMatch) {
-      return [`${categoryMatch[1].trim()}: ${categoryMatch[2].trim()}`]
-    }
-
-    return normalizedLine
-      .split(/[,|•;·]/)
-      .map(skill => skill.trim())
-      .filter(skill => skill.length >= 2 && skill.length <= 50 && !DATE_PATTERN.test(skill))
-  }).filter(skill => skill.length <= 180)
-}
-
 function parseDatedListItems(lines: string[]): string[] {
   const cleaned = cleanBullets(lines)
   const dateOnly = cleaned.filter(line => isDateOnly(line))
@@ -500,8 +503,8 @@ function inferTech(heading: string, blockText: string): string {
 }
 
 function cleanResumeData(input: Partial<ResumeData>): ResumeData {
-  const normalizedSkills = normalizeCategorizedSkillEntries(
-    unique(asArray(input.skills).map(skill => clean(skill.name)).filter(Boolean))
+  const normalizedSkills = flattenSkillNames(
+    asArray(input.skills).map(skill => clean(skill.name)).filter(Boolean)
   )
 
   return {
@@ -536,7 +539,7 @@ function cleanResumeData(input: Partial<ResumeData>): ResumeData {
       year: clean(education.year),
     })).filter(education => education.school || education.degree),
     skills: normalizedSkills
-      .slice(0, 18)
+      .slice(0, 24)
       .map(name => ({ name, level: 80 })),
     certifications: cleanArray(input.certifications, 12),
     publications: cleanArray(input.publications, 12),
@@ -598,51 +601,7 @@ function mergeSkillEntries(parsed: ResumeData['skills'] | undefined, fallback: R
     seen.add(key)
     skills.push({ name, level: typeof skill.level === 'number' ? skill.level : 80 })
   }
-  return normalizeCategorizedSkillEntries(skills.map(skill => skill.name)).map(name => ({ name, level: 80 }))
-}
-
-function normalizeCategorizedSkillEntries(values: string[]): string[] {
-  const order: string[] = []
-  const grouped = new Map<string, string[]>()
-  const plain: string[] = []
-  const categorizedValues = new Set<string>()
-
-  for (const value of values) {
-    const match = value.match(/^([A-Za-z][A-Za-z /&+-]{1,40}):\s*(.+)$/)
-    if (!match) {
-      plain.push(value)
-      continue
-    }
-
-    const label = match[1].trim()
-    const key = label.toLowerCase()
-    const items = match[2].split(/[,;|·]/).map(item => item.trim()).filter(Boolean)
-    if (!grouped.has(key)) {
-      grouped.set(key, [])
-      order.push(label)
-    }
-    const current = grouped.get(key) ?? []
-    for (const item of items) {
-      categorizedValues.add(normalizeSkillValue(item))
-      if (!current.some(existing => existing.toLowerCase() === item.toLowerCase())) {
-        current.push(item)
-      }
-    }
-  }
-
-  return [
-    ...order.map(label => `${label}: ${(grouped.get(label.toLowerCase()) ?? []).join(', ')}`),
-    ...plain.filter(value => !categorizedValues.has(normalizeSkillValue(value))),
-  ]
-}
-
-function normalizeSkillValue(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, '')
-    .replace(/[^a-z0-9+#.]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return flattenSkillNames(skills.map(skill => skill.name)).map(name => ({ name, level: 80 }))
 }
 
 function mergeTextItems(parsed: unknown[] | undefined, fallback: unknown[] | undefined): string[] {

@@ -20,6 +20,8 @@ const TECHNICAL = new Set([
   'LaTeXCV Rows',
   'YAAC Architect CV',
   'Raphael Timeline CV',
+  'Mono Slate',
+  'Timeline Dots',
 ])
 
 const COMMERCE = new Set([
@@ -35,6 +37,9 @@ const BUSINESS = new Set([
   'General Professional',
   'LaTeXCV Classic Timeline',
   'LaTeXCV Modern Orange',
+  'Awesome CV Classic',
+  'Online Resume Card',
+  'Elegant Banner',
 ])
 
 const ACADEMIC = new Set([
@@ -55,6 +60,7 @@ const PHOTO = new Set([
   'YAAC Architect CV',
   'Awesome CV Red',
   'Raphael Timeline CV',
+  'Deedy Two Column',
 ])
 
 const FALLBACK_DESCRIPTIONS: Record<string, string> = {
@@ -100,6 +106,12 @@ const FALLBACK_DESCRIPTIONS: Record<string, string> = {
   'YAAC Architect CV': 'YAAC-inspired architect CV with photo header, social line, skill tags, and compact technical sections.',
   'Awesome CV Red': 'Awesome-CV-inspired resume with centered header, red highlights, quote block, and crisp sections.',
   'Raphael Timeline CV': 'ModernCV timeline-inspired layout for cloud, infrastructure, open-source, and consulting backgrounds.',
+  'Awesome CV Classic': 'Awesome-CV-inspired layout with a left-aligned banner name, right-stacked contact column, and thin ruled section titles.',
+  'Deedy Two Column':   'Deedy-resume-inspired layout with a centered ruled name and a narrow-left / wide-right two-column body.',
+  'Online Resume Card': 'Clean modern web-resume layout with a centered header, role pill, and block-accent section titles.',
+  'Mono Slate':         'Light monospace developer resume with hash-marked section titles — terminal feel without a dark background.',
+  'Timeline Dots':      'ModernCV-casual-inspired layout with a dotted vertical timeline marking each experience and project entry.',
+  'Elegant Banner':     'Full-width gradient banner header with reversed white name and contact, over a clean serif body.',
 }
 
 export function isCompanyInspiredTemplate(_name: string): boolean {

@@ -3,14 +3,15 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronDown,
-  Lightbulb,
-  Wrench,
   AlertTriangle,
-  Info,
+  ArrowUpRight,
   CheckCircle2,
+  Info,
+  Lightbulb,
   RefreshCw,
-  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
 } from 'lucide-react'
 import { ScoreRing } from './ScoreRing'
 import {
@@ -19,9 +20,11 @@ import {
   AuditRecommendation,
   CATEGORY_META,
   scoreColor,
+  scoreLabel,
   severityColor,
   priorityColor,
 } from '@/types/audit'
+import { cn } from '@/lib/utils'
 
 interface Props {
   report: AuditReportType
@@ -29,26 +32,22 @@ interface Props {
   resumeName: string
 }
 
+type SeverityFilter = 'all' | 'high' | 'medium' | 'low'
+
 export function AuditReport({ report, resumeId, resumeName }: Props) {
-  const [severityFilter, setSeverityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
-  const [expandedIssue, setExpandedIssue] = useState<number | null>(null)
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
   const [isPending, startTransition] = useTransition()
   const [reauditError, setReauditError] = useState<string | null>(null)
   const router = useRouter()
 
   const filteredIssues = report.issues.filter(
-    (i) => severityFilter === 'all' || i.severity === severityFilter
+    issue => severityFilter === 'all' || issue.severity === severityFilter,
   )
-
-  const criticalCount = report.issues.filter((i) => i.severity === 'high').length
-  const warningCount  = report.issues.filter((i) => i.severity === 'medium').length
-  const infoCount     = report.issues.filter((i) => i.severity === 'low').length
-
-  const gapToNext = report.overall_score < 80
-    ? report.overall_score < 60
-      ? 60 - report.overall_score
-      : 80 - report.overall_score
-    : 0
+  const criticalCount = report.issues.filter(issue => issue.severity === 'high').length
+  const warningCount = report.issues.filter(issue => issue.severity === 'medium').length
+  const infoCount = report.issues.filter(issue => issue.severity === 'low').length
+  const weakestCategory = getWeakestCategory(report.category_scores)
+  const gapToNext = getGapToNext(report.overall_score)
 
   async function handleReaudit() {
     setReauditError(null)
@@ -68,371 +67,354 @@ export function AuditReport({ report, resumeId, resumeName }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-
-      {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)]">ATS Audit Report</h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-0.5 truncate max-w-xs">{resumeName}</p>
+    <div className="space-y-5">
+      <header className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            ATS Audit
+          </p>
+          <h1 className="mt-2 truncate text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">
+            {resumeName}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            Last checked {formatDate(report.created_at)}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-[var(--color-text-muted)]">
-            {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
+
+        <div className="flex flex-col items-start gap-2 sm:items-end">
           <button
+            type="button"
             onClick={handleReaudit}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 text-sm font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isPending ? 'animate-spin' : ''}`} />
-            Re-audit
+            <RefreshCw className={cn('h-4 w-4', isPending && 'animate-spin')} />
+            {isPending ? 'Running audit' : 'Re-audit'}
           </button>
+          {reauditError && <p className="max-w-xs text-xs text-red-300">{reauditError}</p>}
         </div>
-        {reauditError && (
-          <p className="w-full text-xs text-[#f87171]">{reauditError}</p>
-        )}
-      </div>
+      </header>
 
-      {/* ── Score + Categories ──────────────────────────────── */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-
-          {/* Score Ring */}
-          <div className="flex-shrink-0">
-            <ScoreRing score={report.overall_score} size={150} strokeWidth={11} />
-            {gapToNext > 0 && (
-              <p className="text-center text-xs text-[var(--color-text-muted)] mt-3 max-w-[150px]">
-                <span className="text-[#fbbf24] font-semibold">{gapToNext} points</span> to next tier
+      <section className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Resume Health
               </p>
-            )}
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                Overall parser and content readiness.
+              </p>
+            </div>
+            <ShieldCheck className="h-5 w-5 text-[var(--color-accent)]" />
           </div>
 
-          {/* Category Bars */}
-          <div className="flex-1 w-full">
-            <p className="text-xs font-semibold tracking-widest uppercase text-[var(--color-text-muted)] mb-4">
-              Category Breakdown
+          <div className="flex flex-col items-center">
+            <ScoreRing score={report.overall_score} size={154} strokeWidth={12} />
+            <p className="mt-4 text-center text-sm leading-6 text-[var(--color-text-muted)]">
+              {gapToNext > 0 ? (
+                <>
+                  <span className="font-semibold text-amber-300">{gapToNext} points</span> to the next score band.
+                </>
+              ) : (
+                'This resume is in the top audit band.'
+              )}
             </p>
-            <div className="space-y-3">
-              {(Object.entries(report.category_scores) as [keyof typeof CATEGORY_META, number][]).map(
-                ([key, score]) => {
-                  const meta = CATEGORY_META[key]
-                  const color = scoreColor(score)
-                  return (
-                    <div key={key} className="group">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                            {meta.label}
-                          </span>
-                          <span className="text-xs text-[var(--color-text-muted)] hidden group-hover:inline">
-                            — {meta.description}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-[var(--color-text-muted)]">
-                            {meta.weight}% weight
-                          </span>
-                          <span className="text-sm font-bold tabular-nums" style={{ color }}>
-                            {score}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-2 rounded-full bg-[rgba(245,240,232,0.06)] overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-1000 ease-out"
-                          style={{
-                            width: `${score}%`,
-                            backgroundColor: color,
-                            boxShadow: `0 0 8px ${color}50`,
-                            animationDelay: '200ms',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )
-                }
-              )}
-            </div>
+          </div>
 
-            {/* Issue summary chips */}
-            <div className="flex items-center gap-2 mt-5 flex-wrap">
-              {criticalCount > 0 && (
-                <Chip color="#f87171" count={criticalCount} label="critical" />
-              )}
-              {warningCount > 0 && (
-                <Chip color="#fbbf24" count={warningCount} label="warnings" />
-              )}
-              {infoCount > 0 && (
-                <Chip color="#60a5fa" count={infoCount} label="info" />
-              )}
-              {report.issues.length === 0 && (
-                <span className="text-xs text-[#34d399] font-medium">✓ No issues found</span>
-              )}
-            </div>
+          <div className="mt-6 grid grid-cols-3 gap-2">
+            <SignalCard label="Critical" value={criticalCount} tone="danger" />
+            <SignalCard label="Warnings" value={warningCount} tone="warn" />
+            <SignalCard label="Info" value={infoCount} tone="info" />
           </div>
         </div>
-      </div>
 
-      {/* ── Issues ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
-          <h2 className="font-semibold text-[var(--color-text-primary)]">
-            Issues Found
-            <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">
-              ({report.issues.length})
-            </span>
-          </h2>
-          <div className="flex items-center gap-1">
-            {(['all', 'high', 'medium', 'low'] as const).map((f) => (
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Score Breakdown
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
+                {scoreLabel(report.overall_score)}
+              </h2>
+            </div>
+            <div className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                Focus
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">
+                {weakestCategory.label}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(Object.entries(report.category_scores) as [keyof typeof CATEGORY_META, number][]).map(([key, score]) => (
+              <CategoryCard key={key} label={CATEGORY_META[key].label} description={CATEGORY_META[key].description} weight={CATEGORY_META[key].weight} score={score} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Issues
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
+              {report.issues.length ? `${report.issues.length} items to review` : 'No issues found'}
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap gap-1 rounded-lg border border-[var(--color-border)] p-1">
+            {(['all', 'high', 'medium', 'low'] as const).map(filter => (
               <button
-                key={f}
-                onClick={() => { setSeverityFilter(f); setExpandedIssue(null) }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors capitalize ${
-                  severityFilter === f
-                    ? 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]'
-                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
-                }`}
+                key={filter}
+                type="button"
+                onClick={() => setSeverityFilter(filter)}
+                className={cn(
+                  'h-8 rounded-md px-3 text-xs font-semibold capitalize transition-colors',
+                  severityFilter === filter
+                    ? 'bg-[var(--color-accent)] text-black'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
+                )}
               >
-                {f === 'high' ? 'Critical' : f === 'medium' ? 'Warning' : f === 'low' ? 'Info' : 'All'}
+                {filter === 'high' ? 'Critical' : filter === 'medium' ? 'Warning' : filter}
               </button>
             ))}
           </div>
         </div>
 
-        {filteredIssues.length === 0 ? (
-          <EmptyState
-            icon={<CheckCircle2 className="w-8 h-8 text-[#34d399]" />}
-            title="No issues found"
-            description={severityFilter === 'all' ? 'Your resume is ATS-ready.' : `No ${severityFilter} severity issues.`}
-          />
-        ) : (
-          <ul className="divide-y divide-[var(--color-border)]">
-            {filteredIssues.map((issue, i) => (
-              <IssueRow
-                key={i}
-                issue={issue}
-                index={i}
-                expanded={expandedIssue === i}
-                onToggle={() => setExpandedIssue(expandedIssue === i ? null : i)}
-              />
+        {filteredIssues.length ? (
+          <div className="grid gap-3">
+            {filteredIssues.map((issue, index) => (
+              <IssueCard key={`${issue.category}-${index}`} issue={issue} index={index} />
             ))}
-          </ul>
+          </div>
+        ) : (
+          <EmptyCard
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            title="Nothing in this filter"
+            description={severityFilter === 'all' ? 'Your resume has no audit issues.' : `No ${severityFilter} severity issues were found.`}
+          />
         )}
-      </div>
+      </section>
 
-      {/* ── Recommendations ─────────────────────────────────── */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] overflow-hidden">
-        <div className="px-5 py-4 border-b border-[var(--color-border)]">
-          <h2 className="font-semibold text-[var(--color-text-primary)]">Recommendations</h2>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Fix these to move up the score ladder
-          </p>
+      <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Recommendations
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
+              Prioritized fixes
+            </h2>
+          </div>
+          <Sparkles className="h-5 w-5 text-[var(--color-accent)]" />
         </div>
 
-        {report.recommendations.length === 0 ? (
-          <EmptyState
-            icon={<CheckCircle2 className="w-8 h-8 text-[#34d399]" />}
+        {report.recommendations.length ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {report.recommendations.map((recommendation, index) => (
+              <RecommendationCard key={`${recommendation.action}-${index}`} recommendation={recommendation} index={index} />
+            ))}
+          </div>
+        ) : (
+          <EmptyCard
+            icon={<CheckCircle2 className="h-5 w-5" />}
             title="No recommendations"
-            description="Your resume is well-optimized."
+            description="The audit did not return any required fixes."
           />
-        ) : (
-          <ul className="divide-y divide-[var(--color-border)]">
-            {report.recommendations.map((rec, i) => (
-              <RecommendationRow key={i} rec={rec} index={i} />
-            ))}
-          </ul>
         )}
-      </div>
+      </section>
 
-      {/* ── What this score means ───────────────────────────── */}
-      <div className="rounded-2xl border border-[rgba(245,240,232,0.06)] bg-[rgba(245,240,232,0.02)] p-5">
-        <p className="text-xs font-semibold tracking-widest uppercase text-[var(--color-text-muted)] mb-3">
-          How ATS Scoring Works
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { range: '80–100', label: 'ATS Ready', color: '#34d399', note: 'Passes most systems' },
-            { range: '60–79', label: 'Needs Work', color: '#fbbf24', note: 'May get filtered out' },
-            { range: '40–59', label: 'Weak',       color: '#f97316', note: 'Likely rejected by ATS' },
-            { range: '0–39',  label: 'Critical',   color: '#f87171', note: 'Almost always filtered' },
-          ].map(({ range, label, color, note }) => (
-            <div
-              key={range}
-              className="rounded-xl p-3"
-              style={{ backgroundColor: `${color}0d`, border: `1px solid ${color}25` }}
-            >
-              <p className="text-sm font-bold tabular-nums" style={{ color }}>{range}</p>
-              <p className="text-xs font-semibold text-[var(--color-text-primary)] mt-0.5">{label}</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">{note}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      <section className="grid gap-3 sm:grid-cols-4">
+        {[
+          { range: '80-100', label: 'ATS Ready', color: '#34d399', note: 'Strong signal' },
+          { range: '60-79', label: 'Needs Work', color: '#fbbf24', note: 'Fix before applying' },
+          { range: '40-59', label: 'Weak', color: '#f97316', note: 'Likely filtered' },
+          { range: '0-39', label: 'Critical', color: '#f87171', note: 'Rewrite needed' },
+        ].map(item => (
+          <ScoreBand key={item.range} {...item} />
+        ))}
+      </section>
     </div>
   )
 }
 
-/* ── Sub-components ──────────────────────────────────────────── */
-
-function IssueRow({
-  issue,
-  index,
-  expanded,
-  onToggle,
+function CategoryCard({
+  label,
+  description,
+  weight,
+  score,
 }: {
-  issue: AuditIssue
-  index: number
-  expanded: boolean
-  onToggle: () => void
+  label: string
+  description: string
+  weight: number
+  score: number
 }) {
+  const color = scoreColor(score)
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--color-text-primary)]">{label}</p>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--color-text-muted)]">{description}</p>
+        </div>
+        <span className="text-lg font-semibold tabular-nums" style={{ color }}>
+          {score}
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: color }} />
+      </div>
+      <p className="mt-2 text-[11px] text-[var(--color-text-muted)]">{weight}% weight</p>
+    </div>
+  )
+}
+
+function SignalCard({ label, value, tone }: { label: string; value: number; tone: 'danger' | 'warn' | 'info' }) {
+  const color = tone === 'danger' ? '#f87171' : tone === 'warn' ? '#fbbf24' : '#60a5fa'
+  return (
+    <div className="rounded-lg border p-3 text-center" style={{ borderColor: `${color}30`, backgroundColor: `${color}10` }}>
+      <p className="text-lg font-semibold tabular-nums" style={{ color }}>{value}</p>
+      <p className="mt-0.5 text-[11px] font-medium text-[var(--color-text-muted)]">{label}</p>
+    </div>
+  )
+}
+
+function IssueCard({ issue, index }: { issue: AuditIssue; index: number }) {
   const color = severityColor(issue.severity)
-  const SeverityIcon = issue.severity === 'high' ? AlertTriangle
-                     : issue.severity === 'medium' ? Info
-                     : Info
-
+  const Icon = issue.severity === 'high' ? AlertTriangle : issue.severity === 'medium' ? Info : CheckCircle2
   return (
-    <li>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-start gap-4 px-5 py-4 hover:bg-[var(--color-surface-hover)] transition-colors text-left"
-      >
-        {/* Severity dot */}
-        <div className="mt-0.5 flex-shrink-0">
-          <SeverityIcon className="w-4 h-4" style={{ color }} />
+    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ color, backgroundColor: `${color}16`, border: `1px solid ${color}30` }}>
+          <Icon className="h-4 w-4" />
         </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
-              {issue.category}
-            </span>
-            <span
-              className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
-              style={{ color, backgroundColor: `${color}18`, border: `1px solid ${color}35` }}
-            >
-              {issue.severity === 'high' ? 'critical' : issue.severity}
-            </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-[var(--color-text-primary)]">{issue.category}</p>
+            <SeverityPill severity={issue.severity} />
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed">
-            {issue.message}
-          </p>
-        </div>
-
-        <ChevronDown
-          className={`w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--color-text-muted)] transition-transform duration-200 ${
-            expanded ? 'rotate-180' : ''
-          }`}
-        />
-      </button>
-
-      {/* Expanded: fix suggestion */}
-      {expanded && (
-        <div
-          className="px-5 pb-4 ml-8"
-          style={{ borderLeft: `2px solid ${color}40` }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
-            <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-              How to fix
-            </span>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{issue.message}</p>
+          <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-black/15 p-3">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+              Suggested fix
+            </p>
+            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{getSuggestedFix(issue)}</p>
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-            {getSuggestedFix(issue)}
-          </p>
         </div>
-      )}
-    </li>
+        <span className="hidden text-xs font-semibold tabular-nums text-[var(--color-text-muted)] sm:block">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
+    </article>
   )
 }
 
-function RecommendationRow({
-  rec,
-  index,
-}: {
-  rec: AuditRecommendation
-  index: number
-}) {
-  const color = priorityColor(rec.priority)
+function RecommendationCard({ recommendation, index }: { recommendation: AuditRecommendation; index: number }) {
+  const color = priorityColor(recommendation.priority)
   const Icon = index % 2 === 0 ? Lightbulb : Wrench
-
   return (
-    <li className="flex items-start gap-4 px-5 py-4">
-      <div
-        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5"
-        style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}
-      >
-        <Icon className="w-4 h-4" style={{ color }} />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <p className="text-sm font-semibold text-[var(--color-text-primary)]">{rec.action}</p>
-          <span
-            className="text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide flex-shrink-0"
-            style={{ color, backgroundColor: `${color}18`, border: `1px solid ${color}35` }}
-          >
-            {rec.priority}
-          </span>
+    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ color, backgroundColor: `${color}16`, border: `1px solid ${color}30` }}>
+          <Icon className="h-4 w-4" />
         </div>
-        <p className="text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed">
-          {rec.impact}
-        </p>
+        <PriorityPill priority={recommendation.priority} />
       </div>
-    </li>
+      <p className="text-sm font-semibold leading-6 text-[var(--color-text-primary)]">{recommendation.action}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">{recommendation.impact}</p>
+    </article>
   )
 }
 
-function Chip({ color, count, label }: { color: string; count: number; label: string }) {
+function SeverityPill({ severity }: { severity: AuditIssue['severity'] }) {
+  const color = severityColor(severity)
+  const label = severity === 'high' ? 'critical' : severity === 'medium' ? 'warning' : 'info'
+  return <Pill color={color}>{label}</Pill>
+}
+
+function PriorityPill({ priority }: { priority: AuditRecommendation['priority'] }) {
+  return <Pill color={priorityColor(priority)}>{priority} priority</Pill>
+}
+
+function Pill({ color, children }: { color: string; children: React.ReactNode }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
+      className="rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize"
+      style={{ color, backgroundColor: `${color}16`, border: `1px solid ${color}30` }}
     >
-      <span className="font-bold">{count}</span> {label}
+      {children}
     </span>
   )
 }
 
-function EmptyState({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode
-  title: string
-  description: string
-}) {
+function EmptyCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-10 text-center text-[var(--color-accent)]">
       {icon}
-      <p className="text-sm font-semibold text-[var(--color-text-primary)] mt-3">{title}</p>
-      <p className="text-xs text-[var(--color-text-muted)] mt-1">{description}</p>
+      <p className="mt-3 text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
+      <p className="mt-1 max-w-md text-sm leading-6 text-[var(--color-text-muted)]">{description}</p>
     </div>
   )
 }
 
+function ScoreBand({ range, label, color, note }: { range: string; label: string; color: string; note: string }) {
+  return (
+    <div className="rounded-lg border p-4" style={{ borderColor: `${color}26`, backgroundColor: `${color}0d` }}>
+      <p className="text-sm font-semibold tabular-nums" style={{ color }}>{range}</p>
+      <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">{label}</p>
+      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{note}</p>
+    </div>
+  )
+}
+
+function getWeakestCategory(scores: AuditReportType['category_scores']) {
+  return (Object.entries(scores) as [keyof typeof CATEGORY_META, number][])
+    .map(([key, score]) => ({ key, score, label: CATEGORY_META[key].label }))
+    .sort((a, b) => a.score - b.score)[0]
+}
+
+function getGapToNext(score: number) {
+  if (score < 60) return 60 - score
+  if (score < 80) return 80 - score
+  return 0
+}
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date))
+}
+
 function getSuggestedFix(issue: AuditIssue): string {
-  const lower = (issue.category + ' ' + issue.message).toLowerCase()
+  const lower = `${issue.category} ${issue.message}`.toLowerCase()
 
-  if (lower.includes('contact') || lower.includes('email') || lower.includes('phone'))
-    return 'Add a clear contact section at the top of your resume with your full name, professional email, phone number, LinkedIn URL, and city/state.'
+  if (lower.includes('contact') || lower.includes('email') || lower.includes('phone')) {
+    return 'Add a clear contact line at the top with name, professional email, phone, LinkedIn, and location.'
+  }
 
-  if (lower.includes('keyword') || lower.includes('skill'))
-    return 'Review the job description you\'re targeting. Extract 8-12 specific technical skills and tools, then naturally incorporate them into your experience bullet points and skills section.'
+  if (lower.includes('keyword') || lower.includes('skill')) {
+    return 'Pull the most important tools and keywords from your target role, then add them naturally to skills and experience bullets.'
+  }
 
-  if (lower.includes('bullet') || lower.includes('achievement') || lower.includes('quantif'))
-    return 'Rewrite each job description bullet using the format: "[Action verb] + [what you did] + [measurable result]". Example: "Reduced API latency by 40% by implementing Redis caching."'
+  if (lower.includes('bullet') || lower.includes('achievement') || lower.includes('quantif')) {
+    return 'Rewrite bullets as action + work performed + measurable outcome. Add numbers for scale, impact, latency, revenue, users, or cost.'
+  }
 
-  if (lower.includes('format') || lower.includes('table') || lower.includes('column'))
-    return 'Use a single-column layout with standard section headers. Remove all tables, text boxes, and multi-column layouts that confuse ATS parsers.'
+  if (lower.includes('format') || lower.includes('table') || lower.includes('column')) {
+    return 'Use a single-column layout with standard headings. Avoid tables, text boxes, icons, and decorative layout elements for ATS uploads.'
+  }
 
-  if (lower.includes('length') || lower.includes('page') || lower.includes('dense'))
-    return 'Aim for 1 page (under 5 years experience) or 2 pages max (5+ years). Remove outdated roles, irrelevant skills, and generic filler phrases.'
+  if (lower.includes('length') || lower.includes('page') || lower.includes('dense')) {
+    return 'Keep the resume tight: one page for early career, two pages only for deeper experience. Remove filler and weak older details.'
+  }
 
-  if (lower.includes('font') || lower.includes('color') || lower.includes('graphic'))
-    return 'Use only black text on a white background. Choose standard fonts (Arial, Calibri, Georgia). Remove all icons, graphics, and decorative elements.'
-
-  return 'Address this issue by reviewing your resume content and ensuring it follows ATS-friendly formatting standards.'
+  return 'Review this section for ATS clarity, plain formatting, specific evidence, and role-relevant wording.'
 }

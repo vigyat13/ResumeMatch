@@ -476,6 +476,155 @@ export const BUILT_IN_TEMPLATES: BuilderTemplate[] = [
 .raphael-timeline .timeline{border-left:3px solid #bfdbfe;padding-left:16px}
 `,
   },
+  {
+    id: '11111111-1111-4111-8111-111111111123',
+    name: 'Awesome CV Classic',
+    description: 'Awesome-CV-inspired layout with a left-aligned banner name, right-stacked contact column, and thin ruled section titles.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume awesome-classic">
+  <header class="header">
+    <div class="id"><h1>{{name}}</h1><p class="title">{{title}}</p></div>
+    <div class="reach"><p class="contact">{{contact}}</p></div>
+  </header>
+  <section><h2>Summary</h2><p>{{summary}}</p></section>
+  <section><h2>Experience</h2>{{experience}}</section>
+  <section><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+  <section><h2>Honors</h2>{{honors}}</section>
+</main>`,
+    css_content: baseCss('#1a7f8e', 'Georgia, "Times New Roman", serif') + `
+.awesome-classic .header{display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px;border-bottom:2px solid #1a7f8e;padding-bottom:14px}
+.awesome-classic h1{font-size:42px;font-weight:300;letter-spacing:.02em}
+.awesome-classic .title{margin-top:6px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.awesome-classic .reach .contact{margin:0;text-align:right;font-size:11.5px;line-height:1.7}
+.awesome-classic h2{border-bottom:1px solid #cfd8dc;color:#1a7f8e;font-size:13px;letter-spacing:.06em}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111124',
+    name: 'Deedy Two Column',
+    description: 'Deedy-resume-inspired layout with a centered ruled name and a narrow-left / wide-right two-column body.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume deedy">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <div class="columns">
+    <div class="left">
+      <section><h2>Education</h2>{{education}}</section>
+      <section><h2>Skills</h2><p>{{skills}}</p></section>
+      <section><h2>Awards</h2>{{honors}}</section>
+    </div>
+    <div class="right">
+      <section><h2>Experience</h2>{{experience}}</section>
+      <section><h2>Projects</h2>{{projects}}</section>
+    </div>
+  </div>
+</main>`,
+    css_content: baseCss('#2c3e50', 'Helvetica Neue, Arial, sans-serif') + `
+.deedy .header{text-align:center;border-top:1px solid #2c3e50;border-bottom:1px solid #2c3e50;padding:12px 0}
+.deedy h1{font-size:36px;font-weight:300;letter-spacing:.16em;text-transform:uppercase}
+.deedy .title{margin-top:5px;color:#c0392b;font-size:12px;letter-spacing:.1em}
+.deedy .columns{display:grid;grid-template-columns:1fr 2fr;gap:30px;margin-top:14px}
+.deedy h2{border-bottom:0;color:#c0392b;font-size:12px;letter-spacing:.12em}
+.deedy .left h2{color:#2c3e50}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111125',
+    name: 'Online Resume Card',
+    description: 'Clean modern web-resume layout (tarrex online-resume style) with a centered header, role pill, and block-accent section titles.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume online-resume">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <section><h2>About</h2><p>{{summary}}</p></section>
+  <section><h2>Experience</h2>{{experience}}</section>
+  <section><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+  <section><h2>Education</h2>{{education}}</section>
+</main>`,
+    css_content: baseCss('#10b981', 'Inter, "Helvetica Neue", Arial, sans-serif') + `
+.online-resume .header{text-align:center;border-bottom:0}
+.online-resume h1{font-size:36px;font-weight:700;letter-spacing:-.01em}
+.online-resume .title{display:inline-block;margin-top:9px;background:#ecfdf5;color:#047857;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:none;padding:4px 12px;border-radius:999px}
+.online-resume .contact{margin-top:10px}
+.online-resume h2{border-bottom:0;border-left:4px solid #10b981;border-radius:2px;padding:2px 0 2px 10px;color:#065f46}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111126',
+    name: 'Mono Slate',
+    description: 'Light monospace developer resume with hash-marked section titles — terminal feel without a dark background.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume mono-slate">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <section><h2>summary</h2><p>{{summary}}</p></section>
+  <section><h2>experience</h2>{{experience}}</section>
+  <section><h2>projects</h2>{{projects}}</section>
+  <section><h2>skills</h2><p>{{skills}}</p></section>
+  <section><h2>education</h2>{{education}}</section>
+</main>`,
+    css_content: baseCss('#334155', 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace') + `
+.mono-slate .header{border-bottom:1px dashed #94a3b8}
+.mono-slate h1{font-size:30px;font-weight:700;letter-spacing:-.02em}
+.mono-slate .title{color:#475569;text-transform:none;letter-spacing:0;font-weight:600}
+.mono-slate h2{border-bottom:0;color:#0f172a;letter-spacing:0;text-transform:none;font-size:14px}
+.mono-slate h2::before{content:'# ';color:#94a3b8}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111127',
+    name: 'Timeline Dots',
+    description: 'ModernCV-casual-inspired layout with a dotted vertical timeline marking each experience and project entry.',
+    is_ats_safe: true,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume timeline-dots">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <section><h2>Profile</h2><p>{{summary}}</p></section>
+  <section class="tl"><h2>Experience</h2>{{experience}}</section>
+  <section class="tl"><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+</main>`,
+    css_content: baseCss('#7c3aed', 'Arial, Helvetica, sans-serif') + `
+.timeline-dots h2{color:#6d28d9;border-bottom:1px solid #ddd6fe}
+.timeline-dots .tl .exp-entry,.timeline-dots .tl .proj-entry{position:relative;margin-left:7px;padding-left:20px;border-left:2px solid #ddd6fe}
+.timeline-dots .tl .exp-entry::before,.timeline-dots .tl .proj-entry::before{content:'';position:absolute;left:-7px;top:4px;width:11px;height:11px;border-radius:50%;background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1px #c4b5fd}
+`,
+  },
+  {
+    id: '11111111-1111-4111-8111-111111111128',
+    name: 'Elegant Banner',
+    description: 'Full-width gradient banner header with reversed white name and contact, over a clean serif body.',
+    is_ats_safe: false,
+    tier: 'free',
+    created_at: CREATED_AT,
+    html_content: `<main class="resume elegant-banner">
+  <header class="header"><h1>{{name}}</h1><p class="title">{{title}}</p><p class="contact">{{contact}}</p></header>
+  <section><h2>Summary</h2><p>{{summary}}</p></section>
+  <section><h2>Experience</h2>{{experience}}</section>
+  <section><h2>Projects</h2>{{projects}}</section>
+  <section><h2>Education</h2>{{education}}</section>
+  <section><h2>Skills</h2><p>{{skills}}</p></section>
+</main>`,
+    css_content: baseCss('#0f766e', 'Georgia, "Times New Roman", serif') + `
+.elegant-banner{padding-top:0}
+.elegant-banner .header{margin:0 -52px 20px;padding:34px 52px;border-bottom:0;background:linear-gradient(120deg,#0f172a,#0f766e)}
+.elegant-banner .header *{color:#fff!important}
+.elegant-banner h1{font-size:40px;font-weight:400;letter-spacing:.02em}
+.elegant-banner .title{margin-top:7px;font-style:italic;font-weight:400}
+.elegant-banner .contact{margin-top:11px;opacity:.92}
+.elegant-banner h2{color:#0f766e;border-bottom:1px solid #99f6e4;text-transform:none;font-size:16px;letter-spacing:0}
+`,
+  },
 ]
 
 export function mergeWithBuiltInTemplates<T extends BuilderTemplate>(templates: T[] | null | undefined): BuilderTemplate[] {
